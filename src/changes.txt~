@@ -1,0 +1,6 @@
+gdays		ymd2gday
+gdayfrac	hms2xhrs
+gtime		xhrs2hms
+gdate		gday2ymd
+gdatetime	gt2string
+gdayf2str	gtstr6d
