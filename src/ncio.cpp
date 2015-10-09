@@ -193,33 +193,33 @@ int NcFile_handle::readCoords(gVar &v, ostream &lfout, bool rr){
 		CINFOC << v.ntimes << " read.\n";
 		// set itime0 from sim start time
 		
-	}
+		// read and set time base settings
+		// (this is from earlier function settbase() )
+		NcAtt * a = tVar->get_att("units");
+		string datestr = a->as_string(0);
 
-	// read and set time base settings
-	// (this is from earlier function settbase() )
-	NcAtt * a = tVar->get_att("units");
-	string datestr = a->as_string(0);
+		string unit, junk, sdate, stime;
+		stringstream ss;
+		ss.clear(); ss.str(datestr);
+		ss >> unit >> junk >> sdate >> stime;
+		if (stime == "") stime = "0:0:0";
+	
+		v.tbase = ymd2gday(sdate) + hms2xhrs(stime); // note this time is in GMT
+		if (unit == "hours") v.tscale = 1.0f;
+		else if (unit == "days") v.tscale = 24.0f;
+		else if (unit == "months") {
+			lfout << "WARNING: using months as time units! 365.2524 days/yr will be considered.\n";
+			v.tscale = (365.2524/12.0)*24.0;
+		}
+		else {
+			lfout << "ERROR setting base time in getCoords(): invalid time units!\n";
+			return 1;
+		}
+		//lfout << "Completed read coords Function\n";
+		v.tstep = (v.times[1] - v.times[0])*v.tscale;	// tstep in hours
 
-	string unit, junk, sdate, stime;
-	stringstream ss;
-	ss.clear(); ss.str(datestr);
-	ss >> unit >> junk >> sdate >> stime;
-	if (stime == "") stime = "0:0:0";
-	
-	v.tbase = ymd2gday(sdate) + hms2xhrs(stime); // note this time is in GMT
-	if (unit == "hours") v.tscale = 1.0f;
-	else if (unit == "days") v.tscale = 24.0f;
-	else if (unit == "months") {
-		lfout << "WARNING: using months as time units! 365.2524 days/yr will be considered.\n";
-		v.tscale = (365.2524/12.0)*24.0;
 	}
-	else {
-		lfout << "ERROR setting base time in getCoords(): invalid time units!\n";
-		return 1;
-	}
-	//lfout << "Completed read coords Function\n";
-	v.tstep = (v.times[1] - v.times[0])*v.tscale;	// tstep in hours
-	
+		
 	return 0;
 }
 
@@ -295,8 +295,13 @@ int NcFile_handle::readVar(gVar &v, int itime, int iVar){
 		vVar->set_cur(itime, ilat0, ilon0); // set the starting time at itime and lat/lon/lev at SW corner
 		vVar->get(&v.values[0], 1, v.nlats, v.nlons);
 	}
-	else {
-		cout << "\tVar Error: Cant handle 1D/2D variables yet..\n";
+	else if (vVar->num_dims() == 2){
+		vVar->set_cur(ilat0, ilon0);
+		vVar->get(&v.values[0], v.nlats, v.nlons);
+		CWARN << "treating 2D Variable as lat-lon map..\n";
+	}
+	else{
+		CERR << "Variables with only 2/3/4 dimensions are supported at present!\n";
 		return 1;
 	}
 	
@@ -310,9 +315,12 @@ int NcFile_handle::readVar(gVar &v, int itime, int iVar){
 				v.values[i] = v.values[i]*v.scale_factor + v.add_offset;	
 		}
 	}
-	// set t to gday corresponding to times[itime]
-	v.t = v.ix2gt(itime);
 
+	if (tVar){
+		// set t to gday corresponding to times[itime]
+		v.t = v.ix2gt(itime);
+	}
+	
 	return 0;
 }
 

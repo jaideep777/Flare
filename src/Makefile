@@ -1,14 +1,14 @@
 # makefile for GSM library
 
-OUTLIBPATH = /home/jaideep/libgsm/lib
-OUTINCPATH = /home/jaideep/libgsm/include
+OUTLIBPATH = ../lib
+OUTINCPATH = ../include
 
 #OUTLIBPATH = /usr/local/lib
 #OUTINCPATH = /usr/local/include
 
 TARGET = libgsm
-LIBPATH = -L/usr/local/netcdf-4.1.3/lib
-INCPATH = -I/usr/local/netcdf-4.1.3/include
+LIBPATH = -L/usr/local/netcdf-cxx-legacy/lib 	# Netcdf-c++ libaray path
+INCPATH = -I/usr/local/netcdf-cxx-legacy/include -I/usr/local/netcdf-c-4.3.2/include  # need paths to netcdf-c as well as c++ includes
 LDFLAGS =  
 CPPFLAGS = -fPIC 
 
@@ -21,7 +21,7 @@ LIBS = -lnetcdf_c++
 all: install
 
 install: $(OBJFILES)
-	g++ -shared -o $(LDFLAGS) $(TARGET).so $(OBJFILES) $(LIBPATH) $(LIBS)
+	g++ -shared $(LIBPATH) $(LDFLAGS) -o $(TARGET).so $(OBJFILES) $(LIBS)
 	cp $(TARGET).so $(OUTLIBPATH)
 
 .cpp.o:
