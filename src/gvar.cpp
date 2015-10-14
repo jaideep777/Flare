@@ -49,6 +49,12 @@ int gVar:: shallowCopy(const gVar &v){
 	scale_factor = v.scale_factor; add_offset = v.add_offset;
 	ncoords = v.ncoords; ivar1 = v.ivar1;
 	missing_value = v.missing_value;
+
+	ifname = v.ifname; ofname = v.ofname;	// input and output filenames
+	ifile_handle = v.ifile_handle; ofile_handle = v.ofile_handle;	// ip and op file handles
+	outNcVar = v.outNcVar;		// output NcVar
+	lwrite = v.lwrite; lwriteSP = v.lwriteSP;			// 'write to output' flag (nc, singlePointOutput)
+
 	t = v.t;
 	return 0;
 }

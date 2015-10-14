@@ -18,7 +18,7 @@ int NcFile_handle::open(string s, string m, const float glimits[4]){
 	fname = s;
 	mode = m;
 	if (mode == "r"){ 
-		CDEBUG << "attaempting to open file: " << s << '\n';
+		CDEBUG << "attempting to open file: " << s << '\n';
 		dFile = new NcFile(s.c_str(), NcFile::ReadOnly);
 		if (!dFile)	{cout << "Error Opening File: " << s << "\n"; return 1;}
 	}
@@ -163,6 +163,10 @@ int NcFile_handle::readCoords(gVar &v, ostream &lfout, bool rr){
 		v.lons.resize(v.nlons);
 		if (rr) lonVar->get(&v.lons[0], v.nlons);
 		CINFOC << v.nlons << " read.\n";
+		
+//		CINFO << "bring lons to principle range (0-360)...";
+//		for (int i=0; i<nlons; ++i) if (v.lons[i] < 0) v.lons[i] += 360;
+//		CINFOC << "Done!\n";
 
 		if (mplimited){
 			CINFO << "trimming lons array to match lon limits... ";

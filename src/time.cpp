@@ -153,6 +153,10 @@ int gt2daynum(double g){
 	return g - ymd2gday(ystr, 1, 1);
 }
 
+int gt2dayOfYear(double gt){
+	return gt2daynum(gt);
+}
+
 
 string gt2string(double gt){
 	int gday_day = int(gt);

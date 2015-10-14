@@ -64,7 +64,9 @@ string gtstr6d(double gt);		// print gt upto 6 decimals
 
 int gt2year(double gt);	// calculate year only (non-decimal) from gday
 int gt2month(double gt);	// calculate current month from gday (NOTE: month ranges from 1-12 and NOT from 0-11)
-int gt2daynum(double gt);
+int gt2day(double g);		// calculate day in month
+int gt2daynum(double gt);	// calculate day of year
+int gt2dayOfYear(double gt);	// calculate day of year
 
 // ------  lat lon functions ------- 
 float sex2decLL(string s);	// convert "ll mm ss D" to decimal lat/lon
@@ -189,6 +191,7 @@ public:
 	int ncoords, nvars;
 	string levname, levunits;
 	bool latSN;	// if true, lats are SN, increase with index
+	bool lonPos; // if true, lons range from 0-360 (desired), first index is lon = 0
 	float wlon, elon, slat, nlat;	// map limits
 	int wlonix, elonix, slatix, nlatix;	// map limits indices. 
 	int ilon0, ilat0, itime0;
