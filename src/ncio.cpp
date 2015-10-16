@@ -39,13 +39,14 @@ int NcFile_handle::open(string s, string m, const float glimits[4]){
 
 int NcFile_handle::close(){
 	dFile->close();
+	delete dFile;
 	return 0;
 }
 
 NcFile_handle::~NcFile_handle(){
 	//dFile->close();	including this statement gives seg fault!
-	delete dFile;
-	dFile = NULL;
+//	delete dFile;
+//	dFile = NULL;
 }
 
 void NcFile_handle::setMapLimits(float xwlon, float xelon, float xslat, float xnlat){
@@ -305,7 +306,8 @@ int NcFile_handle::readVar(gVar &v, int itime, int iVar){
 		CWARN << "treating 2D Variable as lat-lon map..\n";
 	}
 	else{
-		CERR << "Variables with only 2/3/4 dimensions are supported at present!\n";
+		CERR << "Variables with only 2/3/4 dimensions are supported at present! Dims found: " 
+			 << vVar->num_dims() << "\n";
 		return 1;
 	}
 	
