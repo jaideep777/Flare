@@ -67,6 +67,8 @@ int gt2month(double gt);	// calculate current month from gday (NOTE: month range
 int gt2day(double g);		// calculate day in month
 int gt2daynum(double gt);	// calculate day of year
 int gt2dayOfYear(double gt);	// calculate day of year
+void gt2array(double gt, int* tarr);	// get yyyy, MM, dd, hh, mm, ss in array from gt
+
 
 // ------  lat lon functions ------- 
 float sex2decLL(string s);	// convert "ll mm ss D" to decimal lat/lon

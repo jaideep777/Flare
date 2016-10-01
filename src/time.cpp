@@ -166,6 +166,36 @@ string gt2string(double gt){
 	return (gday2ymd(gday_day) + " " + xhrs2hms(gday_hours));
 }
 
+void gt2array(double gt, int* tarr){
+	int g = int(gt);
+	double dayf = gt - g;	// use of double here gives 5:29:59.9 for 5:30:0!!
+
+	// get day in yyyy, mm, dd
+	int ystr, mstr, dstr;
+	int y, ddd, mm, mi;
+	y = (10000*(long long int)g + 14780)/3652425;
+	ddd = g - (365*y + y/4 - y/100 + y/400);
+	if (ddd < 0){
+		--y;
+		ddd = g - (365*y + y/4 - y/100 + y/400);
+	}
+	mi = (52 + 100*ddd)/3060;
+	tarr[0] = ystr = y + (mi + 2)/12;
+	tarr[1] = mstr = (mi + 2)%12 + 1;
+	tarr[2] = dstr = ddd - (mi*306 + 5)/10 + 1;
+	
+	// get time in hh, mm, ss
+	int h, m; float s1;
+	dayf = dayf*24;
+	h = int(dayf);
+	double r = dayf - int(dayf);
+	tarr[3] = m = int(r*60);
+	tarr[4] = r = r*60 - int(r*60);
+	tarr[5] = s1 = int(r*600)/10.0;
+	 	
+}
+
+
 string gtstr6d(double gt){
 	return (int2str(gt) + "." + int2str(int((gt-int(gt))*1e6)) );
 }
