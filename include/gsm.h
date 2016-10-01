@@ -1,3 +1,29 @@
+/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    libGSM - library for Gridded Spatial Modelling
+    Copyright (C) 2016 Jaideep Joshi
+
+	This file is part of libGSM.
+
+    libGSM is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+	The author can be contacted at jaideep777@gmail.com 
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
+
 #ifndef VECUTILS
 #define VECUTILS
 
@@ -53,7 +79,8 @@ extern float glimits_custom[4];
 // fractional day is on base 10 not base 24
 // global time is in "days since 1-3-0000 AD"
 
-// ------  date and time functions ------- 
+/*~~~~~~~~~~~~~~~~~~~~~~~~~  Date and Time functions  ~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
 string xhrs2hms(double dayf); // convert fractional day (dayf) to hh-mm-ss.s string
 double hms2xhrs(string time); // convert hh-mm-ss(.s) string to fractional day 
 int    ymd2gday(string date); // convert date string yyyy-mm-dd to global day
@@ -168,7 +195,7 @@ class gVar{
 	
 	// operators
 	float& operator () (int ilon, int ilat, int ilev);	// get reference to element by coord indices, like n-D array
-	float& operator [] (int i);	// get reference to element by memory index, like n-D array
+	float& operator [] (int i);	// get reference to element by memory index, like 1-D array
 	gVar operator + (const gVar &v);
 	gVar operator - (const gVar &v);
 	gVar operator * (const gVar &v);
@@ -287,7 +314,7 @@ float cellVal(int ilat, int ilon, int iz, vector <int> &indices,
 // for all points in v, if (m <= val) v = missing_value
 gVar mask(gVar &v, gVar &m, float val = 0);
 
-// *** Following regridding regridding functions copy metadata (with ofc, new lats/lons)
+// *** Following regridding functions copy metadata (with ofc, new lats/lons)
 // interpolate variable v onto given grid (xlons, xlats)
 gVar lterp(gVar &v, vector <float> &xlons, vector <float> &xlats); 
 // ^ *** IMP! *** order of arguments was (v, xlats, xlons) in previous version!
