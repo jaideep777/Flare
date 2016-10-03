@@ -1,4 +1,4 @@
-Gridded-Spatial-Modelling-library
+Gridded Spatial Modelling library
 =================================
 
 libGSM is a simple library for building spatial models on 
@@ -9,7 +9,8 @@ This library includes functions for for performing operations
 on latitude/longitude/levels and time, along with smaller
 utility functions for printing data to an output stream.
 
-This library provides to classes:
+This library provides two classes:
+
 1) Gridded Variable (gVar) - Objects of this class include 
 storage for gridded data along with meta-data, such as lat-lon
 arrays and time. This library also provides operators on gVars
@@ -24,7 +25,7 @@ using libGSM.
 
 
 
-ACKNOWLEDGEMENT
+Acknowledgement
 ===============
 
 While using libGSM, kindly acknowledge the author Jaideep Joshi. 
