@@ -191,6 +191,22 @@ string gt2string(double gt){
 	return (gday2ymd(gday_day) + " " + xhrs2hms(gday_hours));
 }
 
+
+string gt2string_date(double gt){
+	int gday_day = int(gt);
+	return (gday2ymd(gday_day));
+}
+
+
+string gt2string_time(double gt){
+	int gday_day = int(gt);
+	float gday_hours = gt - gday_day;	// use of double here gives 5:29:59.9 for 5:30:0!!
+	// for the format hh:mm:ss.x float seems to suffice.. error occurs in the last decimal (x)
+	// in conclusion, both float and double give error of 0.1s in different situations
+	return (xhrs2hms(gday_hours));
+}
+
+
 void gt2array(double gt, int* tarr){
 	int g = int(gt);
 	double dayf = gt - g;	// use of double here gives 5:29:59.9 for 5:30:0!!

@@ -87,6 +87,8 @@ int    ymd2gday(string date); // convert date string yyyy-mm-dd to global day
 int    ymd2gday(int year, int month, int day); // convert y, m, d to global day
 string gday2ymd(int g); // convert global time to readable date string yyyy-mm-dd
 string gt2string(double gt); // convert gday (including day fraction) to full date-time
+string gt2string_date(double gt);	// " date only
+string gt2string_time(double gt);   // " time only
 string gtstr6d(double gt);		// print gt upto 6 decimals
 
 int gt2year(double gt);	// calculate year only (non-decimal) from gday
