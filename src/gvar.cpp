@@ -286,3 +286,42 @@ gVar gVar::operator * (const gVar &v){
 };
 
 
+
+// reading functions
+int gVar::readCoords(ostream &lfout, bool rr){
+	return ifile_handle->readCoords(*this, lfout, rr);
+}
+ 
+int gVar::readVarAtts(int ivar){
+	return ifile_handle->readVarAtts(*this, ivar);
+}
+
+int gVar::readVar(int itime, int iVar){
+	return ifile_handle->readVar(*this, itime, iVar);
+}
+
+ 
+int gVar::readVar_gt(double gt, int mode, int iVar){
+	return ifile_handle->readVar_gt(*this, gt, mode, iVar);
+}
+ 
+
+// writing functions
+int gVar::writeCoords(bool wr){
+	return ofile_handle->writeCoords(*this, wr);
+}
+ 
+NcVar * gVar::createVar(){
+	return ofile_handle->createVar(*this);
+}
+ 
+int gVar::writeVar(NcVar * vVar, int itime){
+	return ofile_handle->writeVar(*this, vVar, itime);
+}
+ 
+int gVar::writeTimeValues(){
+	return ofile_handle->writeTimeValues(*this);
+}
+ 
+
+
