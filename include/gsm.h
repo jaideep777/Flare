@@ -218,24 +218,16 @@ class gVar{
 	gVar operator * (const float x);
 	gVar operator / (const float x);
 	
-	// file input	
+
 //	// reading functions
-//	int readCoords(ostream &lfout = cout, bool rr = true); 
-//	int readVarAtts(int ivar = -1); 
-//	int readVar(int itime, int iVar = -1); 
-	int readVar_gt(double gt, int mode); 
-	
-	int createNcInputStream(vector <string> files, ostream &lfout = cout);
-	int loadInputFileMeta(ostream &lfout = cout);
+	int createNcInputStream(vector <string> files);
+	int loadInputFileMeta();
 	int whichNextFile(double gt);
 	int updateInputFile(double gt);
+	int readVar_gt(double gt, int mode); 
 	int closeNcInputStream();
 	
 //	// writing functions
-//	int writeCoords(bool wr = true); 
-//	NcVar * createVar(); 
-//	int writeTimeValues(); 
-
 	int createNcOutputStream(string filename);
 	int closeNcOutputStream();
 	int writeVar(int itime); 
@@ -276,7 +268,7 @@ public:
 	~NcFile_handle();	// dFile must be deleted in destructor
 
 	// reading functions
-	int readCoords(gVar &v, ostream &lfout = cout, bool rr = true); // read coord metadata, read values if rr is true
+	int readCoords(gVar &v, bool rr = true); // read coord metadata, read values if rr is true
 	int getVarID(string varname);	// get variable id (ivar) from name
 	int readVarAtts(gVar &v, int ivar = -1); // get variable name, units, missing_value etc.
 	int readVar(gVar &v, int itime, int iVar = -1); // read variable with index iVar from file into "v"

@@ -92,7 +92,7 @@ void NcFile_handle::setMapLimits(float xwlon, float xelon, float xslat, float xn
 //	 reads most of the metadata - read # coords, coord values
 //	 sets the lat lon limits
 //	 sets the correct order of lats and lons according to model requirements
-int NcFile_handle::readCoords(gVar &v, ostream &lfout, bool rr){
+int NcFile_handle::readCoords(gVar &v, bool rr){
 
 //	CINFO << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
 	// get number of variables

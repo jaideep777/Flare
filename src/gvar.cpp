@@ -301,36 +301,11 @@ gVar gVar::operator * (const gVar &v){
 
 
 
-//// reading functions
-//int gVar::readCoords(ostream &lfout, bool rr){
-//	return ifile_handle->readCoords(*this, lfout, rr);
-//}
-// 
-//int gVar::readVarAtts(int ivar){
-//	return ifile_handle->readVarAtts(*this, ivar);
-//}
-
-//int gVar::readVar(int itime, int iVar){
-//	return ifile_handle->readVar(*this, itime, iVar);
-//}
-
- 
- 
-
-//// writing functions
-//int gVar::writeCoords(bool wr){
-//	return ofile_handle->writeCoords(*this, wr);
-//}
-// 
-//NcVar * gVar::createVar(){
-//	return ofile_handle->createVar(*this);
-//}
-// 
  
 
 // in all input stream functions, the fileIO members of ipvar are not touched 
 // (in fact that cant be touched because they are private)
-int gVar::createNcInputStream(vector <string> files, ostream &lfout){
+int gVar::createNcInputStream(vector <string> files){
 
 	filenames = files;	// check that at least 1 input file is specified
 	if (filenames.size() < 1){
@@ -345,7 +320,7 @@ int gVar::createNcInputStream(vector <string> files, ostream &lfout){
 	loadInputFileMeta();	// read metadata from 1st input file
 }
 
-int gVar::loadInputFileMeta(ostream &lfout){
+int gVar::loadInputFileMeta(){
 
 	CDEBUG << "Attempting to load (" << varname << ") from file " << curr_file << ": " 	
 		   << filenames[curr_file] << endl;
@@ -358,7 +333,7 @@ int gVar::loadInputFileMeta(ostream &lfout){
 	if (i != 0) CERR << "NCFILE NOT VALID!!" << endl;
 
 	// read metadata
-	ifile_handle->readCoords(*ipvar, lfout);
+	ifile_handle->readCoords(*ipvar);
 	ifile_handle->readVarAtts(*ipvar);
 	
 	// calculate regridding indices
