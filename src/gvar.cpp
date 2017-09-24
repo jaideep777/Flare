@@ -31,9 +31,11 @@ gVar::gVar(){
 	tbase = 0; tscale = 1; tstep = 1;
 	varname = ""; varunits = "";
 	missing_value = std_missing_value;
-
-	ifile_handle = new NcFile_handle();
-	ofile_handle = new NcFile_handle();
+	ipvar = NULL;			// set all 4 pointers in class to Null
+	ifile_handle = NULL;	// they will be allocated by filo IO functions
+	ofile_handle = NULL;
+	outNcVar = NULL;
+	ivar1=-1;
 }
 
 gVar::gVar(string name, string units, string tunits){
@@ -41,9 +43,11 @@ gVar::gVar(string name, string units, string tunits){
 	tstep = t = 0;
 	varname = name; varunits = units;
 	missing_value = std_missing_value;
-
-	ifile_handle = new NcFile_handle;
-	ofile_handle = new NcFile_handle;
+	ipvar = NULL;			// set all 4 pointers in class to Null
+	ifile_handle = NULL;
+	ofile_handle = NULL;
+	outNcVar = NULL;
+	ivar1=-1;
 
 	// read time unit string and set tbase and tscale
 	string unit, junk, sdate, stime;
@@ -62,7 +66,6 @@ gVar::gVar(string name, string units, string tunits){
 	else {
 		CERR << "ERROR setting base time in getCoords(): invalid time units!\n";
 	}
-	//cout << "Completed read coords Function\n";
 }
 
 // copy all data except values vector into self.
@@ -108,23 +111,34 @@ int gVar::printGrid(ostream &lfout){
 	lfout << "> Variable " << ivar1 << ": " << varname << " (" << varunits << ")\n";
 	// grid info
 	lfout << "> Grid:\n";
-	lfout << "\t" << nlons << " lons: " << lons[0] << " ... " << lons[1]-lons[0] << " ... " << lons[nlons-1] << '\n';
-	lfout << "\t"  << nlats << " lats: " << lats[0] << " ... " << lats[1]-lats[0] << " ... " << lats[nlats-1] << '\n';
+	lfout << "\t" << nlons << " lons: "; 
+	if (nlons >0) lfout << lons[0] << " ... " << (lons[nlons-1]-lons[0])/nlons << " ... " << lons[nlons-1]; 
+	lfout << "\n";
+	lfout << "\t"  << nlats << " lats: ";
+	if (nlats >0) lfout << lats[0] << " ... " << (lats[nlats-1]-lats[0])/nlats << " ... " << lats[nlats-1];
+	lfout << "\n";
 	lfout << "\t"  << nlevs << " levs.\n";
 	lfout << "\t"  << ntimes << " times.\n";
 	lfout << "\t" << "Current number of values: " << values.size() << '\n';
 	lfout << "> Time:\n";
-	double tbaseIST = tbase + 5.5/24;
-	lfout << "\tbase  gday (IST) = " << gtstr6d(tbaseIST) << ", i.e. " << gt2string(tbaseIST) << '\n';
-	double t0 = ix2gt_IST(0);
-	lfout << "\tfirst gday (IST) = " << gtstr6d(t0) << ", i.e. " << gt2string(t0) << '\n';
-	t0 = ix2gt_IST(times.size()-1);
-	lfout << "\tlast  gday (IST) = " << gtstr6d(t0) << ", i.e. " << gt2string(t0) << '\n';
+	lfout << "\tbase  gday (GMT) = " << gtstr6d(tbase) << ", i.e. " << gt2string(tbase) << '\n';
+	if (ntimes > 0){
+		double t0 = ix2gt(0);
+		lfout << "\tfirst gday (GMT) = " << gtstr6d(t0) << ", i.e. " << gt2string(t0) << '\n';
+		t0 = ix2gt(times.size()-1);
+		lfout << "\tlast  gday (GMT) = " << gtstr6d(t0) << ", i.e. " << gt2string(t0) << '\n';
+	}
 	lfout << "\ttime step = " << tstep << " hours.\n";
 	lfout << "\thours per time unit = " << tscale << "\n";
 	lfout << "> Missing value = " << missing_value << "\n";
 	lfout << "-------------------------------------------------------------------------\n\n";
+	lfout.flush();
 	return 0;
+}
+
+int gVar::printGridIP(ostream &lfout){
+	lfout << "Variable " << varname << " inputs from:\n";
+	ipvar->printGrid(lfout);
 }
 
 int gVar::printValues(ostream &lfout){
@@ -207,7 +221,7 @@ float& gVar::operator [] (int i){
 
 gVar gVar::operator + (const gVar &v){
 	if (nlons != v.nlons || nlats != v.nlats || nlevs != v.nlevs){
-		cout << "ERROR summing variables: Grids not compatible.\n";
+		CERR << varname << " + " << v.varname << " : Grids not compatible.\n";
 		gVar temp1;
 		return temp1;
 	}
@@ -225,7 +239,7 @@ gVar gVar::operator + (const gVar &v){
 
 gVar gVar::operator - (const gVar &v){
 	if (nlons != v.nlons || nlats != v.nlats || nlevs != v.nlevs){
-		cout << "ERROR summing variables: Grids not compatible.\n";
+		CERR << varname << " - " << v.varname << " : Grids not compatible.\n";
 		gVar temp1;
 		return temp1;
 	}
@@ -269,7 +283,7 @@ gVar gVar::operator / (const float x){
 
 gVar gVar::operator * (const gVar &v){
 	if (nlons != v.nlons || nlats != v.nlats || nlevs != v.nlevs){
-		cout << "ERROR summing variables: Grids not compatible.\n";
+		CERR << varname << " * " << v.varname << " : Grids not compatible.\n";
 		gVar temp1;
 		return temp1;
 	}
@@ -287,41 +301,136 @@ gVar gVar::operator * (const gVar &v){
 
 
 
-// reading functions
-int gVar::readCoords(ostream &lfout, bool rr){
-	return ifile_handle->readCoords(*this, lfout, rr);
-}
- 
-int gVar::readVarAtts(int ivar){
-	return ifile_handle->readVarAtts(*this, ivar);
-}
+//// reading functions
+//int gVar::readCoords(ostream &lfout, bool rr){
+//	return ifile_handle->readCoords(*this, lfout, rr);
+//}
+// 
+//int gVar::readVarAtts(int ivar){
+//	return ifile_handle->readVarAtts(*this, ivar);
+//}
 
-int gVar::readVar(int itime, int iVar){
-	return ifile_handle->readVar(*this, itime, iVar);
-}
+//int gVar::readVar(int itime, int iVar){
+//	return ifile_handle->readVar(*this, itime, iVar);
+//}
 
  
-int gVar::readVar_gt(double gt, int mode, int iVar){
-	return ifile_handle->readVar_gt(*this, gt, mode, iVar);
-}
  
 
-// writing functions
-int gVar::writeCoords(bool wr){
-	return ofile_handle->writeCoords(*this, wr);
+//// writing functions
+//int gVar::writeCoords(bool wr){
+//	return ofile_handle->writeCoords(*this, wr);
+//}
+// 
+//NcVar * gVar::createVar(){
+//	return ofile_handle->createVar(*this);
+//}
+// 
+ 
+
+// in all input stream functions, the fileIO members of ipvar are not touched 
+// (in fact that cant be touched because they are private)
+int gVar::createNcInputStream(vector <string> files, ostream &lfout){
+
+	filenames = files;	// check that at least 1 input file is specified
+	if (filenames.size() < 1){
+		CERR << "(" << varname << ") createInputStream: No input files specified\n"; 
+		return 1;
+	}
+	curr_file = 0;
+	
+	ifile_handle = new NcFile_handle;	// create a file handle for input 
+	ipvar = new gVar;					// allocate gVar for input
+	
+	loadInputFileMeta();	// read metadata from 1st input file
+}
+
+int gVar::loadInputFileMeta(ostream &lfout){
+
+	CDEBUG << "Attempting to load (" << varname << ") from file " << curr_file << ": " 	
+		   << filenames[curr_file] << endl;
+
+	// close any previously opened file
+	if (ifile_handle->dFile != NULL) ifile_handle->close();
+
+	// open new file
+	int i = ifile_handle->open(filenames[curr_file], "r", glimits_india);
+	if (i != 0) CERR << "NCFILE NOT VALID!!" << endl;
+
+	// read metadata
+	ifile_handle->readCoords(*ipvar, lfout);
+	ifile_handle->readVarAtts(*ipvar);
+	
+	// calculate regridding indices
+	lterp_indices = bilIndices(ipvar->lons, ipvar->lats, lons, lats);
+	
+}
+
+
+int gVar::whichNextFile(double gt){
+	if (gt > ipvar->ix2gt(ipvar->ntimes-1)) return curr_file+1;
+	else if (gt < ipvar->ix2gt(0)) return curr_file-1;
+	else return curr_file; 	
+}
+
+
+int gVar::updateInputFile(double gt){
+	
+	int next_file = whichNextFile(gt);
+
+	while (curr_file != next_file){
+
+		if (next_file < 0 || next_file >= filenames.size()){
+			CERR << "(" << varname << ") InputStream: specified time out of range of given files (" << next_file << ").\n"; 
+			return 1;
+		}
+
+		curr_file = next_file;
+		loadInputFileMeta();
+		next_file = whichNextFile(gt);
+		
+	}
+
+	return 0;
+}
+
+int gVar::closeNcInputStream(){
+	if (ifile_handle->dFile != NULL) ifile_handle->close();
+	delete ifile_handle;
+	delete ipvar;
+}
+
+
+int gVar::readVar_gt(double gt, int mode){
+	updateInputFile(gt);
+	ifile_handle->readVar_gt(*ipvar, gt, mode, ipvar->ivar1);	// readCoords() would have set ivar1
+	lterpCube(*ipvar, *this, lterp_indices);
+}
+
+
+// output
+
+int gVar::createNcOutputStream(string filename){
+	ofname = filename;
+	ofile_handle = new NcFile_handle;
+	int i = ofile_handle->open(filename, "w", glimits_india);
+	ofile_handle->writeCoords(*this);
+	ofile_handle->writeTimeValues(*this);
+	outNcVar = ofile_handle->createVar(*this);
+	if (outNcVar->is_valid()) CDEBUG << "Succesfully created variable in file " << filename << endl;
+}
+
+
+int gVar::closeNcOutputStream(){
+	ofile_handle->close();
+	delete ofile_handle;
+}
+
+int gVar::writeVar(int itime){
+	return ofile_handle->writeVar(*this, outNcVar, itime);
 }
  
-NcVar * gVar::createVar(){
-	return ofile_handle->createVar(*this);
-}
- 
-int gVar::writeVar(NcVar * vVar, int itime){
-	return ofile_handle->writeVar(*this, vVar, itime);
-}
- 
-int gVar::writeTimeValues(){
-	return ofile_handle->writeTimeValues(*this);
-}
- 
+
+
 
 

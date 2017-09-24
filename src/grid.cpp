@@ -305,7 +305,7 @@ int lterpCube(gVar &v, gVar &out, vector <int> &indices){
 			}
 		}
 	}
-	out.t = v.t; // copy the current time value because it is related to values
+//	out.t = v.t; // copy the current time value because it is related to values
 }
 
 

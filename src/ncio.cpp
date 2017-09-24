@@ -36,21 +36,22 @@ NcFile_handle::NcFile_handle(){
 	ilon0 = ilat0 = 0;
 	wlonix = elonix = slatix = nlatix = 0;
 	mplimited = false;
+	dFile = NULL; // crucial - needed to check if dFile has been allocated
 }
 
 // ------------------------- INIT ----------------------------
 int NcFile_handle::open(string s, string m, const float glimits[4]){
 	fname = s;
 	mode = m;
+	CINFO << "Open file: " << s; gsm_log->flush();
 	if (mode == "r"){ 
-		CDEBUG << "attempting to open file: " << s << '\n';
 		dFile = new NcFile(s.c_str(), NcFile::ReadOnly);
-		if (!dFile)	{cout << "Error Opening File: " << s << "\n"; return 1;}
 	}
 	else if (mode == "w"){ 
 		dFile = new NcFile(s.c_str(), NcFile::Replace);
-		if (!dFile)	{cout << "Error Opening File: " << s << "\n"; return 1;}
 	}
+
+	if (!dFile)	{CERR << "Failed to open File: " << s << "\n"; return 1;}
 	
 	mplimited = (glimits[0] > 0 || glimits[1] < 360 || glimits[2] > -90 || glimits [3] < 90)? true:false; 
 	wlon = glimits[0]; //0.f;
@@ -58,13 +59,14 @@ int NcFile_handle::open(string s, string m, const float glimits[4]){
 	slat = glimits[2]; //-90.f;
 	nlat = glimits[3]; //90.f;
 	
-	if (dFile->is_valid()) return 0;
+	if (dFile->is_valid()) {CINFOC << "... Success!" << endl; return 0;}
 	else return 1;
 }
 
 int NcFile_handle::close(){
 	dFile->close();
 	delete dFile;
+	dFile = NULL;
 	return 0;
 }
 
@@ -92,11 +94,12 @@ void NcFile_handle::setMapLimits(float xwlon, float xelon, float xslat, float xn
 //	 sets the correct order of lats and lons according to model requirements
 int NcFile_handle::readCoords(gVar &v, ostream &lfout, bool rr){
 
+//	CINFO << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
 	// get number of variables
-	lfout << "> Reading file: " << fname << '\n';
+	CINFO << "> Reading metadata from file: " << fname << "\n";
 	nvars = 0;
 	nvars = dFile->num_vars();
-	lfout << '\t' << nvars << " variables found.\n";
+	CINFO << '\t' << nvars << " variables found.\n";
 
 	// Get the coordinate variables
 	ncoords = 0;
@@ -121,7 +124,7 @@ int NcFile_handle::readCoords(gVar &v, ostream &lfout, bool rr){
 	if (!tVar) tVar = dFile->get_var("TIME");
 	if (!tVar) {CWARN << "time not found.\n"; tVar = 0;}
 	else ++ncoords;
-	lfout << "\t" << ncoords << " coordinates found.\n"; lfout.flush();
+	CINFO << "\t" << ncoords << " coordinates found" << endl;
 		
 	int nbounds = 0;
 	// several files have bounds for coordinates.. if found, ignore for now.	
@@ -141,7 +144,7 @@ int NcFile_handle::readCoords(gVar &v, ostream &lfout, bool rr){
 	if (!tBnds) tBnds = dFile->get_var("time_bounds");
 	else ++nbounds;
 
-	lfout << "\t" << nbounds << " coordinate bounds found.\n";
+	CINFO << "\t" << nbounds << " coordinate bounds found.\n";
 	v.ncoords = ncoords; 
 	
 	v.ivar1 = ncoords+nbounds;	// assumes that 1st few variables are coords/bounds
@@ -153,7 +156,7 @@ int NcFile_handle::readCoords(gVar &v, ostream &lfout, bool rr){
 	// if lat order is found N-S in file, reverse it. 
 	// in this model lat order will be S-N (i.e lats increase with index)
 	// all data reading will depend crucially on the variable latSN
-	lfout << "> Reading coordinates.\n";
+	CINFO << "> Reading coordinates.\n";
 	if (latVar){
 		CINFO << "reading lats... ";
 		nlats = v.nlats = *(latVar->edges());	// otherwise constructor has init to 0
@@ -165,7 +168,7 @@ int NcFile_handle::readCoords(gVar &v, ostream &lfout, bool rr){
 		latSN = (dlat < 0)? false:true;
 		
 		if (mplimited){
-			CINFO << "trimming lats array to match lat limits... ";
+			CINFO << "trim lats... ";
 			// set indices
 			slatix = ncIndexLo(v.lats, slat);
 			nlatix = ncIndexHi(v.lats, nlat);
@@ -173,7 +176,7 @@ int NcFile_handle::readCoords(gVar &v, ostream &lfout, bool rr){
 			// cut array
 			v.lats = copyArray(v.lats, nlatix, slatix);
 			v.nlats = fabs(nlatix - slatix) +1;
-			CINFOC << v.nlats << " lats left.\n";
+			CINFOC << v.nlats << " left: (" << v.lats[0] << " --- " << v.lats[v.nlats-1] << ").\n";
 		}
 
 		if (!latSN){
@@ -195,15 +198,15 @@ int NcFile_handle::readCoords(gVar &v, ostream &lfout, bool rr){
 //		CINFOC << "Done!\n";
 
 		if (mplimited){
-			CINFO << "trimming lons array to match lon limits... ";
+			CINFO << "trim lons... ";
 			// set indices
 			wlonix = ncIndexLo(v.lons, wlon);
 			elonix = ncIndexHi(v.lons, elon);
 			ilon0 = (elonix > wlonix)? wlonix:elonix;
 			// cut array
-			v.lons = copyArray(v.lons, elonix, wlonix);
+			v.lons = copyArray(v.lons, elonix, wlonix);	// copyArray returns a new vector 
 			v.nlons = elonix - wlonix +1;
-			CINFOC << v.nlons << " lons left.\n";
+			CINFOC << v.nlons << " left: (" << v.lons[0] << " --- " << v.lons[v.nlons-1] << ").\n";
 		}
 	}
 
@@ -220,7 +223,7 @@ int NcFile_handle::readCoords(gVar &v, ostream &lfout, bool rr){
 		ntimes = v.ntimes = *(tVar->edges());	// otherwise constructor has init to 0
 		v.times.resize(v.ntimes);
 		if (rr) tVar->get(&v.times[0], v.ntimes);
-		CINFOC << v.ntimes << " read.\n";
+		CINFOC << v.ntimes << " read: (";
 		// set itime0 from sim start time
 		
 		// read and set time base settings
@@ -238,18 +241,18 @@ int NcFile_handle::readCoords(gVar &v, ostream &lfout, bool rr){
 		if (unit == "hours") v.tscale = 1.0f;
 		else if (unit == "days") v.tscale = 24.0f;
 		else if (unit == "months") {
-			lfout << "WARNING: using months as time units! 365.2524 days/yr will be considered.\n";
+			CWARN << "WARNING: using months as time units! 365.2524 days/yr will be considered.\n";
 			v.tscale = (365.2524/12.0)*24.0;
 		}
 		else {
-			lfout << "ERROR setting base time in getCoords(): invalid time units!\n";
+			CERR << "ERROR setting base time in getCoords(): invalid time units!\n";
 			return 1;
 		}
-		//lfout << "Completed read coords Function\n";
 		v.tstep = (v.times[1] - v.times[0])*v.tscale;	// tstep in hours
-
+		CINFOC << gt2string(v.ix2gt(0)) << " --- " << gt2string(v.ix2gt(v.ntimes-1)) << ").\n";
 	}
-		
+	CINFO << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
+	
 	return 0;
 }
 
@@ -299,14 +302,14 @@ int NcFile_handle::readVarAtts(gVar &v, int ivar){
 // ivar need to be specified only in case the file has multiple variables
 int NcFile_handle::readVar(gVar &v, int itime, int iVar){
 	if (mode != "r"){
-		cout << "ERROR in readVar: File not in read mode.\n";
+		CERR << "ERROR in readVar: File not in read mode.\n";
 		return 1;
 	}
 
 	// file is in read mode.. continue.
 	if (iVar == -1) iVar = v.ivar1;
 	// some crackpot nc files have coords last. so this check shouldnt be made. 
-	// maybe default ivar should not be allowed!!
+	// TODO maybe default ivar should not be allowed!!
 //	if (iVar < v.ncoords){
 //		cout << "FATAL ERROR in readVar(): Attempted to read a coord variable.\n";
 //		return 1;
@@ -328,7 +331,7 @@ int NcFile_handle::readVar(gVar &v, int itime, int iVar){
 	else if (vVar->num_dims() == 2){
 		vVar->set_cur(ilat0, ilon0);
 		vVar->get(&v.values[0], v.nlats, v.nlons);
-		CWARN << "treating 2D Variable as lat-lon map..\n";
+		CWARN << "(" << v.varname << ") treating 2D Variable as lat-lon map..\n";
 	}
 	else{
 		CERR << "Variables with only 2/3/4 dimensions are supported at present! Dims found: " 
@@ -402,6 +405,7 @@ int NcFile_handle::readVar_gt(gVar &v, double gt, int mode, int iVar){
 		return 2;
 	}
 	else{	// read the values at next step and calculate.
+	//TODO What happens in this mode if value is between 2 files?!
 		CDEBUGC << "intermediate, diff = " << (gt-v.ix2gt(tixlo))*24.0 << " hrs. Interpolate\n";
 		gVar z; z.shallowCopy(v);
 		gVar w; w.shallowCopy(v);	// make a new gVar to hold next step values, identical to v
@@ -521,10 +525,11 @@ NcVar * NcFile_handle::createVar(gVar &v){
 
 int NcFile_handle::writeVar(gVar &v, NcVar* vVar, int itime){
 	if (mode != "w"){
-		cout << "ERROR in writeVar: File not in write mode.\n";
+		CERR << "ERROR in writeVar: File not in write mode.\n";
 		return 1;
 	}
 	
+	CDEBUG << "Write variable (" << v.varname << ") to file at index " << itime << endl;
 	// actually write the data	
 	vVar->put_rec(&v.values[0], itime);
 	return 0;

@@ -7,6 +7,7 @@ OUTINCPATH = ../include
 #OUTINCPATH = /usr/local/include
 
 TARGET = libgsm
+VERSION = 2
 LIBPATH = -L/usr/local/netcdf-cxx-legacy/lib 	# Netcdf-c++ libaray path
 INCPATH = -I/usr/local/netcdf-cxx-legacy/include -I/usr/local/netcdf-c-4.3.2/include  # need paths to netcdf-c as well as c++ includes
 LDFLAGS =  
@@ -21,15 +22,15 @@ LIBS = -lnetcdf_c++
 all: install
 
 install: $(OBJFILES)
-	g++ -shared $(LIBPATH) $(LDFLAGS) -o $(TARGET).so $(OBJFILES) $(LIBS)
-	cp $(TARGET).so $(OUTLIBPATH)
+	g++ -shared $(LIBPATH) $(LDFLAGS) -o $(TARGET).so.$(VERSION) $(OBJFILES) $(LIBS)
+	cp $(TARGET).so.$(VERSION) $(OUTLIBPATH)
 
 .cpp.o:
 	g++ -c $(CPPFLAGS) $(INCPATH) $< 
 
 clean:
-	rm -f *.o *.so
-	rm -f $(OUTLIBPATH)/$(TARGET).so
+	rm -f *.o *.so*
+	rm -f $(OUTLIBPATH)/$(TARGET).so*
 #	rm -f $(INCPATH)/gsm.h
 
 re: clean install

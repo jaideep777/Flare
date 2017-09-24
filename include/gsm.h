@@ -35,15 +35,16 @@
 #include <netcdfcpp.h>
 using namespace std;
 
+extern ostream * gsm_log;
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~  DEFS    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-#define CDEBUG if (gsm_debug_on) cout << "<GSM debug> "
-#define CDEBUGC if (gsm_debug_on) cout
-#define CINFO if (gsm_info_on) cout << "<GSM info> "
-#define CINFOC if (gsm_info_on) cout
-#define CWARN if (gsm_warnings_on) cout << "GSM WARNING: "
-#define CERR if (gsm_errors_on) cout << "GSM ERROR: "
+#define CDEBUG if (gsm_debug_on) (*gsm_log) << "<GSM debug> "
+#define CDEBUGC if (gsm_debug_on) (*gsm_log)
+#define CINFO if (gsm_info_on) (*gsm_log) << "<GSM info> "
+#define CINFOC if (gsm_info_on) (*gsm_log)
+#define CWARN if (gsm_warnings_on) cout << "<GSM WARNING> "
+#define CERR if (gsm_errors_on) cout << "<GSM ERROR> "
 
 const double t_tol = 1e-3;	// tolerance when comparing gt values
 							// corresponds to ~86 sec
@@ -157,7 +158,6 @@ class gVar{
 	int ntimes, nlevs, nlats, nlons;
 	vector <float> levs, lats, lons;
 	vector <double> times;
-	vector <float> values;
 	double tbase;
 	float tscale, tstep;
 	double t;	// the time for which values are currently held
@@ -165,12 +165,25 @@ class gVar{
 	float scale_factor, add_offset;
 	int ncoords, ivar1; // ivar1 is the index of 1st data variable
 	float missing_value;
+
+	bool lwrite, lwriteSP;			// 'write to output' flag (nc, singlePointOutput)
 	
+	private:
 	string ifname, ofname;	// input and output filenames
 	NcFile_handle *ifile_handle, *ofile_handle;	// ip and op file handles
 	NcVar * outNcVar;		// output NcVar
-	bool lwrite, lwriteSP;			// 'write to output' flag (nc, singlePointOutput)
+	vector <int> 		lterp_indices;			// interpolation indices (generated during init)
+	vector <string>		filenames;					// list of filenames (genrated during init)
+	int curr_file;
+	gVar * ipvar;	// gVar to read data into
 	
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~
+	public:
+	vector <float> values;	// actual data store of gVar
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+	public:
 	gVar();
 	gVar(string name, string units, string tunits);
 	
@@ -181,6 +194,7 @@ class gVar{
 	int setTimeAtts(int xntimes, double xtbase, float xtscale);
 
 	int printGrid(ostream &lfout = std::cout);	// print succint grind info
+	int printGridIP(ostream &lfout = std::cout);	// print succint grind info
 	int printValues(ostream &lfout = std::cout); // print values
 	
 	int gt2ix(double gt);	// find index in time coord corresponding to global time (inc day fraction)
@@ -203,6 +217,29 @@ class gVar{
 	gVar operator * (const gVar &v);
 	gVar operator * (const float x);
 	gVar operator / (const float x);
+	
+	// file input	
+//	// reading functions
+//	int readCoords(ostream &lfout = cout, bool rr = true); 
+//	int readVarAtts(int ivar = -1); 
+//	int readVar(int itime, int iVar = -1); 
+	int readVar_gt(double gt, int mode); 
+	
+	int createNcInputStream(vector <string> files, ostream &lfout = cout);
+	int loadInputFileMeta(ostream &lfout = cout);
+	int whichNextFile(double gt);
+	int updateInputFile(double gt);
+	int closeNcInputStream();
+	
+//	// writing functions
+//	int writeCoords(bool wr = true); 
+//	NcVar * createVar(); 
+//	int writeTimeValues(); 
+
+	int createNcOutputStream(string filename);
+	int closeNcOutputStream();
+	int writeVar(int itime); 
+	
 };
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~  NCIO    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
