@@ -14,6 +14,9 @@ int main(){
 	ofstream gsml("gsm_log1.txt");
 	gsm_log = &gsml;
 
+	float glimits[] = {0, 150, -60, 60};
+	vector <float> glim(glimits, glimits+4);
+
 	string files[] = {
 		"/media/jaideep/WorkData/Fire_G/ncep_20cen/temp_sfc/air.sfc.2000.nc",
 		"/media/jaideep/WorkData/Fire_G/ncep_20cen/temp_sfc/air.sfc.2001.nc",
@@ -24,8 +27,8 @@ int main(){
 		};
 			
 	int nlons, nlats, nlevs, ntimes;
-	vector <float> lats = createCoord(6.5,31.5,0.5,nlats);
-	vector <float> lons = createCoord(66.5,100.5,0.5,nlons);
+	vector <float> lats = createCoord(-90,90,0.5,nlats);
+	vector <float> lons = createCoord(0,360,0.5,nlons);
 	vector <float> levs = createCoord(1,1,1,nlevs);
 	vector <double> times(1); 
 	times[0]=ymd2gday("2003-6-1")-ymd2gday("2000-1-1");
@@ -38,7 +41,7 @@ int main(){
 	
 	vector <string> filenames(files, files+6);
 
-	v.createNcInputStream(filenames);	
+	v.createNcInputStream(filenames, glim);	
 	v.readVar_gt(ymd2gday("2003-06-01")+hms2xhrs("0:0:0"),1);
 	v.closeNcInputStream();
 

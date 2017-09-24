@@ -305,8 +305,13 @@ gVar gVar::operator * (const gVar &v){
 
 // in all input stream functions, the fileIO members of ipvar are not touched 
 // (in fact that cant be touched because they are private)
-int gVar::createNcInputStream(vector <string> files){
+int gVar::createNcInputStream(vector <string> files, vector <float> glim){
 
+	gridlimits = glim;
+	if (0 > lons[0] || glim[1] < lons[nlons-1] || glim[2] > lats[0] || glim[3] < lats[nlats-1]){
+		CWARN << "Specified grid limits are narrower than the variable grid" << endl; 
+	}
+	
 	filenames = files;	// check that at least 1 input file is specified
 	if (filenames.size() < 1){
 		CERR << "(" << varname << ") createInputStream: No input files specified\n"; 
@@ -329,7 +334,7 @@ int gVar::loadInputFileMeta(){
 	if (ifile_handle->dFile != NULL) ifile_handle->close();
 
 	// open new file
-	int i = ifile_handle->open(filenames[curr_file], "r", glimits_india);
+	int i = ifile_handle->open(filenames[curr_file], "r", &gridlimits[0]);
 	if (i != 0) CERR << "NCFILE NOT VALID!!" << endl;
 
 	// read metadata
@@ -388,7 +393,7 @@ int gVar::readVar_gt(double gt, int mode){
 int gVar::createNcOutputStream(string filename){
 	ofname = filename;
 	ofile_handle = new NcFile_handle;
-	int i = ofile_handle->open(filename, "w", glimits_india);
+	int i = ofile_handle->open(filename, "w", &gridlimits[0]);
 	ofile_handle->writeCoords(*this);
 	ofile_handle->writeTimeValues(*this);
 	outNcVar = ofile_handle->createVar(*this);

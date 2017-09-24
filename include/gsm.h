@@ -55,9 +55,9 @@ extern bool gsm_debug_on;
 extern bool gsm_warnings_on;
 extern bool gsm_errors_on;
 
-const float glimits_globe[4] = {0, 360, -90, 90};
-const float glimits_india[4] = {66.5, 100.5, 6.5, 38.5};
-extern float glimits_custom[4];
+//const float glimits_globe[4] = {0, 360, -90, 90};
+//const float glimits_india[4] = {66.5, 100.5, 6.5, 38.5};
+//extern float glimits_custom[4];
 
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~   definition changing functions  ~~~~~~~~~~~~~~~~*/
@@ -165,7 +165,8 @@ class gVar{
 	float scale_factor, add_offset;
 	int ncoords, ivar1; // ivar1 is the index of 1st data variable
 	float missing_value;
-
+	vector <float> gridlimits;
+	
 	bool lwrite, lwriteSP;			// 'write to output' flag (nc, singlePointOutput)
 	
 	private:
@@ -220,7 +221,7 @@ class gVar{
 	
 
 //	// reading functions
-	int createNcInputStream(vector <string> files);
+	int createNcInputStream(vector <string> files, vector <float> glim);
 	int loadInputFileMeta();
 	int whichNextFile(double gt);
 	int updateInputFile(double gt);
@@ -263,7 +264,7 @@ public:
 	NcFile_handle();	// open NC object (nc file)
 	
 	void setMapLimits(float xwlon, float xelon, float xslat, float xnlat);	// set lat-lon limits
-	int  open(string s, string m, const float glimits[4] = glimits_globe); // open file s
+	int  open(string s, string m, const float glimits[4]); // open file s
 	int close(); // close file
 	~NcFile_handle();	// dFile must be deleted in destructor
 
