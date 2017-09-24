@@ -53,12 +53,14 @@ int NcFile_handle::open(string s, string m, const float glimits[4]){
 
 	if (!dFile)	{CERR << "Failed to open File: " << s << "\n"; return 1;}
 	
-	mplimited = (glimits[0] > 0 || glimits[1] < 360 || glimits[2] > -90 || glimits [3] < 90)? true:false; 
-	wlon = glimits[0]; //0.f;
-	elon = glimits[1]; //360.f;
-	slat = glimits[2]; //-90.f;
-	nlat = glimits[3]; //90.f;
-	
+	if (mode == "r"){
+		mplimited = (glimits[0] > 0 || glimits[1] < 360 || glimits[2] > -90 || glimits [3] < 90)? true:false; 
+		wlon = glimits[0]; //0.f;
+		elon = glimits[1]; //360.f;
+		slat = glimits[2]; //-90.f;
+		nlat = glimits[3]; //90.f;
+	}
+		
 	if (dFile->is_valid()) {CINFOC << "... Success!" << endl; return 0;}
 	else return 1;
 }
@@ -77,7 +79,7 @@ NcFile_handle::~NcFile_handle(){
 }
 
 void NcFile_handle::setMapLimits(float xwlon, float xelon, float xslat, float xnlat){
-	mplimited = true;
+	mplimited = (xwlon > 0 || xelon < 360 || xslat > -90 || xnlat < 90)? true:false;
 	wlon = xwlon;
 	elon = xelon;
 	slat = xslat;

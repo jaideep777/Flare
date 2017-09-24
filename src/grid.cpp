@@ -262,6 +262,7 @@ gVar mask(gVar &v, gVar &m, float val){
 }
 
 
+// TODO lons should be interpolated cyclically at the edge
 
 // copy values from v to out with cellRegridding (on grid of out)
 // cellRegrid = regrid using cell values rather than interpolated ones
@@ -305,7 +306,7 @@ int lterpCube(gVar &v, gVar &out, vector <int> &indices){
 			}
 		}
 	}
-//	out.t = v.t; // copy the current time value because it is related to values
+	out.t = v.t; // copy the current time value because it is related to values
 }
 
 

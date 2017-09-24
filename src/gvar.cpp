@@ -97,7 +97,9 @@ int gVar:: copyValues(const gVar &v){
 int gVar::setCoords(vector <double> &t, vector <float> &le, vector <float> &la, vector <float> &lo){
 	times = t; levs = le; lats = la; lons = lo;
 	ntimes = t.size(); nlevs = le.size(); nlats = la.size(); nlons = lo.size();
-	tstep = (times[1] - times[0])*tscale;	// tstep in hours
+	if (ntimes >2) tstep = (times[1] - times[0])*tscale;	// tstep in hours
+	else tstep = 0;
+	values.resize(nlons*nlats*nlevs);
 }
 
 int gVar::setTimeAtts(int xntimes, double xtbase, float xtscale){
@@ -307,7 +309,7 @@ gVar gVar::operator * (const gVar &v){
 // (in fact that cant be touched because they are private)
 int gVar::createNcInputStream(vector <string> files, vector <float> glim){
 
-	gridlimits = glim;
+	gridlimits = glim; //TODO should this be assigned to ipvar instead?
 	if (0 > lons[0] || glim[1] < lons[nlons-1] || glim[2] > lats[0] || glim[3] < lats[nlats-1]){
 		CWARN << "Specified grid limits are narrower than the variable grid" << endl; 
 	}
@@ -388,12 +390,36 @@ int gVar::readVar_gt(double gt, int mode){
 }
 
 
+int gVar::createOneShot(string filename, vector<float> glim){
+	ifname = filename;
+
+	float glimits_globe[4] = {0, 360, -90, 90};
+	if (glim.size() == 0) gridlimits = vector <float> (glimits_globe, glimits_globe+4);
+	
+	ifile_handle = new NcFile_handle;
+	int i = ifile_handle->open(ifname, "r", &gridlimits[0]);
+	ifile_handle->readCoords(*this);
+	ifile_handle->readVarAtts(*this);
+	ifile_handle->readVar(*this,0);
+	ifile_handle->close();
+	delete ifile_handle;
+}
+
+
+int gVar::readOneShot(string filename, vector <float> glim){
+	ipvar = new gVar();
+	ipvar->createOneShot(filename, glim);
+	lterp_indices = bilIndices(ipvar->lons, ipvar->lats, lons, lats);
+	lterpCube(*ipvar, *this, lterp_indices);
+}
+
+
 // output
 
 int gVar::createNcOutputStream(string filename){
 	ofname = filename;
 	ofile_handle = new NcFile_handle;
-	int i = ofile_handle->open(filename, "w", &gridlimits[0]);
+	int i = ofile_handle->open(filename, "w", NULL);	// gridlimits are not required for writing
 	ofile_handle->writeCoords(*this);
 	ofile_handle->writeTimeValues(*this);
 	outNcVar = ofile_handle->createVar(*this);

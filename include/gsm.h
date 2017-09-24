@@ -227,6 +227,9 @@ class gVar{
 	int updateInputFile(double gt);
 	int readVar_gt(double gt, int mode); 
 	int closeNcInputStream();
+	int readOneShot(string filename, vector<float> glim = vector <float> ());
+	
+	int createOneShot(string filename, vector<float> glim = vector <float> ());
 	
 //	// writing functions
 	int createNcOutputStream(string filename);
