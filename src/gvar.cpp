@@ -24,7 +24,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 #include "../include/gsm.h"
-
+#include <cmath>
 
 gVar::gVar(){
 	ntimes = 0; nlevs = 1; nlats = 0; nlons = 0;
@@ -36,6 +36,7 @@ gVar::gVar(){
 	ofile_handle = NULL;
 	outNcVar = NULL;
 	ivar1=-1;
+	t=-1;
 }
 
 gVar::gVar(string name, string units, string tunits){
@@ -48,7 +49,8 @@ gVar::gVar(string name, string units, string tunits){
 	ofile_handle = NULL;
 	outNcVar = NULL;
 	ivar1=-1;
-
+	t = -1;
+	
 	// read time unit string and set tbase and tscale
 	string unit, junk, sdate, stime;
 	stringstream ss;
@@ -114,10 +116,10 @@ int gVar::printGrid(ostream &lfout){
 	// grid info
 	lfout << "> Grid:\n";
 	lfout << "\t" << nlons << " lons: "; 
-	if (nlons >0) lfout << lons[0] << " ... " << (lons[nlons-1]-lons[0])/nlons << " ... " << lons[nlons-1]; 
+	if (nlons >0) lfout << lons[0] << " ... " << (lons[nlons-1]-lons[0])/(nlons-1) << " ... " << lons[nlons-1]; 
 	lfout << "\n";
 	lfout << "\t"  << nlats << " lats: ";
-	if (nlats >0) lfout << lats[0] << " ... " << (lats[nlats-1]-lats[0])/nlats << " ... " << lats[nlats-1];
+	if (nlats >0) lfout << lats[0] << " ... " << (lats[nlats-1]-lats[0])/(nlats-1) << " ... " << lats[nlats-1];
 	lfout << "\n";
 	lfout << "\t"  << nlevs << " levs.\n";
 	lfout << "\t"  << ntimes << " times.\n";
@@ -150,8 +152,8 @@ int gVar::printValues(ostream &lfout){
 
 // returns the index corresponding time just <= gt
 int gVar::gt2ix(double gt){
-	//CDEBUG << "tstep = " << tstep << "\n";
-	return ((gt - tbase)*24.0 - times[0]*tscale)/tstep;
+//	CDEBUG << "gt2ix("<< varname << ")" << (gt - tbase)*24.0 - times[0]*tscale << endl;
+	return floor(((gt - tbase)*24.0 - times[0]*tscale)/tstep);	// essential to use floor. int() truncates towards 0! $%@#^$@#*@   
 }
 
 double gVar::ix2gt(int ix){	
@@ -350,9 +352,13 @@ int gVar::loadInputFileMeta(){
 
 
 int gVar::whichNextFile(double gt){
-	if (gt > ipvar->ix2gt(ipvar->ntimes-1)) return curr_file+1;
-	else if (gt < ipvar->ix2gt(0)) return curr_file-1;
-	else return curr_file; 	
+//	cout << varname << ": gt = " << gt2string(gt) << ", file limits = " << gt2string(ipvar->ix2gt(0)) << " --- " << gt2string(ipvar->ix2gt(ipvar->ntimes-1)) << endl;
+	double file_gtf = ipvar->ix2gt(ipvar->ntimes-1);	// first time
+	double file_gt0 = ipvar->ix2gt(0);					// last time
+	double file_dt = ipvar->tstep/24; 					// time  step in days
+	if (gt >= file_gtf+file_dt) return curr_file+1;		// |---------||---------|======== <-- gt >= ix0
+	else if (gt < file_gt0) return curr_file-1;			// ixf  f1        f2   ix0            gt >= ixf+dt
+	else return curr_file; 
 }
 
 
@@ -389,13 +395,18 @@ int gVar::readVar_gt(double gt, int mode){
 	lterpCube(*ipvar, *this, lterp_indices);
 }
 
+int gVar::readVar_it(int tid){
+	ifile_handle->readVar(*ipvar, tid, ipvar->ivar1);
+	lterpCube(*ipvar, *this, lterp_indices);
+}
 
 int gVar::createOneShot(string filename, vector<float> glim){
 	ifname = filename;
 
 	float glimits_globe[4] = {0, 360, -90, 90};
-	if (glim.size() == 0) gridlimits = vector <float> (glimits_globe, glimits_globe+4);
-	
+	if (glim.size() < 4) gridlimits = vector <float> (glimits_globe, glimits_globe+4);
+	else gridlimits = glim;
+
 	ifile_handle = new NcFile_handle;
 	int i = ifile_handle->open(ifname, "r", &gridlimits[0]);
 	ifile_handle->readCoords(*this);
@@ -410,7 +421,8 @@ int gVar::readOneShot(string filename, vector <float> glim){
 	ipvar = new gVar();
 	ipvar->createOneShot(filename, glim);
 	lterp_indices = bilIndices(ipvar->lons, ipvar->lats, lons, lats);
-	lterpCube(*ipvar, *this, lterp_indices);
+	lterpCube(*ipvar, *this, lterp_indices);	// does not copy metadata
+	delete ipvar;
 }
 
 

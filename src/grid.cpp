@@ -37,9 +37,10 @@ vector <float> createCoord(float x0, float xf, int nx, float &dx){
 }
 
 // create coordinate vector given x0, xf and resolution
+// TODO Check this function - though it works
 vector <float> createCoord(float x0, float xf, float dx, int &nx){
-	float xres = 1/dx;	
-	nx = floor(fabs(xf-x0)*xres)+1;	// use resolution to set nx
+//	float xres = 1/dx;	
+	nx = floor(fabs(xf-x0)/dx)+1;	// use resolution to set nx
 	x0 += ((xf-x0) - (nx-1)*dx)/2;
 	vector <float> xvec(nx);	// create variable
 	for (int i=0; i<nx; ++i) {xvec[i] = x0 + i*dx;}

@@ -51,7 +51,7 @@ int NcFile_handle::open(string s, string m, const float glimits[4]){
 		dFile = new NcFile(s.c_str(), NcFile::Replace);
 	}
 
-	if (!dFile)	{CERR << "Failed to open File: " << s << "\n"; return 1;}
+	if (!dFile)	{CERR << "Failed to open File: " << s << endl; return 1;}
 	
 	if (mode == "r"){
 		mplimited = (glimits[0] > 0 || glimits[1] < 360 || glimits[2] > -90 || glimits [3] < 90)? true:false; 
@@ -382,33 +382,34 @@ int NcFile_handle::readVar_gt(gVar &v, double gt, int mode, int iVar){
 	int tixlo = v.gt2ix(gt);		// index for curret gt
 	int tixlo_prev = v.gt2ix(v.t);	// index for gt last read into v
 
-	CDEBUG << "readVar_gt(): gt | ix | gt(ix) = " << gt2string(gt) << " | ";
-	CDEBUGC << tixlo << " | ";
-	CDEBUGC << gt2string(v.ix2gt(tixlo)) << " -> ";
+	CDEBUG << "readVar_gt(" << v.varname << "): " << gt2string(v.t) << " [ix="<<tixlo_prev << "] --> " << gt2string(gt) << " [ix=";
+	CDEBUGC << tixlo << " = ";
+	CDEBUGC << gt2string(v.ix2gt(tixlo)) << "] -> ";
 
 	// in mode 0, if both these indices match, data is already in variable, so skip reading
 	if (tixlo == tixlo_prev && mode == 0) { 
+		CDEBUGC << "~ up to date. Not reading.\n";
 		v.t = gt;	// set t to the actual gt and not to any index values
 		return 0;	
 	}
 	// if times[index] = gt, then no need of interpolation
 	// also, if mode = hold, values should be from tixlo anyway, so include that case here
 	else if ( gt-v.ix2gt(tixlo) < t_tol || mode == 0){
-		CDEBUGC << "~low, diff = " << (gt-v.ix2gt(tixlo))*24.0 << " hrs. Read low.\n";
+		CDEBUGC << "~ Reading low, diff = " << (gt-v.ix2gt(tixlo))*24.0 << " hrs.\n";
 		readVar(v, tixlo, iVar);
 		v.t = gt;	// set t to the actual gt and not to any index values
 		return 1;
 	}
 	else if ( v.ix2gt(tixlo+1)-gt < t_tol || mode == 0){	
 		// we dont want to hold/interpolate for gt that is too close to the higher bound.. hence this case
-		CDEBUGC << "~high, diff = " << (v.ix2gt(tixlo+1)-gt)*24.0 << " hrs. Read Hi.\n";
+		CDEBUGC << "~ Reading high, diff = " << (v.ix2gt(tixlo+1)-gt)*24.0 << " hrs.\n";
 		readVar(v, tixlo+1, iVar);
 		v.t = gt;	// set t to the actual gt and not to any index values
 		return 2;
 	}
 	else{	// read the values at next step and calculate.
 	//TODO What happens in this mode if value is between 2 files?!
-		CDEBUGC << "intermediate, diff = " << (gt-v.ix2gt(tixlo))*24.0 << " hrs. Interpolate\n";
+		CDEBUGC << "~ Interpolating, intermediate, diff = " << (gt-v.ix2gt(tixlo))*24.0 << " hrs.\n";
 		gVar z; z.shallowCopy(v);
 		gVar w; w.shallowCopy(v);	// make a new gVar to hold next step values, identical to v
 		readVar(z, tixlo, iVar);	// read this step in v

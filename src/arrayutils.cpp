@@ -62,14 +62,14 @@ int IX2(int ix, int iy, int nx){
 }  
 
 
-void printArray(float v[], int n){
-	for (int i=0;i<n;++i) { cout << v[i] << " ";}
-	cout << "\n"; 
+void printArray(float v[], int n, ostream &lfout){
+	for (int i=0;i<n;++i) { lfout << v[i] << " ";}
+	lfout << "\n"; 
 }
 
-void printArray( vector <float> &v, string send, int n){
+void printArray(vector <float> &v, ostream &lfout, string send, int n){
 	if (n==0) n = v.size();
-	printArray(&v[0], n);
+	printArray(&v[0], n, lfout);
 }
 
 void printArray2d(float v[], int rows, int columns){

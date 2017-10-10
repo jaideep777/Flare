@@ -117,8 +117,8 @@ int IX3(int ix, int iy, int iz, int nx, int ny);
 // get 1D index of 2D point (ilon,ilat) from a cube (nlons,nlats)
 int IX2(int ix, int iy, int nx);  
 
-void printArray(float v[], int n);	// print n elements of array on single line
-void printArray(vector <float> &v, int n=0);	// print float vector
+void printArray(float v[], int n, ostream &lfout=cout);	// print n elements of array on single line
+void printArray(vector <float> &v, ostream &lfout = cout, string send="", int n=0);	// print float vector
 void printArray2d(float v[], int rows, int columns);	// print 2d array with rows & columns
 void printArray2d(vector <float> &v, int rows, int columns);	// print float vector 2d
 void printCube(vector <float> &v, int nx, int ny, int nz=1, 
@@ -159,7 +159,7 @@ class gVar{
 	vector <float> levs, lats, lons;
 	vector <double> times;
 	double tbase;
-	float tscale, tstep;
+	float tscale, tstep; // tscale = hours/time unit || tstep = time step in hours 
 	double t;	// the time for which values are currently held
 	string varname, varunits;
 	float scale_factor, add_offset;
@@ -220,18 +220,21 @@ class gVar{
 	gVar operator / (const float x);
 	
 
-//	// reading functions
+	// reading functions
 	int createNcInputStream(vector <string> files, vector <float> glim);
 	int loadInputFileMeta();
 	int whichNextFile(double gt);
 	int updateInputFile(double gt);
 	int readVar_gt(double gt, int mode); 
+	int readVar_it(int tid);
 	int closeNcInputStream();
+	
+	// these 2 functions create a gVar in one shot by reading the first record in specified file
+	// createOneShot uses file's coords, readOneShot uses variable's coords and interpolates data
+	int createOneShot(string filename, vector<float> glim = vector <float> ());
 	int readOneShot(string filename, vector<float> glim = vector <float> ());
 	
-	int createOneShot(string filename, vector<float> glim = vector <float> ());
-	
-//	// writing functions
+	// writing functions
 	int createNcOutputStream(string filename);
 	int closeNcOutputStream();
 	int writeVar(int itime); 
