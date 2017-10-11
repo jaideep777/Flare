@@ -410,8 +410,8 @@ int NcFile_handle::readVar_gt(gVar &v, double gt, int mode, int iVar){
 	else{	// read the values at next step and calculate.
 	//TODO What happens in this mode if value is between 2 files?!
 		CDEBUGC << "~ Interpolating, intermediate, diff = " << (gt-v.ix2gt(tixlo))*24.0 << " hrs.\n";
-		gVar z; z.shallowCopy(v);
-		gVar w; w.shallowCopy(v);	// make a new gVar to hold next step values, identical to v
+		gVar z; z.copyMeta(v);
+		gVar w; w.copyMeta(v);	// make a new gVar to hold next step values, identical to v
 		readVar(z, tixlo, iVar);	// read this step in v
 		readVar(w, tixlo+1, iVar);	// read next step in w
 		double t1 = z.ix2gt(tixlo), t2 = w.ix2gt(tixlo+1);

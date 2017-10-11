@@ -4,7 +4,8 @@
 #include <vector>
 using namespace std;
 
-// g++ -I/usr/local/netcdf-c-4.3.2/include -I/usr/local/netcdf-cxx-legacy/include -L/home/jaideep/codes/libgsm_v2/lib -L/usr/local/netcdf-cxx-legacy/lib -o 1 inputvar_test.cpp -lgsm -lnetcdf_c++ 
+// g++ -I/usr/local/netcdf-c-4.3.2/include -I/usr/local/netcdf-cxx-legacy/include -L/home/jaideep/codes/libgsm_v2/lib -L/usr/local/netcdf-cxx-legacy/lib -o 1 streams_test.cpp -l:libgsm.so.2 -lnetcdf_c++ 
+
 
 int main(){
 	
@@ -40,27 +41,43 @@ int main(){
 
 	gVar v("ts", "deg C", "days since 2000-1-1 6:0:0");
 	v.setCoords(times, levs, lats, lons);
-//	v.printGrid();
 	
 	vector <string> filenames(files, files+6);
 
-//	v.createNcInputStream(filenames, glim);	
-//	v.readVar_gt(ymd2gday("2003-06-01")+hms2xhrs("0:0:0"),1);
+	v.createNcInputStream(filenames, glim);	
+	v.readVar_gt(ymd2gday("2001-06-01")+hms2xhrs("0:0:0"), 0);
 //	v.closeNcInputStream();
 
 	
+	gVar w("haha", "-", "days since 2000-1-1 6:0:0");
+	w.setCoords(times, levs, lats, lons);
 	
-//	gVar w;
+	
+	// demonstration that operators copy NcStream data and duplicate pointers
+	gVar z = v+w;
+
+	v.printGrid();
+	w.printGrid();
+	z.printGrid();
+	
+	*gsm_log << sizeof(gVar) << "=======================================================" << sizeof(NcFile_handle) << endl;
+	
+	z.readVar_gt(ymd2gday("2003-06-01")+hms2xhrs("0:0:0"), 0);
+	v.readVar_gt(ymd2gday("2003-06-01")+hms2xhrs("0:0:0"), 0);
+	
+	v.closeNcInputStream();
+//	z.closeNcInputStream();
+	
 //	w.createOneShot(files[1]);
 //	w.printGrid();
 //	w.printValues();
 	
-	v.readOneShot(files[1]);
-	v.printGrid();
+//	v.readOneShot(files[1]);
+//	v.printGrid();
 
-	v.createNcOutputStream("testnc1.nc");
-	v.writeVar(0);	
-	v.closeNcOutputStream();
+//	v.createNcOutputStream("testnc1.nc");
+//	v.writeVar(0);	
+//	v.closeNcOutputStream();
 	
 	return 0;
 

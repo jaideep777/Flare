@@ -71,7 +71,7 @@ gVar::gVar(string name, string units, string tunits){
 }
 
 // copy all data except values vector into self.
-int gVar:: shallowCopy(const gVar &v){
+int gVar:: copyMeta(const gVar &v){
 	ntimes = v.ntimes; nlevs = v.nlevs; nlats = v.nlats; nlons = v.nlons;
 	times = v.times; levs = v.levs; lats = v.lats; lons = v.lons;
 	tbase = v.tbase; tscale = v.tscale; tstep = v.tstep; //t = v.t;
@@ -79,15 +79,24 @@ int gVar:: shallowCopy(const gVar &v){
 	scale_factor = v.scale_factor; add_offset = v.add_offset;
 	ncoords = v.ncoords; ivar1 = v.ivar1;
 	missing_value = v.missing_value;
-
-	ifname = v.ifname; ofname = v.ofname;	// input and output filenames
-	ifile_handle = v.ifile_handle; ofile_handle = v.ofile_handle;	// ip and op file handles
-	outNcVar = v.outNcVar;		// output NcVar
-	lwrite = v.lwrite; lwriteSP = v.lwriteSP;			// 'write to output' flag (nc, singlePointOutput)
-
+	gridlimits = v.gridlimits;
+	
 	t = v.t;
 	return 0;
 }
+
+//// copy nciostream data 
+//int gVar:: copyStreams(const gVar &v){
+//	ifname = v.ifname; ofname = v.ofname;	
+//	ifile_handle = v.ifile_handle; ofile_handle = v.ofile_handle;	
+//	outNcVar = v.outNcVar;		
+//	lwrite = v.lwrite; lwriteSP = v.lwriteSP;	
+//	filenames = v.filenames;
+//	lterp_indices = v.lterp_indices;
+//	curr_file = v.curr_file;
+//	ipvar = v.ipvar;
+//}
+
 
 // copy values vector and missing_value.
 int gVar:: copyValues(const gVar &v){
@@ -135,6 +144,13 @@ int gVar::printGrid(ostream &lfout){
 	lfout << "\ttime step = " << tstep << " hours.\n";
 	lfout << "\thours per time unit = " << tscale << "\n";
 	lfout << "> Missing value = " << missing_value << "\n";
+	lfout << "> Streams:\n";
+	lfout << "\tInput: "; 
+	if (ifile_handle != NULL) lfout << ifile_handle->dFile << " (ipvar = " << ipvar << ")\n";
+	else  lfout << "--- (ipvar = " << ipvar << ")\n";
+	lfout << "\tOutput: "; 
+	if (ofile_handle != NULL) lfout << ofile_handle->dFile << "\n";
+	else  lfout << "---\n";
 	lfout << "-------------------------------------------------------------------------\n\n";
 	lfout.flush();
 	return 0;
@@ -222,6 +238,7 @@ float& gVar::operator [] (int i){
 
 // all operators replace variable missing values with std missing value
 // all operators operate only at places where both operands are non-missing
+// 
 
 gVar gVar::operator + (const gVar &v){
 	if (nlons != v.nlons || nlats != v.nlats || nlevs != v.nlevs){
@@ -230,7 +247,7 @@ gVar gVar::operator + (const gVar &v){
 		return temp1;
 	}
 	gVar temp;
-	temp.shallowCopy(*this);
+	temp.copyMeta(*this);
 	temp.values.resize(nlevs*nlons*nlats, temp.missing_value);
 	for (int i=0; i<nlevs*nlons*nlats; ++i){
 		if (values[i] != missing_value && v.values[i] != v.missing_value)
@@ -248,7 +265,7 @@ gVar gVar::operator - (const gVar &v){
 		return temp1;
 	}
 	gVar temp;
-	temp.shallowCopy(*this);
+	temp.copyMeta(*this);
 	temp.values.resize(nlevs*nlons*nlats, temp.missing_value);
 	for (int i=0; i<nlevs*nlons*nlats; ++i){
 		if (values[i] != missing_value && v.values[i] != v.missing_value)
@@ -261,7 +278,7 @@ gVar gVar::operator - (const gVar &v){
 
 gVar gVar::operator * (const float x){
 	gVar temp;
-	temp.shallowCopy(*this);
+	temp.copyMeta(*this);
 	temp.values.resize(nlevs*nlons*nlats, temp.missing_value);
 	for (int i=0; i<nlevs*nlons*nlats; ++i){
 		if (values[i] != missing_value)
@@ -274,7 +291,7 @@ gVar gVar::operator * (const float x){
 
 gVar gVar::operator / (const float x){
 	gVar temp;
-	temp.shallowCopy(*this);
+	temp.copyMeta(*this);
 	temp.values.resize(nlevs*nlons*nlats, temp.missing_value);
 	for (int i=0; i<nlevs*nlons*nlats; ++i){
 		if (values[i] != missing_value)
@@ -292,7 +309,7 @@ gVar gVar::operator * (const gVar &v){
 		return temp1;
 	}
 	gVar temp;
-	temp.shallowCopy(*this);
+	temp.copyMeta(*this);
 	temp.values.resize(nlevs*nlons*nlats, temp.missing_value);
 	for (int i=0; i<nlevs*nlons*nlats; ++i){
 		if (values[i] != missing_value && v.values[i] != v.missing_value)
@@ -356,8 +373,8 @@ int gVar::whichNextFile(double gt){
 	double file_gtf = ipvar->ix2gt(ipvar->ntimes-1);	// first time
 	double file_gt0 = ipvar->ix2gt(0);					// last time
 	double file_dt = ipvar->tstep/24; 					// time  step in days
-	if (gt >= file_gtf+file_dt) return curr_file+1;		// |---------||---------|======== <-- gt >= ix0
-	else if (gt < file_gt0) return curr_file-1;			// ixf  f1        f2   ix0            gt >= ixf+dt
+	if (gt >= file_gtf+file_dt) return curr_file+1;		// ---|---------||---------|======== <-- gt >= ix0
+	else if (gt < file_gt0) return curr_file-1;			//   ixf   f1        f2   ix0            gt >= ixf+dt
 	else return curr_file; 
 }
 
@@ -384,18 +401,29 @@ int gVar::updateInputFile(double gt){
 
 int gVar::closeNcInputStream(){
 	if (ifile_handle->dFile != NULL) ifile_handle->close();
-	delete ifile_handle;
-	delete ipvar;
+	delete ifile_handle; ifile_handle = NULL; 
+	delete ipvar; ipvar = NULL;
 }
 
 
 int gVar::readVar_gt(double gt, int mode){
+	if (ifile_handle == NULL){
+		CERR << "gVar::readVar_gt(" << varname << "): NcInputStream not initialized" << endl;
+		return 1;
+	}
+	 
 	updateInputFile(gt);
 	ifile_handle->readVar_gt(*ipvar, gt, mode, ipvar->ivar1);	// readCoords() would have set ivar1
 	lterpCube(*ipvar, *this, lterp_indices);
+	return 0;
 }
 
 int gVar::readVar_it(int tid){
+	if (ifile_handle == NULL){
+		CERR << "gVar::readVar_gt(" << varname << "): NcInputStream not initialized" << endl;
+		return 1;
+	}
+
 	ifile_handle->readVar(*ipvar, tid, ipvar->ivar1);
 	lterpCube(*ipvar, *this, lterp_indices);
 }
@@ -413,7 +441,7 @@ int gVar::createOneShot(string filename, vector<float> glim){
 	ifile_handle->readVarAtts(*this);
 	ifile_handle->readVar(*this,0);
 	ifile_handle->close();
-	delete ifile_handle;
+	delete ifile_handle; ifile_handle = NULL;
 }
 
 
@@ -422,7 +450,7 @@ int gVar::readOneShot(string filename, vector <float> glim){
 	ipvar->createOneShot(filename, glim);
 	lterp_indices = bilIndices(ipvar->lons, ipvar->lats, lons, lats);
 	lterpCube(*ipvar, *this, lterp_indices);	// does not copy metadata
-	delete ipvar;
+	delete ipvar; ipvar = NULL;
 }
 
 
@@ -441,7 +469,7 @@ int gVar::createNcOutputStream(string filename){
 
 int gVar::closeNcOutputStream(){
 	ofile_handle->close();
-	delete ofile_handle;
+	delete ofile_handle; ofile_handle = NULL;
 }
 
 int gVar::writeVar(int itime){

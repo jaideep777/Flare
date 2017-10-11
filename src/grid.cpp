@@ -250,7 +250,9 @@ gVar mask(gVar &v, gVar &m, float val){
 		return temp;
 	}
 
-	gVar temp(v); // must use deep copy because unmasked values from v must be retained.
+	gVar temp; 
+	temp.copyMeta(v); 
+	temp.copyValues(v); // must copy values because unmasked values from v must be retained.
 	for (int ilev=0; ilev < v.nlevs; ++ilev){
 		for (int ilat=0; ilat < v.nlats; ++ilat){
 			for (int ilon=0; ilon < v.nlons; ++ilon){
@@ -313,7 +315,7 @@ int lterpCube(gVar &v, gVar &out, vector <int> &indices){
 
 // interpolate variable v onto grid {xlons,xlats} (i.e. with metadata from v)
 gVar lterp(gVar &v, vector <float> &xlons, vector <float> &xlats){
-	gVar temp; temp.shallowCopy(v);
+	gVar temp; temp.copyMeta(v);
 	temp.lats = xlats; temp.nlats = xlats.size();
 	temp.lons = xlons; temp.nlons = xlons.size();
 	temp.values.resize(temp.nlons*temp.nlats*temp.nlevs);

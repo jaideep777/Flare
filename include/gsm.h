@@ -188,7 +188,7 @@ class gVar{
 	gVar();
 	gVar(string name, string units, string tunits);
 	
-	int shallowCopy(const gVar &v);	// copy everything except values vector from v
+	int copyMeta(const gVar &v);	// copy grid and variable attributes
 	int copyValues(const gVar &v);	// copy values vector and missing_value from v
 
 	int setCoords(vector <double> &t, vector <float> &le, vector <float> &la, vector <float> &lo);
@@ -352,12 +352,11 @@ float cellVal(int ilat, int ilon, int iz, vector <int> &indices,
 // for all points in v, if (m <= val) v = missing_value
 gVar mask(gVar &v, gVar &m, float val = 0);
 
-// *** Following regridding functions copy metadata (with ofc, new lats/lons)
+// *** Following regridding functions copy METADATA (except streans, and with new lats/lons)
 // interpolate variable v onto given grid (xlons, xlats)
 gVar lterp(gVar &v, vector <float> &xlons, vector <float> &xlats); 
-// ^ *** IMP! *** order of arguments was (v, xlats, xlons) in previous version!
 
-// *** Following regridding functions DO NOT copy metadata.. 
+// *** Following regridding functions copy ONLY VALUES.. 
 // .. they assume (and check) compatibility
 // .. input and output coords can be taken directly from input and output gVars
 int lterpCube(gVar &v, gVar &out, vector <int> &indices);
