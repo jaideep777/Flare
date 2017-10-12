@@ -18,7 +18,7 @@ int main(){
 	gsm_log = &gsml;
 
 	// create a grid limits vector for convenience
-	float glimits[] = {0, 150, -60, 60};
+	float glimits[] = {0, 360, -90, 90};
 	vector <float> glim(glimits, glimits+4);
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -30,7 +30,7 @@ int main(){
 		"/media/jaideep/WorkData/Fire_G/ncep_20cen/temp_sfc/air.sfc.2004.nc",
 		"/media/jaideep/WorkData/Fire_G/ncep_20cen/temp_sfc/air.sfc.2005.nc"
 		};
-			
+
 	int nlons, nlats, nlevs, ntimes;
 	vector <float> lats = createCoord(-89.75,89.75,0.5,nlats);
 	vector <float> lons = createCoord(0.25,359.75,0.5,nlons);
@@ -45,27 +45,38 @@ int main(){
 	vector <string> filenames(files, files+6);
 
 	v.createNcInputStream(filenames, glim);	
-	v.readVar_gt(ymd2gday("2001-06-01")+hms2xhrs("0:0:0"), 0);
-//	v.closeNcInputStream();
-
 	
-	gVar w("haha", "-", "days since 2000-1-1 6:0:0");
-	w.setCoords(times, levs, lats, lons);
-	
-	
-	// demonstration that operators copy NcStream data and duplicate pointers
-	gVar z = v+w;
-
 	v.printGrid();
-	w.printGrid();
-	z.printGrid();
+
+	v.readVar_reduce(ymd2gday("2001-06-01"), ymd2gday("2001-06-30"));
+
 	
-	*gsm_log << sizeof(gVar) << "=======================================================" << sizeof(NcFile_handle) << endl;
+//	// demonstration that operators copy NcStream data and duplicate pointers
+//	gVar w("haha", "-", "days since 2000-1-1 6:0:0");
+//	w.setCoords(times, levs, lats, lons);
 	
-	z.readVar_gt(ymd2gday("2003-06-01")+hms2xhrs("0:0:0"), 0);
-	v.readVar_gt(ymd2gday("2003-06-01")+hms2xhrs("0:0:0"), 0);
+//	gVar z = v+w;
+
+//	v.printGrid();
+//	w.printGrid();
+//	z.printGrid();
+//	
+//	*gsm_log << sizeof(gVar) << "=======================================================" << sizeof(NcFile_handle) << endl;
+//	
+//	z.readVar_gt(ymd2gday("2003-06-01")+hms2xhrs("0:0:0"), 0);
+//	v.readVar_gt(ymd2gday("2003-06-01")+hms2xhrs("0:0:0"), 0);
 	
+
+	// demonstration of readVar_reduce()
+	
+	
+
+
 	v.closeNcInputStream();
+
+
+
+//	v.closeNcInputStream();
 //	z.closeNcInputStream();
 	
 //	w.createOneShot(files[1]);
@@ -75,9 +86,9 @@ int main(){
 //	v.readOneShot(files[1]);
 //	v.printGrid();
 
-//	v.createNcOutputStream("testnc1.nc");
-//	v.writeVar(0);	
-//	v.closeNcOutputStream();
+	v.createNcOutputStream("testnc1.nc");
+	v.writeVar(0);	
+	v.closeNcOutputStream();
 	
 	return 0;
 

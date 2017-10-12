@@ -475,7 +475,24 @@ int gVar::closeNcOutputStream(){
 int gVar::writeVar(int itime){
 	return ofile_handle->writeVar(*this, outNcVar, itime);
 }
- 
+
+
+int gVar::readVar_reduce(double gt1, double gt2){
+	gVar temp; temp.copyMeta(*ipvar);
+	temp.values.resize(temp.nlons*temp.nlats*temp.nlevs);
+//	temp.printGrid();
+	int count = 0;
+	for (double d = gt1; d < gt2; d += ipvar->tstep/24){
+		updateInputFile(d);
+		ifile_handle->readVar_gt(*ipvar, d, 0, ipvar->ivar1);	// read in mode 0 (Hold); readCoords() would have set ivar1
+		temp = temp + *ipvar;
+		++count;
+	}
+	temp = temp/count;	
+	lterpCube(temp, *this, lterp_indices);
+}
+
+
 
 
 

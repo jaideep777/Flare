@@ -82,6 +82,7 @@ extern bool gsm_errors_on;
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~  Date and Time functions  ~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
+int daysInMonth(int yr, int mon); // get days in month (31, 28/29, 31, 30 ...)
 string xhrs2hms(double dayf); // convert fractional day (dayf) to hh-mm-ss.s string
 double hms2xhrs(string time); // convert hh-mm-ss(.s) string to fractional day 
 int    ymd2gday(string date); // convert date string yyyy-mm-dd to global day
@@ -225,9 +226,11 @@ class gVar{
 	int loadInputFileMeta();
 	int whichNextFile(double gt);
 	int updateInputFile(double gt);
+	int closeNcInputStream();
+	
 	int readVar_gt(double gt, int mode); 
 	int readVar_it(int tid);
-	int closeNcInputStream();
+	int readVar_reduce(double gt1, double gt2);
 	
 	// these 2 functions create a gVar in one shot by reading the first record in specified file
 	// createOneShot uses file's coords, readOneShot uses variable's coords and interpolates data

@@ -31,6 +31,19 @@
 //void setWarningFlag(bool f) {warnings_on = f;};
 //void setErrorFlag(bool f) {errors_on = f;};
 
+int daysInMonth(int yr, int mon){
+
+	int daysMonthly[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+
+	bool isLeap = false;
+	if (yr % 4 == 0) isLeap = true;
+	if (yr % 100 == 0) isLeap = false;
+	if (yr % 400 == 0) isLeap = true;
+	
+	if (mon == 2 && isLeap) return 29;
+	else return daysMonthly[mon-1];
+}
+
 
 // gives time string in hh-mm-ss.s format
 string xhrs2hms(double dayf){
