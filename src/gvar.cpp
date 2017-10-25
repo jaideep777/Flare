@@ -493,7 +493,7 @@ int gVar::readVar_reduce(double gt1, double gt2){
 }
 
 
-
+ 
 
 
 
