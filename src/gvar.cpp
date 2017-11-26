@@ -85,6 +85,17 @@ int gVar:: copyMeta(const gVar &v){
 	return 0;
 }
 
+int gVar::initMetaFromFile(string filename){
+	float glimits_globe[4] = {0, 360, -90, 90};
+	ifile_handle = new NcFile_handle;
+	int i = ifile_handle->open(filename, "r", glimits_globe);
+	ifile_handle->readCoords(*this);
+	ifile_handle->readVarAtts(*this);
+	ifile_handle->close();
+	delete ifile_handle; ifile_handle = NULL;
+}
+
+
 //// copy nciostream data 
 //int gVar:: copyStreams(const gVar &v){
 //	ifname = v.ifname; ofname = v.ofname;	
@@ -454,6 +465,8 @@ int gVar::readOneShot(string filename, vector <float> glim){
 }
 
 
+
+
 // output
 
 int gVar::createNcOutputStream(string filename){
@@ -477,10 +490,14 @@ int gVar::writeVar(int itime){
 }
 
 
-int gVar::readVar_reduce(double gt1, double gt2){
+// -----------------------------------------------------------------------
+// Functions to read data and compute aggregates between specified times
+// -----------------------------------------------------------------------
+
+int gVar::readVar_reduce_mean(double gt1, double gt2){
 	gVar temp; temp.copyMeta(*ipvar);
 	temp.values.resize(temp.nlons*temp.nlats*temp.nlevs);
-//	temp.printGrid();
+	temp.fill(0);
 	int count = 0;
 	for (double d = gt1; d < gt2; d += ipvar->tstep/24){
 		updateInputFile(d);
@@ -492,8 +509,28 @@ int gVar::readVar_reduce(double gt1, double gt2){
 	lterpCube(temp, *this, lterp_indices);
 }
 
+int gVar::readVar_reduce_sd(double gt1, double gt2){
+	gVar s, ssq; 
+	s.copyMeta(*ipvar);
+	ssq.copyMeta(*ipvar);
+	s.values.resize(s.nlons*s.nlats*s.nlevs);
+	ssq.values.resize(ssq.nlons*ssq.nlats*ssq.nlevs);
+	s.fill(0); ssq.fill(0);
+	int count = 0;
+	for (double d = gt1; d < gt2; d += ipvar->tstep/24){
+		updateInputFile(d);
+		ifile_handle->readVar_gt(*ipvar, d, 0, ipvar->ivar1);	// read in mode 0 (Hold); readCoords() would have set ivar1
+		s = s + *ipvar;
+		ssq = ssq + (*ipvar)*(*ipvar);
+		++count;
+	}
+	if (count == 1) CERR << "Cannot compute SD with one data point" << endl;
+	gVar sd = ssq/(count-1) + s*s/count/(count-1);
+	sd.sqrtVar();
+	lterpCube(sd, *this, lterp_indices);
+}
 
- 
+
 
 
 

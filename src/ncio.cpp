@@ -276,6 +276,7 @@ int NcFile_handle::readVarAtts(gVar &v, int ivar){
 	// units
 	NcAtt * A = nVar->get_att("units");
 	if (A) v.varunits = A->as_string(0);
+	else v.varunits = "NA";
 	delete A;	
 	// missing value
 	NcAtt * B = nVar->get_att("missing_value");

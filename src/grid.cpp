@@ -240,7 +240,6 @@ float cellVal(int ilat, int ilon, int iz, vector <int> &indices,
 
 
 // ------------------- OPERATIONS ON GVARS ---------------------------
-
 // mask variable v using m as mask
 // all values in v where (m <= val) are set to missing value
 gVar mask(gVar &v, gVar &m, float val){
@@ -328,6 +327,55 @@ gVar lterp(gVar &v, vector <float> &xlons, vector <float> &xlats){
 	}
 	//temp.values = tempvalues;
 	return temp;
+}
+
+// coarse grain by summing or averaging high resolution data points within each target grid cell
+gVar coarseGrain(string fun, gVar &hires, vector <float> &xlons, vector <float> &xlats){
+	gVar temp; temp.copyMeta(hires);
+	temp.lats = xlats; temp.nlats = xlats.size();
+	temp.lons = xlons; temp.nlons = xlons.size();
+	temp.values.resize(temp.nlons*temp.nlats*temp.nlevs);
+	
+	gVar counts = temp;
+	counts.nlevs = 1;
+	counts.levs = vector <float> (1,0);
+	counts.values.resize(temp.nlons*temp.nlats);
+	
+	temp.fill(0);
+	counts.fill(0);
+	for (int ilev=0; ilev < hires.nlevs; ++ilev){
+		for (int ilat=0; ilat < hires.nlats; ++ilat){
+			for (int ilon=0; ilon < hires.nlons; ++ilon){
+				vector <int> uv = findGridBoxC(hires.lons[ilon], hires.lats[ilat], xlons, xlats);
+				if (uv[0] != -999 && uv[1] != -999) {
+					temp(uv[0],uv[1],ilev) += hires(ilon, ilat, ilev);
+					counts(uv[0],uv[1],0) += 1;
+				}
+			}
+		}
+	}
+	
+	for (int ilev=0; ilev < temp.nlevs; ++ilev){
+		for (int ilat=0; ilat < temp.nlats; ++ilat){
+			for (int ilon=0; ilon < temp.nlons; ++ilon){
+				if (counts(ilon,ilat,0) == 0) temp(ilon,ilat, ilev) = temp.missing_value;
+				else {
+					if (fun == "mean") temp(ilon,ilat,ilev) /= counts(ilon,ilat,0);
+				}
+			}
+		}
+	}
+
+	return temp;
+}
+
+
+gVar coarseGrain_sum(gVar &hires, vector <float> &xlons, vector <float> &xlats){
+	return coarseGrain("sum", hires, xlons, xlats);
+}
+
+gVar coarseGrain_mean(gVar &hires, vector <float> &xlons, vector <float> &xlats){
+	return coarseGrain("mean", hires, xlons, xlats);
 }
 
 

@@ -192,7 +192,7 @@ int lindexSW(vector <float> &v, float val){
 	}
 	else{
 		// this case must not be used.. nonetheless, it may not cause trouble in interpolation
-		cout << "**WARNING**: lindexSW() invoked on descending vector!\n";
+		CWARN << "lindexSW() invoked on descending vector!\n";
 		if (val < v[v.size()-1] || val > v[0]) return -999;	// if val exceeds edges, return -999
 		else if (val == v[v.size()-1]) return v.size() -2;	// if val is on right edge, return 1 less
 		else return (upper_bound(v.begin(), v.end(), val, dscComp) - v.begin() -1);
@@ -201,7 +201,7 @@ int lindexSW(vector <float> &v, float val){
 
 // find index (m) of grid box such that P lies closer to m than m+1 or m-1
 // if val is out of range, returns missing value (-999)
-// |---1---|---2-P-|---3-P-|     P
+// [---1---)[---2-P-)[---3-P-)     P
 //               ^G.C    ^Sp.C   ^outlier
 int indexC(vector <float> &v, float val){
 	bool asc = (v[1]>v[0])? true:false;
@@ -221,7 +221,7 @@ int indexC(vector <float> &v, float val){
 	}
 	else{
 		// this case must not be used.. 
-		cout << "**ERROR**: indexC() invoked on descending vector!\n";
+		CERR << "indexC() invoked on descending vector!\n";
 		return -999;
 	}
 }

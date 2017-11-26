@@ -4,16 +4,16 @@
 #include <vector>
 using namespace std;
 
-// g++ -I/usr/local/netcdf-c-4.3.2/include -I/usr/local/netcdf-cxx-legacy/include -L/home/jaideep/codes/libgsm_v2/lib -L/usr/local/netcdf-cxx-legacy/lib -o 1 streams_test.cpp -l:libgsm.so.2 -lnetcdf_c++ 
+// g++ -I/usr/local/netcdf-c-4.3.2/include -I/usr/local/netcdf-cxx-legacy/include -I/home/jaideep/codes/libgsm_v2/include -L/home/jaideep/codes/libgsm_v2/lib -L/usr/local/netcdf-cxx-legacy/lib -o 1 streams_test.cpp -l:libgsm.so.2 -lnetcdf_c++ 
 
 
 int main(){
 	
-	// ~~~~~~ Essentials ~~~~~~~~
+	// ~~~~~~ Some NetCDF Essentials ~~~~~~~~
 	// set NETCDF error behavior to non-fatal
 	NcError err(NcError::silent_nonfatal);
 	
-	// speficy log file for gsm
+	// specify log file for gsm
 	ofstream gsml("gsm_log.txt");
 	gsm_log = &gsml;
 
@@ -22,6 +22,7 @@ int main(){
 	vector <float> glim(glimits, glimits+4);
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	// set your data files
 	string files[] = {
 		"/media/jaideep/WorkData/Fire_G/ncep_20cen/temp_sfc/air.sfc.2000.nc",
 		"/media/jaideep/WorkData/Fire_G/ncep_20cen/temp_sfc/air.sfc.2001.nc",
@@ -31,26 +32,40 @@ int main(){
 		"/media/jaideep/WorkData/Fire_G/ncep_20cen/temp_sfc/air.sfc.2005.nc"
 		};
 
+	// create the coordinates for our georeferenced variable
 	int nlons, nlats, nlevs, ntimes;
 	vector <float> lats = createCoord(-89.75,89.75,0.5,nlats);
 	vector <float> lons = createCoord(0.25,359.75,0.5,nlons);
 	vector <float> levs = createCoord(1,1,1,nlevs);
 	vector <double> times(1); 
 	times[0]=ymd2gday("2003-6-1")-ymd2gday("2000-1-1");
-//	times[1]=ymd2gday("2005-11-2")-ymd2gday("2000-1-1");
 
+
+	// create the georeferenced variable
 	gVar v("ts", "deg C", "days since 2000-1-1 6:0:0");
 	v.setCoords(times, levs, lats, lons);
 	
 	vector <string> filenames(files, files+6);
 
+
+	// create input stream
 	v.createNcInputStream(filenames, glim);	
-	
 	v.printGrid();
 
+	// read variable
 	v.readVar_reduce(ymd2gday("2001-06-01"), ymd2gday("2001-06-30"));
 
-	
+	// create output stream and write variable to output	
+	v.createNcOutputStream("testnc1.nc");
+	v.writeVar(0);	
+
+	// close streams when done
+	v.closeNcOutputStream();
+	v.closeNcInputStream();
+
+
+
+
 //	// demonstration that operators copy NcStream data and duplicate pointers
 //	gVar w("haha", "-", "days since 2000-1-1 6:0:0");
 //	w.setCoords(times, levs, lats, lons);
@@ -72,7 +87,7 @@ int main(){
 	
 
 
-	v.closeNcInputStream();
+//	v.closeNcInputStream();
 
 
 
@@ -86,9 +101,9 @@ int main(){
 //	v.readOneShot(files[1]);
 //	v.printGrid();
 
-	v.createNcOutputStream("testnc1.nc");
-	v.writeVar(0);	
-	v.closeNcOutputStream();
+//	v.createNcOutputStream("testnc1.nc");
+//	v.writeVar(0);	
+//	v.closeNcOutputStream();
 	
 	return 0;
 

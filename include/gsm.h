@@ -1,6 +1,6 @@
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    libGSM - library for Gridded Spatial Modelling
+    libGSM - library for Georeferenced Spatial Modelling
     Copyright (C) 2016 Jaideep Joshi
 
 	This file is part of libGSM.
@@ -188,6 +188,8 @@ class gVar{
 	public:
 	gVar();
 	gVar(string name, string units, string tunits);
+
+	int initMetaFromFile(string filename);
 	
 	int copyMeta(const gVar &v);	// copy grid and variable attributes
 	int copyValues(const gVar &v);	// copy values vector and missing_value from v
@@ -230,7 +232,9 @@ class gVar{
 	
 	int readVar_gt(double gt, int mode); 
 	int readVar_it(int tid);
-	int readVar_reduce(double gt1, double gt2);
+
+	int readVar_reduce_mean(double gt1, double gt2);
+	int readVar_reduce_sd(double gt1, double gt2);
 	
 	// these 2 functions create a gVar in one shot by reading the first record in specified file
 	// createOneShot uses file's coords, readOneShot uses variable's coords and interpolates data
@@ -365,7 +369,8 @@ gVar lterp(gVar &v, vector <float> &xlons, vector <float> &xlats);
 int lterpCube(gVar &v, gVar &out, vector <int> &indices);
 int cellRegridCube(gVar &v, gVar &out, vector <int> &indices);
 
-
+gVar coarseGrain_sum(gVar &hires, vector <float> &xlons, vector <float> &xlats);
+gVar coarseGrain_mean(gVar &hires, vector <float> &xlons, vector <float> &xlats);
 
 #endif
 
