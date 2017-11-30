@@ -37,6 +37,8 @@ NcFile_handle::NcFile_handle(){
 	wlonix = elonix = slatix = nlatix = 0;
 	mplimited = false;
 	dFile = NULL; // crucial - needed to check if dFile has been allocated
+	lonDim = latDim = levDim = tDim = NULL;
+	lonVar = latVar = levVar = tVar = NULL;
 }
 
 // ------------------------- INIT ----------------------------
@@ -128,30 +130,39 @@ int NcFile_handle::readCoords(gVar &v, bool rr){
 	else ++ncoords;
 	CINFO << "\t" << ncoords << " coordinates found" << endl;
 		
-	int nbounds = 0;
-	// several files have bounds for coordinates.. if found, ignore for now.	
-	NcVar* latBnds = dFile->get_var("lat_bnds");
-	if (!latBnds) latBnds = dFile->get_var("lat_bounds");
-	else ++nbounds;
+//	int nbounds = 0;
+//	// several files have bounds for coordinates.. if found, ignore for now.	
+//	NcVar* latBnds = dFile->get_var("lat_bnds");
+//	if (!latBnds) latBnds = dFile->get_var("lat_bounds");
+//	else ++nbounds;
 
-	NcVar* lonBnds = dFile->get_var("lon_bnds");
-	if (!lonBnds) lonBnds = dFile->get_var("lon_bounds");
-	else ++nbounds;
+//	NcVar* lonBnds = dFile->get_var("lon_bnds");
+//	if (!lonBnds) lonBnds = dFile->get_var("lon_bounds");
+//	else ++nbounds;
 
-	NcVar* levBnds = dFile->get_var("lev_bnds");
-	if (!levBnds) levBnds = dFile->get_var("lev_bounds");
-	else ++nbounds;
+//	NcVar* levBnds = dFile->get_var("lev_bnds");
+//	if (!levBnds) levBnds = dFile->get_var("lev_bounds");
+//	else ++nbounds;
 
-	NcVar* tBnds = dFile->get_var("time_bnds");
-	if (!tBnds) tBnds = dFile->get_var("time_bounds");
-	else ++nbounds;
+//	NcVar* tBnds = dFile->get_var("time_bnds");
+//	if (!tBnds) tBnds = dFile->get_var("time_bounds");
+//	else ++nbounds;
 
-	CINFO << "\t" << nbounds << " coordinate bounds found.\n";
-	v.ncoords = ncoords; 
-	
-	v.ivar1 = ncoords+nbounds;	// assumes that 1st few variables are coords/bounds
-								// will NOT always work. better set explicitly.
+//	CINFO << "\t" << nbounds << " coordinate bounds found.\n";
+//	v.ncoords = ncoords; 
+//	
+//	v.ivar1 = ncoords+nbounds;	// assumes that 1st few variables are coords/bounds
+//								// will NOT always work. better set explicitly.
 
+	v.ivar1 = 0;
+	CINFO << "> Attempting to find 1st variable... ";
+	while (1){
+		NcVar * vVar = dFile->get_var(v.ivar1);
+		if (vVar->num_dims() < ncoords) ++v.ivar1;
+		else break;
+	}
+	CINFOC << dFile->get_var(v.ivar1)->name() << " (" << v.ivar1 << ")" << endl;
+	 
 	// read lats, lons metadata from file
 	// read actual values only is rr is true
 
@@ -160,7 +171,7 @@ int NcFile_handle::readCoords(gVar &v, bool rr){
 	// all data reading will depend crucially on the variable latSN
 	CINFO << "> Reading coordinates.\n";
 	if (latVar){
-		CINFO << "reading lats... ";
+		CINFO << "  reading lats... ";
 		nlats = v.nlats = *(latVar->edges());	// otherwise constructor has init to 0
 		v.lats.resize(v.nlats);
 		if (rr) latVar->get(&v.lats[0], v.nlats);
@@ -170,7 +181,7 @@ int NcFile_handle::readCoords(gVar &v, bool rr){
 		latSN = (dlat < 0)? false:true;
 		
 		if (mplimited){
-			CINFO << "trim lats... ";
+			CINFO << "  trim lats... ";
 			// set indices
 			slatix = ncIndexLo(v.lats, slat);
 			nlatix = ncIndexHi(v.lats, nlat);
@@ -182,14 +193,14 @@ int NcFile_handle::readCoords(gVar &v, bool rr){
 		}
 
 		if (!latSN){
-			CINFO << "lats array is N-S. Reversing...";
+			CINFO << "  lats array is N-S. Reversing...";
 			reverseArray(v.lats);
 			CINFOC << " Done.\n";
 		}
 	}
 
 	if (lonVar){
-		CINFO << "reading lons... ";
+		CINFO << "  reading lons... ";
 		nlons = v.nlons = *(lonVar->edges());	// otherwise constructor has init to 0
 		v.lons.resize(v.nlons);
 		if (rr) lonVar->get(&v.lons[0], v.nlons);
@@ -200,7 +211,7 @@ int NcFile_handle::readCoords(gVar &v, bool rr){
 //		CINFOC << "Done!\n";
 
 		if (mplimited){
-			CINFO << "trim lons... ";
+			CINFO << "  trim lons... ";
 			// set indices
 			wlonix = ncIndexLo(v.lons, wlon);
 			elonix = ncIndexHi(v.lons, elon);
@@ -213,7 +224,7 @@ int NcFile_handle::readCoords(gVar &v, bool rr){
 	}
 
 	if (levVar){
-		CINFO << "reading levs... ";
+		CINFO << "  reading levs... ";
 		nlevs = v.nlevs = *(levVar->edges());	// otherwise constructor has init to 1
 		v.levs.resize(v.nlevs);
 		if (rr) levVar->get(&v.levs[0], v.nlevs);
@@ -221,7 +232,7 @@ int NcFile_handle::readCoords(gVar &v, bool rr){
 	}
 	
 	if ( tVar){
-		CINFO << "reading t... ";
+		CINFO << "  reading t... ";
 		ntimes = v.ntimes = *(tVar->edges());	// otherwise constructor has init to 0
 		v.times.resize(v.ntimes);
 		if (rr) tVar->get(&v.times[0], v.ntimes);
@@ -317,7 +328,6 @@ int NcFile_handle::readVar(gVar &v, int itime, int iVar){
 //		cout << "FATAL ERROR in readVar(): Attempted to read a coord variable.\n";
 //		return 1;
 //	}
-	
 	// allocate space for values
 	v.values.resize(v.nlevs*v.nlats*v.nlons); // no need to fill values 
 	NcVar * vVar = dFile->get_var(iVar);
@@ -337,7 +347,7 @@ int NcFile_handle::readVar(gVar &v, int itime, int iVar){
 		CWARN << "(" << v.varname << ") treating 2D Variable as lat-lon map..\n";
 	}
 	else{
-		CERR << "Variables with only 2/3/4 dimensions are supported at present! Dims found: " 
+		CERR << "Variables with only 2/3/4 dimensions are supported! Dims found: " 
 			 << vVar->num_dims() << "\n";
 		return 1;
 	}
@@ -470,6 +480,7 @@ int NcFile_handle::writeCoords(gVar &v, bool wr){
 	//CINFO << "Wrote levs to file." << endl;
 	
 	if (v.ntimes > 0){
+		
 		tDim = dFile->add_dim("time");	// unlimited dimension
 		tVar = dFile->add_var("time", ncFloat, tDim);
 		string tunits = "";
@@ -510,9 +521,15 @@ NcVar * NcFile_handle::createVar(gVar &v){
 	// file is in write mode.. continue.
 	// include level dimension only if nlevs > 0.
 	NcVar * vVar;
-	if (v.nlevs <= 1) vVar = dFile->add_var(v.varname.c_str(), ncFloat, tDim,         latDim, lonDim);
-	else			  vVar = dFile->add_var(v.varname.c_str(), ncFloat, tDim, levDim, latDim, lonDim);
-	
+	if (!tVar){
+		if (v.nlevs <= 1) vVar = dFile->add_var(v.varname.c_str(), ncFloat,         latDim, lonDim);
+		else			  vVar = dFile->add_var(v.varname.c_str(), ncFloat, levDim, latDim, lonDim);
+	}
+	else{
+		if (v.nlevs <= 1) vVar = dFile->add_var(v.varname.c_str(), ncFloat, tDim,         latDim, lonDim);
+		else			  vVar = dFile->add_var(v.varname.c_str(), ncFloat, tDim, levDim, latDim, lonDim);
+	}
+		
 	// add variable attributes
 	vVar->add_att("units", v.varunits.c_str());
 	vVar->add_att("scale_factor", 1.0f);
@@ -533,9 +550,19 @@ int NcFile_handle::writeVar(gVar &v, NcVar* vVar, int itime){
 		return 1;
 	}
 	
-	CDEBUG << "Write variable (" << v.varname << ") to file at index " << itime << endl;
-	// actually write the data	
-	vVar->put_rec(&v.values[0], itime);
+	CDEBUG << "Write variable (" << v.varname << ") to file";
+	// actually write the data
+	if (tVar) {
+		CDEBUGC << " at index " << itime << endl;
+		vVar->put_rec(&v.values[0], itime);	// if time dimension exists, write a record
+	}
+	else {	
+		CDEBUGC << endl;
+		if (v.nlevs <=1 ) vVar->put(&v.values[0], v.nlats, v.nlons);	// else write a single map
+		else vVar->put(&v.values[0], v.nlevs, v.nlats, v.nlons);
+	}
 	return 0;
 }
+
+
 

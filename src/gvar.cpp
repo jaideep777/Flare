@@ -474,7 +474,7 @@ int gVar::createNcOutputStream(string filename){
 	ofile_handle = new NcFile_handle;
 	int i = ofile_handle->open(filename, "w", NULL);	// gridlimits are not required for writing
 	ofile_handle->writeCoords(*this);
-	ofile_handle->writeTimeValues(*this);
+	if (ofile_handle->tVar) ofile_handle->writeTimeValues(*this);
 	outNcVar = ofile_handle->createVar(*this);
 	if (outNcVar->is_valid()) CDEBUG << "Succesfully created variable in file " << filename << endl;
 }

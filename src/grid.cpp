@@ -379,3 +379,8 @@ gVar coarseGrain_mean(gVar &hires, vector <float> &xlons, vector <float> &xlats)
 }
 
 
+gVar coarseGrain_sd(gVar &hires, vector <float> &xlons, vector <float> &xlats){
+	
+}
+
+

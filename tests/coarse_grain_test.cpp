@@ -45,7 +45,7 @@ int main(){
 
 	cout << "----------------------------------------\n";
 
-	// create the georeferenced variable
+	// test coarsegraining on a simple dummy variable
 	gVar v("ts", "deg C", "days since 2000-1-1 6:0:0");
 	v.setCoords(times, levs, lats, lons);
 	float a[] = {-1,0,0,1,1,
@@ -65,6 +65,32 @@ int main(){
 
 //	vector <float> v1(1e9);
 //	int a1; cin >> a1;
+	
+	// test coarsegraining on a real large variable
+	vector <float> ilim(4);
+	ilim[0] = 66.5;
+	ilim[1] = 100.5;
+	ilim[2] = 6.5;
+	ilim[3] = 38.5;
+	
+	gVar hires;
+	hires.createOneShot("/home/jaideep/codes/Rajiv_carbon_project/MOD17A2_GPP.2000.M01.nc", ilim);
+//	hires.ntimes=1; hires.times=vector <double> (1,0);	// This is somehow still required else program segfaults
+	hires.printGrid();
+//	hires.printValues();
+
+//	hires.createNcOutputStream("out.nc");
+//	hires.writeVar(0);
+//	hires.closeNcOutputStream();
+
+	vector <float> lats1 = createCoord(ilim[2],ilim[3],0.25,nlats);
+	vector <float> lons1 = createCoord(ilim[0],ilim[1],0.25,nlons);
+	gVar lores = coarseGrain_mean(hires, lons1, lats1);
+	lores.printGrid();
+	
+	lores.createNcOutputStream("out.nc");
+	lores.writeVar(0);
+	lores.closeNcOutputStream();
 	
 	return 0;
 
