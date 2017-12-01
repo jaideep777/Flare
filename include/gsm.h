@@ -247,6 +247,7 @@ class gVar{
 	int createNcOutputStream(string filename);
 	int closeNcOutputStream();
 	int writeVar(int itime); 
+	int writeOneShot(string filename);
 	
 };
 

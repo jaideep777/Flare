@@ -489,6 +489,13 @@ int gVar::writeVar(int itime){
 	return ofile_handle->writeVar(*this, outNcVar, itime);
 }
 
+int gVar::writeOneShot(string filename){
+	createNcOutputStream(filename);
+	writeVar(0);
+	closeNcOutputStream();
+}
+
+
 
 // -----------------------------------------------------------------------
 // Functions to read data and compute aggregates between specified times

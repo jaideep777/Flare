@@ -235,7 +235,7 @@ int indexC(vector <float> &v, float val){
 		else {
 //			int m = distance(v.begin(), upper_bound(v.begin(), v.end(), val, ascComp)) - 1; // (last element <= val)
 			int k = (val-v[0])/dv+1;
-			int m = gsm_upper_bound(v, val, k-2, k+2) - 1; // (last element <= val)
+			int m = gsm_upper_bound(v, val, k-2, k+2) - 1; // (last element <= val) //TODO: deal with case where this is out of bounds
 			return ((val - v[m]) < (v[m+1]-val))? m:(m+1);
 		}
 	}

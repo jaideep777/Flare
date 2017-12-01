@@ -64,8 +64,6 @@ int main(){
 	vc.printGrid();
 	vc.printValues();
 
-//	vector <float> v1(1e9);
-//	int a1; cin >> a1;
 	
 	// test coarsegraining on a real large variable
 	vector <float> ilim(4);
@@ -73,28 +71,21 @@ int main(){
 	ilim[1] = 180;
 	ilim[2] = -90;
 	ilim[3] = 90;
-//	
+	
 	gVar hires;
 	hires.createOneShot("/home/jaideep/codes/Rajiv_carbon_project/MOD17A2_GPP.2000.M01.nc", ilim);
-//	hires.ntimes=1; hires.times=vector <double> (1,0);	// This is somehow still required else program segfaults
 	hires.printGrid();
-//	hires.printValues();
 
-//	hires.createNcOutputStream("out.nc");
-//	hires.writeVar(0);
-//	hires.closeNcOutputStream();
-
-	vector <float> lats1 = createCoord(ilim[2]+0.125,ilim[3]-0.125,0.25,nlats);
 	vector <float> lons1 = createCoord(ilim[0]+0.125,ilim[1]-0.125,0.25,nlons);
+	vector <float> lats1 = createCoord(ilim[2]+0.125,ilim[3]-0.125,0.25,nlats);
+
 	gVar lores = coarseGrain_mean(hires, lons1, lats1);
 	lores.printGrid();
 	
-	lores.createNcOutputStream("out1.nc");
-	lores.writeVar(0);
-	lores.closeNcOutputStream();
+	lores.writeOneShot("out1.nc");
 
 
-	// gsm_upper_bound and indexC test and time
+//	// test gsm_upper_bound and indexC 
 //	int nlons;
 //	vector <float> a = createCoord(ilim[0]+0.125, ilim[1]-0.125, 0.25, nlons);
 //	
@@ -107,8 +98,8 @@ int main(){
 //		if (distance(a.begin(), stl_upperbound) != my_upperbound) ++wrong_count;
 //	}
 //	cout << "Wrong upper bounds = " << wrong_count << endl;
-
-
+//
+//
 //	// indexC time test
 //	for (int i=0; i<7200*3600; ++i){
 //		indexC(a, -177);
