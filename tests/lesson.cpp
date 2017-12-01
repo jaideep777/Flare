@@ -43,11 +43,12 @@ int main(){
 	T.setCoords(t, levs, lats, lons);
 	T.printGrid();
 
-	// read data from NC files
+	// create a list of filenames in correct order
 	vector <string> files;
 	files.push_back("/media/jaideep/WorkData/Fire_G/precip_imd/rf_imd.2000.nc");
 	files.push_back("/media/jaideep/WorkData/Fire_G/precip_imd/rf_imd.2003.nc");
 	
+	// create a stream for reading data
 	T.createNcInputStream(files, glim);
 	T.printGrid();
 

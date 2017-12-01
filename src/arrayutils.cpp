@@ -147,6 +147,23 @@ bool dscComp(float a, float b){ return (a>b); }
 // lower_bound = 1st element !< (>=) val
 // upper_bound = last element !> (<=) val
 
+
+// upper-bound (raw code from stl)
+int gsm_upper_bound (vector<float> &sorted_vec, float val, int first, int last){
+	if (last == -1 || last > sorted_vec.size()) last = sorted_vec.size();
+	if (first < 0) first = 0;
+	int count, step;
+	int it;
+	count = last - first;
+	while (count > 0){
+		int it = first; step=count/2; it += step;
+		if (!(val< sorted_vec[it]))                 // or: if (!comp(val,*it)), for version (2)
+			{ first=++it; count-=step+1;  }
+		else count=step;
+	}
+	return first;
+}
+
 // returns lower bound in array for val. 
 // if val is out of range, returns appropriate edge. does not return missing value
 int ncIndexLo(vector <float> &v, float val){
@@ -204,18 +221,21 @@ int lindexSW(vector <float> &v, float val){
 // [---1---)[---2-P-)[---3-P-)     P
 //               ^G.C    ^Sp.C   ^outlier
 int indexC(vector <float> &v, float val){
-	bool asc = (v[1]>v[0])? true:false;
+	float dv = v[1]-v[0];
+	bool asc = (dv>0)? true:false;
 	if (asc){
 		if (val >= v[v.size()-1]){
 			if (val <= (v[v.size()-1] + (v[v.size()-1]-v[v.size()-2])/2)) return (v.size()-1);
 			else return -999;
 		}
-		if (val <= v[0]){
-			if (val >= (v[0] - (v[1]-v[0])/2)) return 0;
+		else if (val <= v[0]){
+			if (val >= (v[0] - dv/2)) return 0;
 			else return -999;
 		} 
 		else {
-			int m = (upper_bound(v.begin(), v.end(), val, ascComp) - v.begin() - 1); // lower bound
+//			int m = distance(v.begin(), upper_bound(v.begin(), v.end(), val, ascComp)) - 1; // (last element <= val)
+			int k = (val-v[0])/dv+1;
+			int m = gsm_upper_bound(v, val, k-2, k+2) - 1; // (last element <= val)
 			return ((val - v[m]) < (v[m+1]-val))? m:(m+1);
 		}
 	}

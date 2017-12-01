@@ -134,6 +134,8 @@ void reverseCube(vector <float> &v, int nx, int ny,
 
 vector <float> copyArray(vector <float> &v, int i2, int i1=0); // copy v[i1:i2] into new array (returned)
 
+int gsm_upper_bound (vector<float> &sorted_vec, float val, int first=0, int last=-1);
+
 int ncIndexLo(vector <float> &v, float val); // lower bound, edge for outliers
 int ncIndexHi(vector <float> &v, float val); // upper bound, edge for outliers
 int lindexSW(vector <float> &v, float val);  // lower (S/W) bound, missing value for outliers

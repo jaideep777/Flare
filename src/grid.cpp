@@ -331,6 +331,7 @@ gVar lterp(gVar &v, vector <float> &xlons, vector <float> &xlats){
 
 // coarse grain by summing or averaging high resolution data points within each target grid cell
 gVar coarseGrain(string fun, gVar &hires, vector <float> &xlons, vector <float> &xlats){
+	cout << "Coarsegraining..."; cout.flush();
 	gVar temp; temp.copyMeta(hires);
 	temp.lats = xlats; temp.nlats = xlats.size();
 	temp.lons = xlons; temp.nlons = xlons.size();
@@ -354,7 +355,8 @@ gVar coarseGrain(string fun, gVar &hires, vector <float> &xlons, vector <float> 
 			}
 		}
 	}
-	
+
+	cout << "averaging..."; cout.flush();
 	for (int ilev=0; ilev < temp.nlevs; ++ilev){
 		for (int ilat=0; ilat < temp.nlats; ++ilat){
 			for (int ilon=0; ilon < temp.nlons; ++ilon){
@@ -365,7 +367,7 @@ gVar coarseGrain(string fun, gVar &hires, vector <float> &xlons, vector <float> 
 			}
 		}
 	}
-
+	cout << "Done!" << endl;
 	return temp;
 }
 

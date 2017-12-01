@@ -2,6 +2,7 @@
 #include <gsm.h>
 #include <netcdfcpp.h>
 #include <vector>
+#include <algorithm>
 using namespace std;
 
 // g++ -I/usr/local/netcdf-c-4.3.2/include -I/usr/local/netcdf-cxx-legacy/include -I/home/jaideep/codes/libgsm_v2/include -L/home/jaideep/codes/libgsm_v2/lib -L/usr/local/netcdf-cxx-legacy/lib -o 1 coarse_grain_test.cpp -l:libgsm.so.2 -lnetcdf_c++ 
@@ -68,11 +69,11 @@ int main(){
 	
 	// test coarsegraining on a real large variable
 	vector <float> ilim(4);
-	ilim[0] = 66.5;
-	ilim[1] = 100.5;
-	ilim[2] = 6.5;
-	ilim[3] = 38.5;
-	
+	ilim[0] = -180;
+	ilim[1] = 180;
+	ilim[2] = -90;
+	ilim[3] = 90;
+//	
 	gVar hires;
 	hires.createOneShot("/home/jaideep/codes/Rajiv_carbon_project/MOD17A2_GPP.2000.M01.nc", ilim);
 //	hires.ntimes=1; hires.times=vector <double> (1,0);	// This is somehow still required else program segfaults
@@ -83,14 +84,36 @@ int main(){
 //	hires.writeVar(0);
 //	hires.closeNcOutputStream();
 
-	vector <float> lats1 = createCoord(ilim[2],ilim[3],0.25,nlats);
-	vector <float> lons1 = createCoord(ilim[0],ilim[1],0.25,nlons);
+	vector <float> lats1 = createCoord(ilim[2]+0.125,ilim[3]-0.125,0.25,nlats);
+	vector <float> lons1 = createCoord(ilim[0]+0.125,ilim[1]-0.125,0.25,nlons);
 	gVar lores = coarseGrain_mean(hires, lons1, lats1);
 	lores.printGrid();
 	
-	lores.createNcOutputStream("out.nc");
+	lores.createNcOutputStream("out1.nc");
 	lores.writeVar(0);
 	lores.closeNcOutputStream();
+
+
+	// gsm_upper_bound and indexC test and time
+//	int nlons;
+//	vector <float> a = createCoord(ilim[0]+0.125, ilim[1]-0.125, 0.25, nlons);
+//	
+//	int wrong_count = 0;
+//	for (int i=0; i<7200; ++i){
+//		int my_upperbound = gsm_upper_bound(a, hires.lons[i]);
+//		vector <float>::iterator stl_upperbound = upper_bound(a.begin(), a.end(), hires.lons[i]);
+////		cout << hires.lons[i] << " " <<  *stl_upperbound << " " <<  a[my_upperbound] << "\n";
+////		cout << hires.lons[i] << " " <<  distance(a.begin(), stl_upperbound) << " " <<  my_upperbound << "\n";
+//		if (distance(a.begin(), stl_upperbound) != my_upperbound) ++wrong_count;
+//	}
+//	cout << "Wrong upper bounds = " << wrong_count << endl;
+
+
+//	// indexC time test
+//	for (int i=0; i<7200*3600; ++i){
+//		indexC(a, -177);
+//		indexC(a, -177);
+//	}
 	
 	return 0;
 
