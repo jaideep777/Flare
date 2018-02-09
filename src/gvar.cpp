@@ -180,6 +180,7 @@ int gVar::printValues(ostream &lfout){
 // returns the index corresponding time just <= gt
 int gVar::gt2ix(double gt){
 //	CDEBUG << "gt2ix("<< varname << ")" << (gt - tbase)*24.0 - times[0]*tscale << endl;
+//	CDEBUG << "gt = " << gt2string(gt) << ", t0 = " << gt2string(tbase+times[0]*tscale/24) << endl;
 	return floor(((gt - tbase)*24.0 - times[0]*tscale)/tstep);	// essential to use floor. int() truncates towards 0! $%@#^$@#*@   
 }
 
@@ -380,11 +381,12 @@ int gVar::loadInputFileMeta(){
 
 
 int gVar::whichNextFile(double gt){
-//	cout << varname << ": gt = " << gt2string(gt) << ", file limits = " << gt2string(ipvar->ix2gt(0)) << " --- " << gt2string(ipvar->ix2gt(ipvar->ntimes-1)) << endl;
 	double file_gtf = ipvar->ix2gt(ipvar->ntimes-1);	// first time
 	double file_gt0 = ipvar->ix2gt(0);					// last time
 	double file_dt = ipvar->tstep/24; 					// time  step in days
-	if (gt >= file_gtf+file_dt) return curr_file+1;		// ---|---------||---------|======== <-- gt >= ix0
+//	cout << varname << ": gt = " << gt2string(gt) << ", file limits = " << gt2string(file_gt0) << " --- " << gt2string(file_gtf+file_dt) << endl;
+//	cout << "file_dt: " << file_dt << endl;
+	if (gt > file_gtf+file_dt) return curr_file+1;		// ---|---------||---------|======== <-- gt >= ix0
 	else if (gt < file_gt0) return curr_file-1;			//   ixf   f1        f2   ix0            gt >= ixf+dt
 	else return curr_file; 
 }

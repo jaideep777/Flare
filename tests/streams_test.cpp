@@ -4,7 +4,7 @@
 #include <vector>
 using namespace std;
 
-// g++ -I/usr/local/netcdf-c-4.3.2/include -I/usr/local/netcdf-cxx-legacy/include -I/home/jaideep/codes/libgsm_v2/include -L/home/jaideep/codes/libgsm_v2/lib -L/usr/local/netcdf-cxx-legacy/lib -o 1 streams_test.cpp -l:libgsm.so.2 -lnetcdf_c++ 
+// g++ -I/usr/local/netcdf-c-4.3.2/include -I/usr/local/netcdf-cxx-legacy/include -I/home/jaideep/codes/FIRE_CODES/libgsm_v2/include -L/home/jaideep/codes/FIRE_CODES/libgsm_v2/lib -L/usr/local/netcdf-cxx-legacy/lib -o 1 streams_test.cpp -l:libgsm.so.2 -lnetcdf_c++ 
 
 
 int main(){
@@ -24,12 +24,21 @@ int main(){
 
 	// set your data files
 	string files[] = {
-		"/media/jaideep/WorkData/Fire_G/ncep_20cen/temp_sfc/air.sfc.2000.nc",
-		"/media/jaideep/WorkData/Fire_G/ncep_20cen/temp_sfc/air.sfc.2001.nc",
-		"/media/jaideep/WorkData/Fire_G/ncep_20cen/temp_sfc/air.sfc.2002.nc",
-		"/media/jaideep/WorkData/Fire_G/ncep_20cen/temp_sfc/air.sfc.2003.nc",
-		"/media/jaideep/WorkData/Fire_G/ncep_20cen/temp_sfc/air.sfc.2004.nc",
-		"/media/jaideep/WorkData/Fire_G/ncep_20cen/temp_sfc/air.sfc.2005.nc"
+			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2001.nc",
+			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2002.nc",
+			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2003.nc",
+			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2004.nc",
+			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2005.nc",
+			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2006.nc",
+			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2007.nc",
+			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2008.nc",
+			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2009.nc",
+			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2010.nc",
+			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2011.nc",
+			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2012.nc",
+			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2013.nc",
+			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2014.nc",
+			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2015.nc"
 		};
 
 	// create the coordinates for our georeferenced variable
@@ -42,7 +51,7 @@ int main(){
 
 
 	// create the georeferenced variable
-	gVar v("ts", "deg C", "days since 2000-1-1 6:0:0");
+	gVar v("ba", "%", "days since 2000-1-1 6:0:0");
 	v.setCoords(times, levs, lats, lons);
 	
 	vector <string> filenames(files, files+6);
@@ -53,14 +62,16 @@ int main(){
 	v.printGrid();
 
 	// read variable
-	v.readVar_reduce(ymd2gday("2001-06-01"), ymd2gday("2001-06-30"));
+	for (float i=0; i< 365*5; i+= 15.22)
+	v.readVar_gt(ymd2gday("2001-12-25")+i, 0);
+	
 
-	// create output stream and write variable to output	
-	v.createNcOutputStream("testnc1.nc");
-	v.writeVar(0);	
+//	// create output stream and write variable to output	
+//	v.createNcOutputStream("testnc1.nc");
+//	v.writeVar(0);	
 
-	// close streams when done
-	v.closeNcOutputStream();
+//	// close streams when done
+//	v.closeNcOutputStream();
 	v.closeNcInputStream();
 
 
