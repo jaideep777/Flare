@@ -146,11 +146,16 @@ inline float bilinear_mn(int m, int n, float x, float y, float iz,
 	f[1] = data[IX3(m,   n+1, iz,   lons.size(), lats.size())];
 	f[2] = data[IX3(m+1, n,   iz,   lons.size(), lats.size())];
 	f[3] = data[IX3(m+1, n+1, iz,   lons.size(), lats.size())];
-	// check if any function value is missing.. if so, return missingval
-	if (f[0] == missingVal || f[2] == missingVal || 
-		f[1] == missingVal || f[3] == missingVal )   return missingVal;
 
-	// ------> f is OK.
+	// check if all function values are missing.. if so, return missingval
+	if (f[0] == missingVal && f[2] == missingVal && 
+		f[1] == missingVal && f[3] == missingVal )   return missingVal;
+
+	// ------> f is OK (at least one value is non-missing).
+	if (f[0]== missingVal) f[0] = 0;
+	if (f[1]== missingVal) f[1] = 0;
+	if (f[2]== missingVal) f[2] = 0;
+	if (f[3]== missingVal) f[3] = 0;
 	// compute lterp value
 	float xbil = (f[0] * ((x2-x )*(y2-y ))   // f11
 				+ f[2] * ((x -x1)*(y2-y ))   // f21
@@ -158,6 +163,7 @@ inline float bilinear_mn(int m, int n, float x, float y, float iz,
 				+ f[3] * ((x -x1)*(y -y1)))  // f22
 				/ ((x2-x1)*(y2-y1));		// x2=x1+dx, so no div-by-zero!
 	//cout << "lterp value = " << xbilinear << '\n';
+
 	return xbil;
 
 }
@@ -349,8 +355,10 @@ gVar coarseGrain(string fun, gVar &hires, vector <float> &xlons, vector <float> 
 			for (int ilon=0; ilon < hires.nlons; ++ilon){
 				vector <int> uv = findGridBoxC(hires.lons[ilon], hires.lats[ilat], xlons, xlats);
 				if (uv[0] != -999 && uv[1] != -999) {
-					temp(uv[0],uv[1],ilev) += hires(ilon, ilat, ilev);
-					counts(uv[0],uv[1],0) += 1;
+					if (hires(ilon, ilat, ilev) != hires.missing_value){
+						temp(uv[0],uv[1],ilev) += hires(ilon, ilat, ilev);
+						counts(uv[0],uv[1],0) += 1;
+					}
 				}
 			}
 		}

@@ -407,6 +407,7 @@ int NcFile_handle::readVar_gt(gVar &v, double gt, int mode, int iVar){
 	// also, if mode = hold, values should be from tixlo anyway, so include that case here
 	else if ( gt-v.ix2gt(tixlo) < t_tol || mode == 0){
 		CDEBUGC << "~ Reading low, diff = " << (gt-v.ix2gt(tixlo))*24.0 << " hrs.\n";
+		if (tixlo >= v.ntimes) CERR << " desired time out of bounds";
 		readVar(v, tixlo, iVar);
 		v.t = gt;	// set t to the actual gt and not to any index values
 		return 1;

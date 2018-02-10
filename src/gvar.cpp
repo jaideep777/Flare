@@ -386,7 +386,7 @@ int gVar::whichNextFile(double gt){
 	double file_dt = ipvar->tstep/24; 					// time  step in days
 //	cout << varname << ": gt = " << gt2string(gt) << ", file limits = " << gt2string(file_gt0) << " --- " << gt2string(file_gtf+file_dt) << endl;
 //	cout << "file_dt: " << file_dt << endl;
-	if (gt > file_gtf+file_dt) return curr_file+1;		// ---|---------||---------|======== <-- gt >= ix0
+	if (gt >= file_gtf+file_dt) return curr_file+1;		// ---|---------||---------|======== <-- gt >= ix0
 	else if (gt < file_gt0) return curr_file-1;			//   ixf   f1        f2   ix0            gt >= ixf+dt
 	else return curr_file; 
 }
