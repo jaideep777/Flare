@@ -376,5 +376,7 @@ int cellRegridCube(gVar &v, gVar &out, vector <int> &indices);
 gVar coarseGrain_sum(gVar &hires, vector <float> &xlons, vector <float> &xlats);
 gVar coarseGrain_mean(gVar &hires, vector <float> &xlons, vector <float> &xlats);
 
+gVar binary(gVar v, float thresh=0);
+
 #endif
 

@@ -342,15 +342,16 @@ gVar coarseGrain(string fun, gVar &hires, vector <float> &xlons, vector <float> 
 	temp.lats = xlats; temp.nlats = xlats.size();
 	temp.lons = xlons; temp.nlons = xlons.size();
 	temp.values.resize(temp.nlons*temp.nlats*temp.nlevs);
-	
+	temp.fill(0);
+
 	gVar counts = temp;
 	counts.nlevs = 1;
 	counts.levs = vector <float> (1,0);
 	counts.values.resize(temp.nlons*temp.nlats);
 	
-	temp.fill(0);
-	counts.fill(0);
 	for (int ilev=0; ilev < hires.nlevs; ++ilev){
+//		cout << " lev = " << ilev << ",";
+		counts.fill(0);
 		for (int ilat=0; ilat < hires.nlats; ++ilat){
 			for (int ilon=0; ilon < hires.nlons; ++ilon){
 				vector <int> uv = findGridBoxC(hires.lons[ilon], hires.lats[ilat], xlons, xlats);
@@ -362,10 +363,8 @@ gVar coarseGrain(string fun, gVar &hires, vector <float> &xlons, vector <float> 
 				}
 			}
 		}
-	}
 
-	cout << "averaging..."; cout.flush();
-	for (int ilev=0; ilev < temp.nlevs; ++ilev){
+//		cout << "averaging..."; cout.flush();
 		for (int ilat=0; ilat < temp.nlats; ++ilat){
 			for (int ilon=0; ilon < temp.nlons; ++ilon){
 				if (counts(ilon,ilat,0) == 0) temp(ilon,ilat, ilev) = temp.missing_value;
@@ -374,8 +373,9 @@ gVar coarseGrain(string fun, gVar &hires, vector <float> &xlons, vector <float> 
 				}
 			}
 		}
+
 	}
-	cout << "Done!" << endl;
+//	cout << "Done!" << endl;
 	return temp;
 }
 
@@ -391,6 +391,15 @@ gVar coarseGrain_mean(gVar &hires, vector <float> &xlons, vector <float> &xlats)
 
 gVar coarseGrain_sd(gVar &hires, vector <float> &xlons, vector <float> &xlats){
 	
+}
+
+gVar binary(gVar v, float thresh){
+	gVar temp = v;
+	for (int i=0; i<v.values.size(); ++i) {
+		if (v[i] == v.missing_value) temp[i] = temp.missing_value;
+		else temp[i] = (v[i] > thresh)? 1:0;
+	}
+	return temp;
 }
 
 
