@@ -25,6 +25,7 @@
 
 #include "../include/gsm.h"
 #include <cmath>
+#include <algorithm>
 
 gVar::gVar(){
 	ntimes = 0; nlevs = 1; nlats = 0; nlons = 0;
@@ -80,6 +81,8 @@ int gVar:: copyMeta(const gVar &v){
 	ncoords = v.ncoords; ivar1 = v.ivar1;
 	missing_value = v.missing_value;
 	gridlimits = v.gridlimits;
+	
+	values.resize(nlons*nlats*nlevs);
 	
 	t = v.t;
 	return 0;
@@ -341,7 +344,7 @@ gVar gVar::operator * (const gVar &v){
 int gVar::createNcInputStream(vector <string> files, vector <float> glim){
 
 	gridlimits = glim; //TODO should this be assigned to ipvar instead?
-	if (0 > lons[0] || glim[1] < lons[nlons-1] || glim[2] > lats[0] || glim[3] < lats[nlats-1]){
+	if (glim[0] > lons[0] || glim[1] < lons[nlons-1] || glim[2] > lats[0] || glim[3] < lats[nlats-1]){
 		CWARN << "Specified grid limits are narrower than the variable grid" << endl; 
 	}
 	
@@ -394,23 +397,37 @@ int gVar::whichNextFile(double gt){
 
 int gVar::updateInputFile(double gt){
 	
+	int prev_file = curr_file;
 	int next_file = whichNextFile(gt);
+
+//	cout << prev_file << " " << curr_file << " " << next_file << endl;
 
 	while (curr_file != next_file){
 
 		if (next_file < 0 || next_file >= filenames.size()){
-			CERR << "(" << varname << ") InputStream: specified time out of range of given files (" << next_file << ").\n"; 
+			CERR << "(" << varname << ") updateInputFile(): specified time out of range of given files (" << next_file << ").\n"; 
 			return 1;
 		}
-
+		
+		prev_file = curr_file;
 		curr_file = next_file;
 		loadInputFileMeta();
 		next_file = whichNextFile(gt);
 		
+//		cout << prev_file << " " << curr_file << " " << next_file << endl;
+		
+		if (next_file == prev_file) {
+			CERR << "(" << varname << ") updateInputFile(): Infinite loop (\n    " << filenames[curr_file] << "\n    " << filenames[next_file] 
+				 << "\n    --------\n    " << filenames[min(curr_file, next_file)] << " - returned." << endl;
+			curr_file = min(curr_file, next_file);
+			break;
+		}
 	}
 
 	return 0;
 }
+
+
 
 int gVar::closeNcInputStream(){
 	if (ifile_handle->dFile != NULL) ifile_handle->close();
@@ -433,7 +450,7 @@ int gVar::readVar_gt(double gt, int mode){
 
 int gVar::readVar_it(int tid){
 	if (ifile_handle == NULL){
-		CERR << "gVar::readVar_gt(" << varname << "): NcInputStream not initialized" << endl;
+		CERR << "gVar::readVar_it(" << varname << "): NcInputStream not initialized" << endl;
 		return 1;
 	}
 
@@ -502,42 +519,65 @@ int gVar::writeOneShot(string filename){
 // -----------------------------------------------------------------------
 // Functions to read data and compute aggregates between specified times
 // -----------------------------------------------------------------------
-
 int gVar::readVar_reduce_mean(double gt1, double gt2){
 	gVar temp; temp.copyMeta(*ipvar);
-	temp.values.resize(temp.nlons*temp.nlats*temp.nlevs);
+//	temp.values.resize(temp.nlons*temp.nlats*temp.nlevs);
 	temp.fill(0);
 	int count = 0;
-	for (double d = gt1; d < gt2; d += ipvar->tstep/24){
-		updateInputFile(d);
-		ifile_handle->readVar_gt(*ipvar, d, 0, ipvar->ivar1);	// read in mode 0 (Hold); readCoords() would have set ivar1
-		temp = temp + *ipvar;
-		++count;
+	
+	updateInputFile(gt1);	// this will give correct OR one previous file
+	while (gt1 > ipvar->ix2gt(ipvar->times.size()-1)){	// increment curr_file as long as gt1 +outside file range
+		++curr_file;
+		loadInputFileMeta();
 	}
+	
+	CDEBUG << "readVar_reduce_mean (" << varname << ") :" << gt2string(gt1) << " " << gt2string(gt2) << endl;
+	while(1){
+//		cout << (ipvar->times[0]) << " " << (ipvar->times[ipvar->times.size()-1]) << " "  << (gt1-ipvar->tbase)*24.0/ipvar->tscale <<  endl;
+		int tstart = lower_bound(ipvar->times.begin(), ipvar->times.end(), (gt1-ipvar->tbase)*24.0/ipvar->tscale) - ipvar->times.begin();	   // first elem >= gt1 
+		int tend   = upper_bound(ipvar->times.begin(), ipvar->times.end(), (gt2-ipvar->tbase)*24.0/ipvar->tscale) - ipvar->times.begin() -1;   // last elem <= gt2
+//		cout << gt2string(ipvar->ix2gt(tstart)) << " " << gt2string(ipvar->ix2gt(tend)) << endl;
+
+		if (tend < 0) break;
+	
+		for (int i=tstart; i<=tend; ++i){ 
+			ifile_handle->readVar(*ipvar, i, ipvar->ivar1);	// readCoords() would have set ivar1
+			temp = temp + *ipvar;
+			++count;
+		}
+
+		if (tend == ipvar->times.size()-1){ // if tend was the last time in file, then load next file and continue reading
+			++curr_file;
+			loadInputFileMeta();
+		}
+		else break;
+	}
+	
+	CDEBUG << "----------- Read " << count << " timesteps from " << varname << endl;
 	temp = temp/count;	
 	lterpCube(temp, *this, lterp_indices);
 }
 
-int gVar::readVar_reduce_sd(double gt1, double gt2){
-	gVar s, ssq; 
-	s.copyMeta(*ipvar);
-	ssq.copyMeta(*ipvar);
-	s.values.resize(s.nlons*s.nlats*s.nlevs);
-	ssq.values.resize(ssq.nlons*ssq.nlats*ssq.nlevs);
-	s.fill(0); ssq.fill(0);
-	int count = 0;
-	for (double d = gt1; d < gt2; d += ipvar->tstep/24){
-		updateInputFile(d);
-		ifile_handle->readVar_gt(*ipvar, d, 0, ipvar->ivar1);	// read in mode 0 (Hold); readCoords() would have set ivar1
-		s = s + *ipvar;
-		ssq = ssq + (*ipvar)*(*ipvar);
-		++count;
-	}
-	if (count == 1) CERR << "Cannot compute SD with one data point" << endl;
-	gVar sd = ssq/(count-1) + s*s/count/(count-1);
-	sd.sqrtVar();
-	lterpCube(sd, *this, lterp_indices);
-}
+//int gVar::readVar_reduce_sd(double gt1, double gt2){
+//	gVar s, ssq; 
+//	s.copyMeta(*ipvar);
+//	ssq.copyMeta(*ipvar);
+//	s.values.resize(s.nlons*s.nlats*s.nlevs);
+//	ssq.values.resize(ssq.nlons*ssq.nlats*ssq.nlevs);
+//	s.fill(0); ssq.fill(0);
+//	int count = 0;
+//	for (double d = gt1; d < gt2; d += ipvar->tstep/24){
+//		updateInputFile(d);
+//		ifile_handle->readVar_gt(*ipvar, d, 0, ipvar->ivar1);	// read in mode 0 (Hold); readCoords() would have set ivar1
+//		s = s + *ipvar;
+//		ssq = ssq + (*ipvar)*(*ipvar);
+//		++count;
+//	}
+//	if (count == 1) CERR << "Cannot compute SD with one data point" << endl;
+//	gVar sd = ssq/(count-1) + s*s/count/(count-1);
+//	sd.sqrtVar();
+//	lterpCube(sd, *this, lterp_indices);
+//}
 
 
 

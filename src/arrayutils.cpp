@@ -145,7 +145,7 @@ bool ascComp(float a, float b){ return (a<b); }
 bool dscComp(float a, float b){ return (a>b); }
 
 // lower_bound = 1st element !< (>=) val
-// upper_bound = last element !> (<=) val
+// upper_bound = 1st element >  (>) val
 
 
 // upper-bound (raw code from stl)

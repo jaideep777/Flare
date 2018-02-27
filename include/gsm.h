@@ -236,7 +236,7 @@ class gVar{
 	int readVar_it(int tid);
 
 	int readVar_reduce_mean(double gt1, double gt2);
-	int readVar_reduce_sd(double gt1, double gt2);
+//	int readVar_reduce_sd(double gt1, double gt2);
 	
 	// these 2 functions create a gVar in one shot by reading the first record in specified file
 	// createOneShot uses file's coords, readOneShot uses variable's coords and interpolates data

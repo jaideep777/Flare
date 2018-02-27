@@ -54,7 +54,7 @@ int main(){
 	gVar v("ba", "%", "days since 2000-1-1 6:0:0");
 	v.setCoords(times, levs, lats, lons);
 	
-	vector <string> filenames(files, files+6);
+	vector <string> filenames(files, files+10);
 
 
 	// create input stream
@@ -62,9 +62,13 @@ int main(){
 	v.printGrid();
 
 	// read variable
-	for (float i=0; i< 365*5; i+= 15.22)
-	v.readVar_gt(ymd2gday("2001-12-25")+i, 0);
+//	for (float i=0; i< 365*5; i+= 15.22)
+
+//	v.readVar_gt(ymd2gday("2008-6-25"), 0);
+
+//	v.readVar_gt(ymd2gday("2006-6-25"), 0);
 	
+	v.readVar_reduce_mean(ymd2gday("2001-1-1"), ymd2gday("2002-12-31"));
 
 //	// create output stream and write variable to output	
 //	v.createNcOutputStream("testnc1.nc");

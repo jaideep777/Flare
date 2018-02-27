@@ -91,6 +91,10 @@ void NcFile_handle::setMapLimits(float xwlon, float xelon, float xslat, float xn
 
 // ------------------------- READING ----------------------------
 
+//int NcFile_handle::readTime(gVar &v){
+
+//}
+
 // THE MOST PAINFUL NCIO FUNCTION!!
 // this function:
 //	 reads most of the metadata - read # coords, coord values
@@ -130,30 +134,6 @@ int NcFile_handle::readCoords(gVar &v, bool rr){
 	else ++ncoords;
 	CINFO << "\t" << ncoords << " coordinates found" << endl;
 		
-//	int nbounds = 0;
-//	// several files have bounds for coordinates.. if found, ignore for now.	
-//	NcVar* latBnds = dFile->get_var("lat_bnds");
-//	if (!latBnds) latBnds = dFile->get_var("lat_bounds");
-//	else ++nbounds;
-
-//	NcVar* lonBnds = dFile->get_var("lon_bnds");
-//	if (!lonBnds) lonBnds = dFile->get_var("lon_bounds");
-//	else ++nbounds;
-
-//	NcVar* levBnds = dFile->get_var("lev_bnds");
-//	if (!levBnds) levBnds = dFile->get_var("lev_bounds");
-//	else ++nbounds;
-
-//	NcVar* tBnds = dFile->get_var("time_bnds");
-//	if (!tBnds) tBnds = dFile->get_var("time_bounds");
-//	else ++nbounds;
-
-//	CINFO << "\t" << nbounds << " coordinate bounds found.\n";
-//	v.ncoords = ncoords; 
-//	
-//	v.ivar1 = ncoords+nbounds;	// assumes that 1st few variables are coords/bounds
-//								// will NOT always work. better set explicitly.
-
 	v.ivar1 = 0;
 	CINFO << "> Attempting to find 1st variable... ";
 	while (1){
@@ -319,6 +299,8 @@ int NcFile_handle::readVar(gVar &v, int itime, int iVar){
 		CERR << "ERROR in readVar: File not in read mode.\n";
 		return 1;
 	}
+
+	CDEBUG << "readVar_it(" << v.varname << "): " << gt2string(v.ix2gt(itime)) << endl;
 
 	// file is in read mode.. continue.
 	if (iVar == -1) iVar = v.ivar1;
