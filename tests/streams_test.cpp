@@ -23,23 +23,27 @@ int main(){
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	// set your data files
+//	string files[] = {
+//		"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2001.nc",
+//		"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2002.nc",
+//		"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2003.nc",
+//		"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2004.nc",
+//		"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2005.nc",
+//		"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2006.nc",
+//		"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2007.nc",
+//		"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2008.nc",
+//		"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2009.nc",
+//		"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2010.nc",
+//		"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2011.nc",
+//		"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2012.nc",
+//		"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2013.nc",
+//		"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2014.nc",
+//		"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2015.nc"
+//	};
+
 	string files[] = {
-			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2001.nc",
-			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2002.nc",
-			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2003.nc",
-			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2004.nc",
-			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2005.nc",
-			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2006.nc",
-			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2007.nc",
-			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2008.nc",
-			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2009.nc",
-			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2010.nc",
-			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2011.nc",
-			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2012.nc",
-			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2013.nc",
-			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2014.nc",
-			"/media/jaideep/Totoro/Data/Fire_BA/burned_area.2015.nc"
-		};
+		"/media/jaideep/Totoro/Data/precip_trmm/pr.trmm.2003.nc"
+			};
 
 	// create the coordinates for our georeferenced variable
 	int nlons, nlats, nlevs, ntimes;
@@ -51,10 +55,10 @@ int main(){
 
 
 	// create the georeferenced variable
-	gVar v("ba", "%", "days since 2000-1-1 6:0:0");
+	gVar v("ba", "%", "days since 1950-1-1 6:0:0");
 	v.setCoords(times, levs, lats, lons);
 	
-	vector <string> filenames(files, files+10);
+	vector <string> filenames(files, files+1);
 
 
 	// create input stream
@@ -68,7 +72,9 @@ int main(){
 
 //	v.readVar_gt(ymd2gday("2006-6-25"), 0);
 	
-	v.readVar_reduce_mean(ymd2gday("2001-1-1"), ymd2gday("2002-12-31"));
+	v.readVar_it(0);
+	
+//	v.readVar_reduce_mean(ymd2gday("2001-12-1"), ymd2gday("2002-1-31"));
 
 //	// create output stream and write variable to output	
 //	v.createNcOutputStream("testnc1.nc");
@@ -76,8 +82,8 @@ int main(){
 
 //	// close streams when done
 //	v.closeNcOutputStream();
-	v.closeNcInputStream();
-
+//	v.closeNcInputStream();
+	v.writeOneShot("trmm20030101.nc");
 
 
 

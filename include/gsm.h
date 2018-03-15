@@ -306,7 +306,8 @@ public:
 vector <float> createCoord(float x0, float xf, int nx, float &dx);
 
 // create coordinate vector given x0, xf and resolution
-vector <float> createCoord(float x0, float xf, float dx, int &nx);
+vector <float> createCoord(double x0, double xf, double dx, int &nx);	// x0 and xf are centres of 1st and last gridbox
+vector <float> createCoord_from_edges(double x0, double xf, double dx, int &nx); // x0 and xf are edges of 1st and last gridbox
 
 // print a gridded variable along with 2d coordinates defined on x, y
 void printVar(vector <float> &x, vector <float> &y, vector <float> &data);

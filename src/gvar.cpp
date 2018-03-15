@@ -539,14 +539,14 @@ int gVar::readVar_reduce_mean(double gt1, double gt2){
 //		cout << gt2string(ipvar->ix2gt(tstart)) << " " << gt2string(ipvar->ix2gt(tend)) << endl;
 
 		if (tend < 0) break;
-	
+
 		for (int i=tstart; i<=tend; ++i){ 
 			ifile_handle->readVar(*ipvar, i, ipvar->ivar1);	// readCoords() would have set ivar1
 			temp = temp + *ipvar;
 			++count;
 		}
 
-		if (tend == ipvar->times.size()-1){ // if tend was the last time in file, then load next file and continue reading
+		if (tend >= ipvar->times.size()-1){ // if tend was the last time in file, then load next file and continue reading
 			++curr_file;
 			loadInputFileMeta();
 		}
@@ -555,8 +555,10 @@ int gVar::readVar_reduce_mean(double gt1, double gt2){
 	
 	CDEBUG << "----------- Read " << count << " timesteps from " << varname << endl;
 	temp = temp/count;	
-	lterpCube(temp, *this, lterp_indices);
+	if (count > 0) lterpCube(temp, *this, lterp_indices);	// We want to preserve current values if no new values were read
 }
+
+
 
 //int gVar::readVar_reduce_sd(double gt1, double gt2){
 //	gVar s, ssq; 

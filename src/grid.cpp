@@ -37,11 +37,22 @@ vector <float> createCoord(float x0, float xf, int nx, float &dx){
 }
 
 // create coordinate vector given x0, xf and resolution
-// TODO Check this function - though it works
-vector <float> createCoord(float x0, float xf, float dx, int &nx){
-//	float xres = 1/dx;	
-	nx = floor(fabs(xf-x0)/dx)+1;	// use resolution to set nx
-	x0 += ((xf-x0) - (nx-1)*dx)/2;
+// x0 and xf are treated as centres and included in coords 
+vector <float> createCoord(double x0, double xf, double dx, int &nx){
+	double eps = 1+1e-10;			// need to slightly increase the desired range so that floor doesnt reduce nx
+	nx = int(fabs(xf-x0)/dx*eps)+1;	// use resolution to set nx
+	vector <float> xvec(nx);	// create variable
+	for (int i=0; i<nx; ++i) {xvec[i] = x0 + i*dx;}
+	return xvec;
+}
+
+// create coordinate vector given x0, xf and resolution
+// x0 and xf are treated as edges and centres are returned in coords 
+vector <float> createCoord_from_edges(double x0, double xf, double dx, int &nx){
+	double eps = 1+1e-10;			// need to slightly increase the desired range so that floor doesnt reduce nx
+	xf -= dx/2;
+	x0 += dx/2;
+	nx = int(fabs(xf-x0)/dx*eps)+1;	// use resolution to set nx
 	vector <float> xvec(nx);	// create variable
 	for (int i=0; i<nx; ++i) {xvec[i] = x0 + i*dx;}
 	return xvec;

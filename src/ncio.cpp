@@ -245,6 +245,7 @@ int NcFile_handle::readCoords(gVar &v, bool rr){
 		CINFOC << gt2string(v.ix2gt(0)) << " --- " << gt2string(v.ix2gt(v.ntimes-1)) << ").\n";
 	}
 	CINFO << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
+	gsm_log->flush();
 	
 	return 0;
 }
@@ -300,8 +301,10 @@ int NcFile_handle::readVar(gVar &v, int itime, int iVar){
 		return 1;
 	}
 
-	CDEBUG << "readVar_it(" << v.varname << "): " << gt2string(v.ix2gt(itime)) << endl;
-
+	CDEBUG << "readVar_it(" << v.varname << "): ";
+	if (v.times.size() > 0) CDEBUGC << gt2string(v.ix2gt(itime)) << endl;
+	else CDEBUGC << "2D map" << endl;
+	
 	// file is in read mode.. continue.
 	if (iVar == -1) iVar = v.ivar1;
 	// some crackpot nc files have coords last. so this check shouldnt be made. 
