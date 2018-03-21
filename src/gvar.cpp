@@ -155,8 +155,8 @@ int gVar::printGrid(ostream &lfout){
 		t0 = ix2gt(times.size()-1);
 		lfout << "\tlast  gday (GMT) = " << gtstr6d(t0) << ", i.e. " << gt2string(t0) << '\n';
 	}
-	lfout << "\ttime step = " << tstep << " hours.\n";
-	lfout << "\thours per time unit = " << tscale << "\n";
+	lfout << "\ttime step (tstep) = " << tstep << " hours.\n";
+	lfout << "\thours per time unit (tscale) = " << tscale << "\n";
 	lfout << "> Missing value = " << missing_value << "\n";
 	lfout << "> Streams:\n";
 	lfout << "\tInput: "; 
@@ -182,8 +182,7 @@ int gVar::printValues(ostream &lfout){
 
 // returns the index corresponding time just <= gt
 int gVar::gt2ix(double gt){
-//	CDEBUG << "gt2ix("<< varname << ")" << (gt - tbase)*24.0 - times[0]*tscale << endl;
-//	CDEBUG << "gt = " << gt2string(gt) << ", t0 = " << gt2string(tbase+times[0]*tscale/24) << endl;
+//    CDEBUG << "t0 = " << times[0] << ", tbase = " << tbase << ", tscale = " << tscale << ", tstep = " << tstep << endl;
 	return floor(((gt - tbase)*24.0 - times[0]*tscale)/tstep);	// essential to use floor. int() truncates towards 0! $%@#^$@#*@   
 }
 

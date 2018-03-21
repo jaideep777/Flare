@@ -241,7 +241,7 @@ int NcFile_handle::readCoords(gVar &v, bool rr){
 			CERR << "ERROR setting base time in getCoords(): invalid time units!\n";
 			return 1;
 		}
-		v.tstep = (v.times[1] - v.times[0])*v.tscale;	// tstep in hours
+		v.tstep = (v.times[v.times.size()-1] - v.times[0])/(v.times.size()-1)*v.tscale;    // average tstep in hours
 		CINFOC << gt2string(v.ix2gt(0)) << " --- " << gt2string(v.ix2gt(v.ntimes-1)) << ").\n";
 	}
 	CINFO << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
