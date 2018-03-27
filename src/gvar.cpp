@@ -1,7 +1,7 @@
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     libGSM - library for Gridded Spatial Modelling
-    Copyright (C) 2016 Jaideep Joshi
+    Copyright (C) 2016, 2018 Jaideep Joshi
 
 	This file is part of libGSM.
 
