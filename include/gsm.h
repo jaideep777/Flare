@@ -219,11 +219,13 @@ class gVar{
 	float& operator () (int ilon, int ilat, int ilev);	// get reference to element by coord indices, like n-D array
 	float& operator [] (int i);	// get reference to element by memory index, like 1-D array
 	gVar operator + (const gVar &v);
+	gVar operator + (const float x);
 	gVar operator - (const gVar &v);
+	gVar operator - (const float x);
 	gVar operator * (const gVar &v);
 	gVar operator * (const float x);
 	gVar operator / (const float x);
-	
+	gVar operator / (const gVar &v);
 
 	// reading functions
 	int createNcInputStream(vector <string> files, vector <float> glim);
@@ -237,6 +239,7 @@ class gVar{
 
 	int readVar_reduce_mean(double gt1, double gt2);
 //	int readVar_reduce_sd(double gt1, double gt2);
+	gVar trend(double gt1, double gt2);
 	
 	// these 2 functions create a gVar in one shot by reading the first record in specified file
 	// createOneShot uses file's coords, readOneShot uses variable's coords and interpolates data
