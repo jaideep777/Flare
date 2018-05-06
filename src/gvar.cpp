@@ -701,6 +701,102 @@ gVar gVar::trend(double gt1, double gt2){
 
 
 
+gVar gVar::trend_gpu(double gt1, double gt2){
+
+	
+	gVar temp; temp.copyMeta(*ipvar);
+	temp.fill(0);
+	int count = 0;
+	
+	gVar Sxx = temp, 
+		 Syy = temp, 
+		 Sxy = temp;
+
+	gVar sxy = temp, 
+		 sx = temp, 
+		 sy = temp, 
+		 sxx = temp, 
+		 syy = temp;
+
+	gVar b1 = temp, 
+		 s = temp,
+		 t = temp; 
+	
+	updateInputFile(gt1);	// this will give correct OR one previous file
+	while (gt1 > ipvar->ix2gt(ipvar->times.size()-1)){	// increment curr_file as long as gt1 +outside file range
+		++curr_file;
+		loadInputFileMeta();
+	}
+
+	clock_t start, end;
+	double msecs;
+	start = clock();
+	
+	CDEBUG << "readVar_reduce_mean (" << varname << ") :" << gt2string(gt1) << " " << gt2string(gt2) << endl;
+	while(1){
+//		cout << (ipvar->times[0]) << " " << (ipvar->times[ipvar->times.size()-1]) << " "  << (gt1-ipvar->tbase)*24.0/ipvar->tscale <<  endl;
+		int tstart = lower_bound(ipvar->times.begin(), ipvar->times.end(), (gt1-ipvar->tbase)*24.0/ipvar->tscale) - ipvar->times.begin();	   // first elem >= gt1 
+		int tend   = upper_bound(ipvar->times.begin(), ipvar->times.end(), (gt2-ipvar->tbase)*24.0/ipvar->tscale) - ipvar->times.begin() -1;   // last elem <= gt2
+//		cout << gt2string(ipvar->ix2gt(tstart)) << " " << gt2string(ipvar->ix2gt(tend)) << endl;
+
+		if (tend < 0) break;
+
+		for (int i=tstart; i<=tend; ++i){ 
+			ifile_handle->readVar(*ipvar, i, ipvar->ivar1);	// readCoords() would have set ivar1
+//			double gt = ix2gt(i);
+			
+//			sxy = sxy + (*ipvar)*count;		// sum(xi*yi)
+//			sx = sx + count;				// sum(xi)
+//			sy = sy + (*ipvar);				// sum(yi)
+//			sxx = sxx + count*count;		// sum(xi^2)
+//			syy = syy + (*ipvar)*(*ipvar);	// sum(yi^2)
+			
+			for (int i=0; i<temp.values.size(); ++i){
+				sxy[i] += (*ipvar)[i]*count;
+				sx[i] += count;
+				sy[i] += (*ipvar)[i];
+				sxx[i] += count*count;
+				syy[i] += (*ipvar)[i] * (*ipvar)[i];
+			}
+			
+			++count;
+		}
+
+		if (tend >= ipvar->times.size()-1){ // if tend was the last time in file, then load next file and continue reading
+			++curr_file;
+			if (curr_file >= filenames.size()) break;
+			else loadInputFileMeta();
+		}
+		else break;
+	}
+	
+	CDEBUG << "----------- Read " << count << " timesteps from " << varname << endl;
+	
+	Sxy = sxy - sx*sy/count;
+	Sxx = sxx - sx*sx/count;
+	Syy = syy - sy*sy/count;
+	
+	b1 = Sxy/Sxx;
+	s = (Syy - b1*Sxy)/(count-2);
+	s.sqrtVar();
+	
+	gVar sqrt_Sxx = Sxx;
+	sqrt_Sxx.sqrtVar();
+	
+	t = b1/(s/sqrt_Sxx);
+
+	end = clock();
+	msecs = ((double) (end - start)) * 1000 / CLOCKS_PER_SEC;
+	
+	cout << "Execution time is " << msecs/1000 << " sec" << endl;
+//	if (count > 0) lterpCube(b1, *this, lterp_indices);	// We want to preserve current values if no new values were read
+	return b1;
+}
+
+
+
+
+
 
 //int gVar::readVar_reduce_sd(double gt1, double gt2){
 //	gVar s, ssq; 
