@@ -61,7 +61,7 @@ __global__ void calc_metrics_kernel(float * b1, float * t, float * sxx, float * 
 
 gVar gVar::trend_gpu(double gt1, double gt2){
 
-	clock_t start, end;
+	clock_t start, end, start1, end1;
 	double msecs;
 	start = clock();
 
@@ -73,6 +73,11 @@ gVar gVar::trend_gpu(double gt1, double gt2){
 	float * b1_dev, *t_dev;
 	float * var_dev;
 
+	cudaStream_t stream1, stream2;
+	cudaStreamCreate(&stream1);
+	cudaStreamCreate(&stream2);
+	
+	
 	cudaMalloc((void**)& var_dev, nvals*sizeof(float));
 	
 	cudaMalloc((void**)& sxx_dev, nvals*sizeof(float));
@@ -81,8 +86,11 @@ gVar gVar::trend_gpu(double gt1, double gt2){
 	cudaMalloc((void**)& sx_dev, nvals*sizeof(float));
 	cudaMalloc((void**)& sy_dev, nvals*sizeof(float));
 	
-	cudaMalloc((void**)& b1_dev, nlons*nlats*nlevs*sizeof(float));
-	cudaMalloc((void**)& t_dev,  nlons*nlats*nlevs*sizeof(float));
+	cudaMalloc((void**)& b1_dev, nvals*sizeof(float));
+	cudaMalloc((void**)& t_dev,  nvals*sizeof(float));
+	
+	float * buffer;
+	cudaMallocHost((void**)&buffer, nvals*sizeof(float));	// alloate pinned memory for async calls
 	
 	gVar temp; temp.copyMeta(*ipvar);
 	temp.fill(0);
@@ -102,19 +110,29 @@ gVar gVar::trend_gpu(double gt1, double gt2){
 
 	CDEBUG << "readVar_reduce_mean (" << varname << ") :" << gt2string(gt1) << " " << gt2string(gt2) << endl;
 	while(1){
+//		cout << (ipvar->times[0]) << " " << (ipvar->times[ipvar->times.size()-1]) << " "  << (gt1-ipvar->tbase)*24.0/ipvar->tscale <<  endl;
 		int tstart = lower_bound(ipvar->times.begin(), ipvar->times.end(), (gt1-ipvar->tbase)*24.0/ipvar->tscale) - ipvar->times.begin();	   // first elem >= gt1 
 		int tend   = upper_bound(ipvar->times.begin(), ipvar->times.end(), (gt2-ipvar->tbase)*24.0/ipvar->tscale) - ipvar->times.begin() -1;   // last elem <= gt2
+//		cout << gt2string(ipvar->ix2gt(tstart)) << " " << gt2string(ipvar->ix2gt(tend)) << endl;
 
 		if (tend < 0) break;
 
 		for (int i=tstart; i<=tend; ++i){ 
-			ifile_handle->readVar(*ipvar, i, ipvar->ivar1);	// this is the slowest step which will run in parallel with the kernel execution. Hence no need to parallelize GPU-IO and kernel execution 
+			start1 = clock();
+			ifile_handle->readVar(*ipvar, i, ipvar->ivar1);	// readCoords() would have set ivar1
+			end1 = clock();
+			copy(ipvar->values.begin(), ipvar->values.end(), buffer);
+			cout << "copy took " << ((double) (end1 - start1)) * 1000 / CLOCKS_PER_SEC << "secs" <<  endl;
 			
-			cudaMemcpy(var_dev, &(ipvar->values[0]), ipvar->values.size()*sizeof(float), cudaMemcpyHostToDevice);
+			cudaMemcpyAsync(var_dev, buffer, ipvar->values.size()*sizeof(float), cudaMemcpyHostToDevice, stream1);
+			gpuErrchk(cudaGetLastError());
+			
+			cudaDeviceSynchronize();
+			
+			update_residuals_kernel <<< nblocks, blockSize, 0, stream2 >>> (var_dev, sxx_dev, syy_dev, sxy_dev, sx_dev, sy_dev, count, nvals);						
 			gpuErrchk(cudaGetLastError());
 
-			update_residuals_kernel <<< nblocks, blockSize >>> (var_dev, sxx_dev, syy_dev, sxy_dev, sx_dev, sy_dev, count, nvals);						
-			gpuErrchk(cudaGetLastError());
+			//cudaDeviceSynchronize();
 						
 			++count;
 		}

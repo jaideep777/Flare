@@ -352,7 +352,7 @@ gVar coarseGrain(string fun, gVar &hires, vector <float> &xlons, vector <float> 
 	gVar temp; temp.copyMeta(hires);
 	temp.lats = xlats; temp.nlats = xlats.size();
 	temp.lons = xlons; temp.nlons = xlons.size();
-	temp.values.resize(temp.nlons*temp.nlats*temp.nlevs);
+	temp.values.resize(temp.nlons*temp.nlats*temp.nlevs);	// TODO: This is why resize was not done in copyMeta
 	temp.fill(0);
 
 	gVar counts = temp;

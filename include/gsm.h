@@ -67,6 +67,37 @@ extern bool gsm_errors_on;
 //void setWarningFlag(bool f);
 //void setErrorFlag(bool f);
 
+
+/*~~~~~~~~~~~~~~~~~~~~~~~~~ Pinned vector that uses CUDAMALLOC ~~~~~~~~~~~~~~~*/
+
+template <typename T>
+class PinnedVector{
+	private:
+	T * data;
+	int len;
+	
+	public:
+	
+	PinnedVector <T> ();
+	PinnedVector <T> (int n);
+	PinnedVector <T> (int n, T initVal);
+	PinnedVector(const PinnedVector& pv);	
+	
+	~PinnedVector <T> ();
+	
+	int size();
+	
+	void resize(int n, T fillVal = 0);
+	void print(string name = "");	
+	
+	T& operator[](int i);
+	PinnedVector<T>& operator=(const PinnedVector& pv);
+};
+
+#include "../src/pinned_vector.tpp" 
+
+
+
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~  TIME    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 //	Definitions:

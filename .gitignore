@@ -4,6 +4,7 @@
 *.o
 *.obj
 *.cu_o 
+*/*.cu_o
 
 # Precompiled Headers
 *.gch
