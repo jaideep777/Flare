@@ -25,7 +25,12 @@
 
 #include <math.h>
 #include "../include/gsm.h"
+#include <thread>
 
+void read_subset(NcVar* vVar, gVar *v, int itime, int ilat0, int ilon0, int nlats, int nlons, int start){
+	vVar->set_cur(itime, ilat0, ilon0); // set the starting time at itime and lat/lon/lev at SW corner		
+	vVar->get(&v->values[start], 1, nlats, nlons);
+}
 
 vector <int> id2ix3(int id, int nx, int ny, int nz){
 	// id = iz*ny*nx + iy*nx + ix; 
@@ -71,12 +76,18 @@ int NcFile_handle::readVar_parallel(gVar &v, int itime, int iVar){
 		vVar->get(&v.values[0], 1, v.nlevs, v.nlats, v.nlons);
 	}	
 	else if (vVar->num_dims() == 3){
-		cout << "Reading 3D file" << endl; 
-		vVar->set_cur(itime, ilat0, ilon0); // set the starting time at itime and lat/lon/lev at SW corner		
-		vVar->get(&v.values[0], 1, v.nlats/2, v.nlons);
+		cout << "Reading 3D file" << endl;
+//		vVar->set_cur(itime, ilat0, ilon0); // set the starting time at itime and lat/lon/lev at SW corner		
+//		vVar->get(&v.values[0], 1, v.nlats/2, v.nlons);
+		thread t1(read_subset, vVar, &v, itime, ilat0, ilon0, v.nlats/2, v.nlons, 0);
+
 		cout << "ilat0-ilatf = " << ilat0 << ":" << ilatf << endl;
 //		vVar->set_cur(itime, ilatf/2+1, ilon0); // set the starting time at itime and lat/lon/lev at SW corner		
 //		vVar->get(&v.values[(ilatf/2+1)*v.nlons + ilon0], 1, v.nlats - v.nlats/2, v.nlons);
+		thread t2(read_subset, vVar, &v, itime, ilatf/2+1, ilon0, v.nlats - v.nlats/2, v.nlons, (ilatf/2+1)*v.nlons + ilon0);
+
+		t1.join();
+		t2.join();
 	}
 	else if (vVar->num_dims() == 2){
 		vVar->set_cur(ilat0, ilon0);

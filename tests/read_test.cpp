@@ -5,7 +5,7 @@
 #include <algorithm>
 using namespace std;
 
-// g++ -I/usr/local/netcdf-c/include -I/usr/local/netcdf-cxx-legacy/include -I/home/jaideep/Documents/libgsm_v2/include -L/home/jaideep/Documents/libgsm_v2/lib -L/usr/local/netcdf-cxx-legacy/lib -o 1 read_test.cpp -l:libgsm.so.2 -lnetcdf_c++ 
+// g++ -I/usr/local/netcdf-c-4.3.2/include -I/usr/local/netcdf-cxx-legacy/include -I/home/jaideep/codes/FIRE_CODES/libgsm_v2/include -L/home/jaideep/codes/FIRE_CODES/libgsm_v2/lib -L/usr/local/netcdf-cxx-legacy/lib -o 1 read_test.cpp -l:libgsm.so.2 -lnetcdf_c++ 
 
 
 int main(){
@@ -42,8 +42,11 @@ int main(){
 	hires.createNcInputStream(infiles, glim);
 	hires.printGrid();
 
-	hires.readVar_it(0);
-	hires.writeOneShot("serial_io.nc");
+//	hires.readVar_it(0);
+//	hires.writeOneShot("serial_io.nc");
+
+	hires.fill(0);
+	hires.printValues();
 	
 	hires.readVar_it_parallel(0);
 	hires.writeOneShot("par_io.nc");
