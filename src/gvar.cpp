@@ -389,6 +389,9 @@ gVar gVar::operator / (const gVar &v){
 // (in fact that cant be touched because they are private)
 int gVar::createNcInputStream(vector <string> files, vector <float> glim){
 
+	clock_t start, end;
+	start = clock();
+
 	gridlimits = glim; //TODO should this be assigned to ipvar instead?
 	if (glim[0] > lons[0] || glim[1] < lons[nlons-1] || glim[2] > lats[0] || glim[3] < lats[nlats-1]){
 		CWARN << "Specified grid limits are narrower than the variable grid" << endl; 
@@ -405,6 +408,9 @@ int gVar::createNcInputStream(vector <string> files, vector <float> glim){
 	ipvar = new gVar;					// allocate gVar for input
 	
 	loadInputFileMeta();	// read metadata from 1st input file
+	
+	end = clock();
+	cout << "createNcInputStream: " << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms." << endl; 
 }
 
 int gVar::loadInputFileMeta(){
@@ -500,9 +506,34 @@ int gVar::readVar_it(int tid){
 		return 1;
 	}
 
+	clock_t start, end;
+	start = clock();
+
 	ifile_handle->readVar(*ipvar, tid, ipvar->ivar1);
+	end = clock();
+	cout << "readVar_it: " << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms." << endl; 
+
+
 	lterpCube(*ipvar, *this, lterp_indices);
 }
+
+int gVar::readVar_it_parallel(int tid){
+	if (ifile_handle == NULL){
+		CERR << "gVar::readVar_it(" << varname << "): NcInputStream not initialized" << endl;
+		return 1;
+	}
+
+	clock_t start, end;
+	start = clock();
+
+	ifile_handle->readVar_parallel(*ipvar, tid, ipvar->ivar1);
+	end = clock();
+	cout << "readVar_it_parallel: " << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms." << endl; 
+
+
+	lterpCube(*ipvar, *this, lterp_indices);
+}
+
 
 int gVar::createOneShot(string filename, vector<float> glim){
 	ifname = filename;

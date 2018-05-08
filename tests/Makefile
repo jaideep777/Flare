@@ -14,7 +14,7 @@ CUFILES  :=  $(TARGET).cu
 CUDA_INSTALL_PATH ?= /usr/local/cuda#-5.0
 
 # compilers
-NVCC := nvcc -g --ptxas-options=-v,-abi=no
+NVCC := nvcc -g --ptxas-options=-v
 CXX  := g++ -g -fPIC
 LINK := g++ -fPIC
 
@@ -23,13 +23,13 @@ INC_PATH := -I$(CUDA_INSTALL_PATH)/include
 LIB_PATH := -L$(CUDA_INSTALL_PATH)/lib64 -L/usr/local/lib 
 GLLIB_PATH := -L/usr/lib/nvidia-331
 
-INC_PATH += -I/usr/local/netcdf-c-4.3.2/include -I/usr/local/netcdf-cxx-legacy/include -I/home/jaideep/codes/FIRE_CODES/libgsm_v2/include
-LIB_PATH += -L/home/jaideep/codes/FIRE_CODES/libgsm_v2/lib -L/usr/local/netcdf-cxx-legacy/lib
+INC_PATH += -I/usr/local/netcdf-c-4.3.2/include -I/usr/local/netcdf-cxx-legacy/include -I/home/jaideep/Documents/libgsm_v2/include
+LIB_PATH += -L/home/jaideep/Documents/libgsm_v2/lib -L/usr/local/netcdf-cxx-legacy/lib
 
 # flags
-ARCH := sm_30
+ARCH := 
 COMMONFLAGS = -m64 
-NVCCFLAGS += $(COMMONFLAGS) -arch=$(ARCH) 
+NVCCFLAGS += $(COMMONFLAGS) #-arch=$(ARCH) 
 CXXFLAGS += $(COMMONFLAGS) $(CXXWARN_FLAGS) 
 LINKFLAGS += $(COMMONFLAGS) 
 

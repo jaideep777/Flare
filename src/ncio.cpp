@@ -166,6 +166,7 @@ int NcFile_handle::readCoords(gVar &v, bool rr){
 			slatix = ncIndexLo(v.lats, slat);
 			nlatix = ncIndexHi(v.lats, nlat);
 			ilat0 = (nlatix > slatix)? slatix:nlatix;
+			ilatf = (nlatix > slatix)? nlatix:slatix;
 			// cut array
 			v.lats = copyArray(v.lats, nlatix, slatix);
 			v.nlats = fabs(nlatix - slatix) +1;
@@ -196,6 +197,7 @@ int NcFile_handle::readCoords(gVar &v, bool rr){
 			wlonix = ncIndexLo(v.lons, wlon);
 			elonix = ncIndexHi(v.lons, elon);
 			ilon0 = (elonix > wlonix)? wlonix:elonix;
+			ilonf = (elonix > wlonix)? elonix:wlonix;
 			// cut array
 			v.lons = copyArray(v.lons, elonix, wlonix);	// copyArray returns a new vector 
 			v.nlons = elonix - wlonix +1;
@@ -307,12 +309,7 @@ int NcFile_handle::readVar(gVar &v, int itime, int iVar){
 	
 	// file is in read mode.. continue.
 	if (iVar == -1) iVar = v.ivar1;
-	// some crackpot nc files have coords last. so this check shouldnt be made. 
-	// TODO maybe default ivar should not be allowed!!
-//	if (iVar < v.ncoords){
-//		cout << "FATAL ERROR in readVar(): Attempted to read a coord variable.\n";
-//		return 1;
-//	}
+
 	// allocate space for values
 	v.values.resize(v.nlevs*v.nlats*v.nlons); // no need to fill values 
 	NcVar * vVar = dFile->get_var(iVar);
