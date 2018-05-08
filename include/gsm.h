@@ -267,6 +267,7 @@ class gVar{
 	
 	int readVar_gt(double gt, int mode); 
 	int readVar_it(int tid);
+	int readVar_it_parallel(int tid);
 
 	int readVar_reduce_mean(double gt1, double gt2);
 //	int readVar_reduce_sd(double gt1, double gt2);
@@ -308,6 +309,7 @@ public:
 	float wlon, elon, slat, nlat;	// map limits
 	int wlonix, elonix, slatix, nlatix;	// map limits indices. 
 	int ilon0, ilat0, itime0;
+	int ilonf, ilatf;
 	// NOTE: above indices are defined on the native arrays and not reversed ones
 	bool mplimited; // if true, map limits are set
 	
@@ -327,6 +329,7 @@ public:
 	int readVar(gVar &v, int itime, int iVar = -1); // read variable with index iVar from file into "v"
 	int readVar_gt(gVar &v, double gt, int mode, int iVar = -1); // read variable corresponding to GT gt
 		// as specified by mode: 0 = hold values from previous step, 1 = interpolate
+	int readVar_parallel(gVar &v, int itime, int iVar = -1);
 	
 	// writing functions
 	int writeCoords(gVar &v, bool wr = true); // write coord metadata, write values if wr is true

@@ -108,7 +108,15 @@ gVar gVar::trend_gpu(double gt1, double gt2){
 		if (tend < 0) break;
 
 		for (int i=tstart; i<=tend; ++i){ 
+<<<<<<< HEAD:tests/trend_gpu.cu
 			ifile_handle->readVar(*ipvar, i, ipvar->ivar1);	// this is the slowest step which will run in parallel with the kernel execution. Hence no need to parallelize GPU-IO and kernel execution 
+=======
+			clock_t start1, end1;
+			start1 = clock();
+			ifile_handle->readVar(*ipvar, i, ipvar->ivar1);	// readCoords() would have set ivar1
+			end1 = clock();
+			cout << "time to read: " << ((double) (end1 - start1)) * 1000 / CLOCKS_PER_SEC << " ms" << endl;
+>>>>>>> 6abbe57814ff67b96acb195843ea1c8873d73222:tests/gpu_test.cu
 			
 			cudaMemcpy(var_dev, &(ipvar->values[0]), ipvar->values.size()*sizeof(float), cudaMemcpyHostToDevice);
 			gpuErrchk(cudaGetLastError());
@@ -181,18 +189,63 @@ int main(){
 
 	string files[] = 
 	{
-		"/media/jaideep/WorkData/Fire_G/GPP_modis/gpp.2000-2015.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-01-01.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-01-09.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-01-17.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-01-25.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-02-02.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-02-10.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-02-18.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-02-26.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-03-06.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-03-14.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-03-22.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-03-30.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-04-07.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-04-15.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-04-23.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-05-01.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-05-09.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-05-17.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-05-25.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-06-02.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-06-10.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-06-18.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-06-26.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-07-04.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-07-12.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-07-20.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-07-28.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-08-05.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-08-13.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-08-21.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-08-29.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-09-06.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-09-14.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-09-22.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-09-30.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-10-08.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-10-16.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-10-24.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-11-01.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-11-09.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-11-17.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-11-25.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-12-03.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-12-11.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-12-19.nc",
+		"/media/jaideep/HD-B1/LAI/LAI_new/MOD15A2H.A_LAI-2003-12-27.nc"
 	};
 
-	vector <string> infiles(files, files+1); 
+	vector <string> infiles(files, files+46); 
 	gVar hires;
 	hires.initMetaFromFile(infiles[0]);
 	hires.createNcInputStream(infiles, glim);
 	hires.printGrid();
 
-	gVar slope = hires.trend_gpu(ymd2gday("2000-1-1"), ymd2gday("2015-12-31"));
+	gVar slope = hires.trend_gpu(ymd2gday("2003-1-1"), ymd2gday("2003-12-31"));
 	
-	slope.writeOneShot("npp.t1.nc");
+	slope.writeOneShot("npp.b1.nc");
 	
 	return 0;
 
