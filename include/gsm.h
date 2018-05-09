@@ -179,9 +179,9 @@ vector <float> max_vec(vector <float> &u, vector <float> &v);	// return elementw
 // Array operations
 float sum(vector <float> &v);
 float avg(vector <float> &v);
-vector <float> dim_sum(vector <float> v, int idim, vector <float> dimsizes);
-vector <float> operator * (const vector <float> &x, const vector <float> &y);
-vector <float> operator / (const vector <float> &x, const float c);
+//vector <float> dim_sum(vector <float> v, int idim, vector <float> dimsizes);
+//vector <float> operator * (const vector <float> &x, const vector <float> &y);
+//vector <float> operator / (const vector <float> &x, const float c);
 
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~  GVAR    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
@@ -217,7 +217,7 @@ class gVar{
 	
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~
 	public:
-	vector <float> values;	// actual data store of gVar
+	vector <float> values;	// data store of gVar
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
