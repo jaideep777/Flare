@@ -71,19 +71,20 @@ extern bool gsm_errors_on;
 /*~~~~~~~~~~~~~~~~~~~~~~~~~ Pinned vector that uses CUDAMALLOC ~~~~~~~~~~~~~~~*/
 
 template <typename T>
-class PinnedVector{
+class BufferedVector{
 	private:
-	T * data;
+	T * data;		// array that will be used for processing
+	T * membuf;	// array that will be used for reading data into
 	int len;
 	
 	public:
 	
-	PinnedVector <T> ();
-	PinnedVector <T> (int n);
-	PinnedVector <T> (int n, T initVal);
-	PinnedVector(const PinnedVector& pv);	
+	BufferedVector <T> ();
+	BufferedVector <T> (int n);
+	BufferedVector <T> (int n, T initVal);
+	BufferedVector(const BufferedVector& pv);	
 	
-	~PinnedVector <T> ();
+	~BufferedVector <T> ();
 	
 	int size();
 	
@@ -91,10 +92,12 @@ class PinnedVector{
 	void print(string name = "");	
 	
 	T& operator[](int i);
-	PinnedVector<T>& operator=(const PinnedVector& pv);
+	BufferedVector<T>& operator=(const BufferedVector& pv);
+	
+	void swap();
 };
 
-#include "../src/pinned_vector.tpp" 
+#include "../src/buffered_vector.tpp" 
 
 
 
@@ -273,6 +276,7 @@ class gVar{
 //	int readVar_reduce_sd(double gt1, double gt2);
 	gVar trend(double gt1, double gt2);
 	gVar trend_gpu(double gt1, double gt2);
+	gVar trend_par(double gt1, double gt2);
 	
 	// these 2 functions create a gVar in one shot by reading the first record in specified file
 	// createOneShot uses file's coords, readOneShot uses variable's coords and interpolates data

@@ -513,7 +513,6 @@ int gVar::readVar_it(int tid){
 	end = clock();
 	cout << "readVar_it: " << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms." << endl; 
 
-
 	lterpCube(*ipvar, *this, lterp_indices);
 }
 
@@ -679,14 +678,10 @@ gVar gVar::trend(double gt1, double gt2){
 		if (tend < 0) break;
 
 		for (int i=tstart; i<=tend; ++i){ 
+//			thread t1(NcFile_handle::readVar, ifile_handle, *ipvar, i, ipvar->ivar1);
+//			t1.join();
 			ifile_handle->readVar(*ipvar, i, ipvar->ivar1);	// readCoords() would have set ivar1
 //			double gt = ix2gt(i);
-			
-//			sxy = sxy + (*ipvar)*count;		// sum(xi*yi)
-//			sx = sx + count;				// sum(xi)
-//			sy = sy + (*ipvar);				// sum(yi)
-//			sxx = sxx + count*count;		// sum(xi^2)
-//			syy = syy + (*ipvar)*(*ipvar);	// sum(yi^2)
 			
 			for (int i=0; i<temp.values.size(); ++i){
 				sxy[i] += (*ipvar)[i]*count;

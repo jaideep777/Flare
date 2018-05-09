@@ -33,7 +33,7 @@ int main(){
 
 	string fireFiles[] = 
 	{
-		"data/gpp.2000-2015.nc",
+		"data/LAI_MOD15A2H.A_2003-01-01.h25v07.nc",
 	};
 
 	vector <string> infiles(fireFiles, fireFiles+1); 
@@ -42,14 +42,16 @@ int main(){
 	hires.createNcInputStream(infiles, glim);
 	hires.printGrid();
 
-//	hires.readVar_it(0);
-//	hires.writeOneShot("serial_io.nc");
+	hires.readVar_it(0);
+	hires.writeOneShot("serial_io.nc");
 
-	hires.fill(0);
-	hires.printValues();
+//	hires.fill(0);
+//	hires.printValues();
 	
-	hires.readVar_it_parallel(0);
-	hires.writeOneShot("par_io.nc");
+//	hires.readVar_it_parallel(0);
+//	hires.writeOneShot("par_io.nc");
+
+	
 
 	hires.closeNcInputStream();	
 	
