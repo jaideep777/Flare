@@ -101,7 +101,7 @@ int NcFile_handle::readVar_parallel(gVar &v, int itime, int iVar){
 	}
 	
 	// if lats are not in SN order, reverse the data along lats
-	if (!latSN)	reverseCube(v.values, v.nlons, v.nlats, v.nlevs);
+	if (!latSN)	reverseCube(&v.values[0], v.nlons, v.nlats, v.nlevs);
 
 	// if either scale_factor or offset is present, convert data..
 	if (v.scale_factor != 1 || v.add_offset != 0){

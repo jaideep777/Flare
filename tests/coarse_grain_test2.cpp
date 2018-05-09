@@ -5,7 +5,7 @@
 #include <algorithm>
 using namespace std;
 
-// g++ -I/usr/local/netcdf-c-4.3.2/include -I/usr/local/netcdf-cxx-legacy/include -I/home/jaideep/codes/FIRE_CODES/libgsm_v2/include -L/home/jaideep/codes/FIRE_CODES/libgsm_v2/lib -L/usr/local/netcdf-cxx-legacy/lib -o 1 coarse_grain_test2.cpp -l:libgsm.so.2 -lnetcdf_c++ 
+// g++ -O3 -I/usr/local/netcdf-c/include -I/usr/local/netcdf-cxx-legacy/include -I/home/jaideep/Documents/libgsm_v2/include -L/home/jaideep/Documents/libgsm_v2/lib -L/usr/local/netcdf-cxx-legacy/lib -o 1 coarse_grain_test2.cpp -l:libgsm.so.2 -lnetcdf_c++ 
 
 
 int main(){
@@ -15,11 +15,11 @@ int main(){
 	NcError err(NcError::silent_nonfatal);
 	
 	// specify log file for gsm
-	ofstream gsml("gsm_log.txt");
-	gsm_log = &gsml;
+//	ofstream gsml("gsm_log.txt");
+//	gsm_log = &gsml;
 
 	// create a grid limits vector for convenience
-	float glimits[] = {0, 360, -90, 90};
+	float glimits[] = {60.25, 99.75, 5.25, 49.75};
 	vector <float> glim(glimits, glimits+4);
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -32,13 +32,17 @@ int main(){
 	times[0]=0;
 
 	gVar hires;
-	hires.createOneShot("/media/jaideep/Totoro/Data/World_population_density/GHS_POP_GPW42000_GLOBE_R2015A_54009_1k_v1_0/wpd_2000_reprojected.nc", glim);
+	hires.createOneShot("/media/jaideep/Totoro/Data/World_population_density/GHS_POP_GPW42000_GLOBE_R2015A_54009_1k_v1_0/GHS_pop_GPW42000_reprojected_SSAplus.nc", glim);
 	hires.printGrid();
 
-	gVar lores = coarseGrain_mean(hires, lons, lats);
-	lores.printGrid();
-	
-	lores.writeOneShot("GHS_pop_GPW42000_0.5deg_world	.nc");
+//	clock_t start, end;
+//	start = clock();
+//	gVar lores = coarseGrain_mean(hires, lons, lats);
+//	end = clock();
+//	cout << "Execution time for coarsegraining is " << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms" << endl;
+//	lores.printGrid();
+//	
+//	lores.writeOneShot("GHS_pop_GPW42000_0.5deg_ssaplus.nc");
 
 
 //	// test gsm_upper_bound and indexC 

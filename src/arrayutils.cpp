@@ -21,11 +21,12 @@
 
 	The author can be contacted at jaideep777@gmail.com 
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~1072.08~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 #include <algorithm>
 #include <sstream>
 #include <string>
+#include <functional>
 #include "../include/gsm.h"
 
 
@@ -84,30 +85,32 @@ void printArray2d(vector <float> &v, int rows, int columns){
 	printArray2d(&v[0], rows, columns);
 }
 
-void setValue(vector <float> &v, float value){
-	for (int i=0; i<v.size(); ++i) v[i] = value;
-}
+//void setValue(vector <float> &v, float value){
+//	for (int i=0; i<v.size(); ++i) v[i] = value;
+//}
 
-void setZero(vector <float> &v){
-	setValue(v, 0);
-}
+//void setZero(vector <float> &v){
+//	setValue(v, 0);
+//}
 
+// FOR COMPATIBILITY ONLY
 void reverseArray(vector <float> &orig){
-	int b = orig.size();
-	float swap;
-	for(int a=0; a<--b; a++){ //increment a and decrement b until they meet eachother
-		swap = orig[a];       //put what's in a into swap space
-		orig[a] = orig[b];    //put what's in b into a
-		orig[b] = swap;       //put what's in the swap (a) into b
-	}
+//	int b = orig.size();
+//	float swap;
+//	for(int a=0; a<--b; a++){ //increment a and decrement b until they meet eachother
+//		swap = orig[a];       //put what's in a into swap space
+//		orig[a] = orig[b];    //put what's in b into a
+//		orig[b] = swap;       //put what's in the swap (a) into b
+//	}
 	//return orig;    //return the new (reversed) string (a pointer to it)
+	reverse(orig.begin(), orig.end());
 }
 
-void printCube(vector <float> &v, int nx, int ny, int nz, float ignoreVal){
-	if (nx*ny*nz != v.size()) {
-		cout << "Error in printCube: dimensions mismatch!\n\n";
-		return;
-	}
+void printCube(float v[], int nx, int ny, int nz, float ignoreVal){
+//	if (nx*ny*nz != v.size()) {
+//		cout << "Error in printCube: dimensions mismatch!\n\n";
+//		return;
+//	}
 	
 	for (int k=0; k<nz; ++k){
 		cout << "lev = " << k << ":\n";
@@ -123,22 +126,22 @@ void printCube(vector <float> &v, int nx, int ny, int nz, float ignoreVal){
 	}	
 }
 
-
-void reverseCube(vector <float> &v, int nx, int ny, int nz, int n4, int n5){
-	if (nx*ny*nz*n4*n5 != v.size()) {
-		cout << "Error in reverseCube: dimensions mismatch!\n\n";
-		return;
-	}
-	float temp;
-	for (int k=0; k<nz; ++k){
-		for (int i=0; i<ny/2; ++i){
-			for (int j=0; j<nx; ++j){
-				temp = v[IX3(j,ny-i-1,k, nx,ny)];
-				v[IX3(j,ny-i-1,k, nx,ny)] = v[IX3(j,i,k, nx,ny)];
-				v[IX3(j,i,k, nx,ny)] = temp;
-			}
+void reverseY(float v[], int nx, int ny){
+	for (int i=0; i<ny/2; ++i){
+		for (int j=0; j<nx; ++j){
+			swap(v[IX2(j,ny-i-1, nx)], v[IX2(j,i, nx)]);
 		}
-	}	
+	}
+}
+
+
+void reverseCube(float v[], int nx, int ny, int nz, int n4, int n5){
+//	if (nx*ny*nz*n4*n5 != v.size()) {
+//		cout << "Error in reverseCube: dimensions mismatch!\n\n";
+//		return;
+//	}
+//	float temp;
+	for (int k=0; k<nz; ++k) reverseY(v+k*nx*ny, nx,ny);
 }
 
 
@@ -149,21 +152,21 @@ bool dscComp(float a, float b){ return (a>b); }
 // upper_bound = 1st element >  (>) val
 
 
-// upper-bound (raw code from stl)
-int gsm_upper_bound (vector<float> &sorted_vec, float val, int first, int last){
-	if (last == -1 || last > sorted_vec.size()) last = sorted_vec.size();
-	if (first < 0) first = 0;
-	int count, step;
-	int it;
-	count = last - first;
-	while (count > 0){
-		int it = first; step=count/2; it += step;
-		if (!(val< sorted_vec[it]))                 // or: if (!comp(val,*it)), for version (2)
-			{ first=++it; count-=step+1;  }
-		else count=step;
-	}
-	return first;
-}
+//// upper-bound (raw code from stl)
+//int gsm_upper_bound (vector<float> &sorted_vec, float val, int first, int last){
+//	if (last == -1 || last > sorted_vec.size()) last = sorted_vec.size();
+//	if (first < 0) first = 0;
+//	int count, step;
+//	int it;
+//	count = last - first;
+//	while (count > 0){
+//		int it = first; step=count/2; it += step;
+//		if (!(val< sorted_vec[it]))                 // or: if (!comp(val,*it)), for version (2)
+//			{ first=++it; count-=step+1;  }
+//		else count=step;
+//	}
+//	return first;
+//}
 
 // returns lower bound in array for val. 
 // if val is out of range, returns appropriate edge. does not return missing value
@@ -234,9 +237,9 @@ int indexC(vector <float> &v, float val){
 			else return -999;
 		} 
 		else {
-//			int m = distance(v.begin(), upper_bound(v.begin(), v.end(), val, ascComp)) - 1; // (last element <= val)
-			int k = (val-v[0])/dv+1;
-			int m = gsm_upper_bound(v, val, k-2, k+2) - 1; // (last element <= val) //TODO: deal with case where this is out of bounds
+			int m = distance(v.begin(), upper_bound(v.begin(), v.end(), val, ascComp)) - 1; // (last element <= val)
+//			int k = (val-v[0])/dv+1;
+//			int m = gsm_upper_bound(v, val, 0, v.size()) - 1; // (last element <= val) 
 			return ((val - v[m]) < (v[m+1]-val))? m:(m+1);
 		}
 	}
@@ -248,18 +251,19 @@ int indexC(vector <float> &v, float val){
 }
 
 // copy array[i1:i2] into new array
-vector <float> copyArray(vector <float> &v, int i2, int i1){
-	// if i1 > i2 swap
-	if (i1 > i2){
-		int temp = i1; i1 = i2; i2 = temp;
-	}
-	int n = i2-i1+1;
-	vector <float> w;
-	for (int i=0; i<n; ++i){
-		w.push_back(v[i1+i]);
-	}
-	return w;
-}
+//vector <float> copyArray(vector <float> &v, int i2, int i1){
+//	// if i1 > i2 swap
+//	if (i1 > i2) swap(i1, i2);
+////	{
+////		int temp = i1; i1 = i2; i2 = temp;
+////	}
+//	int n = i2-i1+1;
+//	vector <float> w(n);
+//	for (int i=0; i<n; ++i){
+//		w[i] = v[i1+i];
+//	}
+//	return w;
+//}
 
 
 vector <float> max_vec(vector <float> &u, vector <float> &v){
@@ -270,52 +274,46 @@ vector <float> max_vec(vector <float> &u, vector <float> &v){
 	}
 	
 	temp.resize(v.size());
-	for (int i=0; i<temp.size(); ++i){
-		temp[i] = (u[i] > v[i])? u[i]:v[i];
-	}
+	transform (u.begin(), u.end(), v.begin(), temp.begin(), [](float a, float b) {return max(a,b);});
 	return temp;
 }
 
 // operations on vectors
 
 float sum(vector <float> &v){
-	float vsum = 0;
-	for (int i=0; i<v.size(); ++i){
-		vsum += v[i];
-	}
-	return vsum;
+	return accumulate(v.begin(), v.end(), 0);
 }
 
 float avg(vector <float> &v){
 	return sum(v)/v.size();
 }
 
-vector <float> dim_sum(vector <float> v, int idim, vector <float> dimsizes){
+//vector <float> dim_sum(vector <float> v, int idim, vector <float> dimsizes){
 
-}
+//}
 
 
-vector <float> operator * (const vector <float> &x, const vector <float> &y){
-	vector <float> temp;
-	if (x.size() != y.size()){
-		CERR << "Vector multiplication: input vectors not compatible!!\n";
-	}
-	else{
-		temp.resize(x.size());
-		for (int i=0; i<temp.size(); ++i){
-			temp[i] = x[i]*y[i];
-		}
-	}
-	return temp;
-}
+//vector <float> operator * (const vector <float> &x, const vector <float> &y){
+//	vector <float> temp;
+//	if (x.size() != y.size()){
+//		CERR << "Vector multiplication: input vectors not compatible!!\n";
+//	}
+//	else{
+//		temp.resize(x.size());
+//		for (int i=0; i<temp.size(); ++i){
+//			temp[i] = x[i]*y[i];
+//		}
+//	}
+//	return temp;
+//}
 
-vector <float> operator / (const vector <float> &x, const float c){
-	vector <float> temp = x;
-	for (int i=0; i<temp.size(); ++i){
-		temp[i] /= c;
-	}
-	return temp;
-}
+//vector <float> operator / (const vector <float> &x, const float c){
+//	vector <float> temp = x;
+//	for (int i=0; i<temp.size(); ++i){
+//		temp[i] /= c;
+//	}
+//	return temp;
+//}
 
 
 //// index of cell containing given value

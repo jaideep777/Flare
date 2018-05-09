@@ -168,7 +168,8 @@ int NcFile_handle::readCoords(gVar &v, bool rr){
 			ilat0 = (nlatix > slatix)? slatix:nlatix;
 			ilatf = (nlatix > slatix)? nlatix:slatix;
 			// cut array
-			v.lats = copyArray(v.lats, nlatix, slatix);
+			//v.lats = copyArray(v.lats, nlatix, slatix);
+			v.lats = vector<float> (v.lats.begin()+ilat0, v.lats.begin()+ilatf+1);
 			v.nlats = fabs(nlatix - slatix) +1;
 			CINFOC << v.nlats << " left: (" << v.lats[0] << " --- " << v.lats[v.nlats-1] << ").\n";
 		}
@@ -199,7 +200,9 @@ int NcFile_handle::readCoords(gVar &v, bool rr){
 			ilon0 = (elonix > wlonix)? wlonix:elonix;
 			ilonf = (elonix > wlonix)? elonix:wlonix;
 			// cut array
-			v.lons = copyArray(v.lons, elonix, wlonix);	// copyArray returns a new vector 
+//			v.lons = copyArray(v.lons, elonix, wlonix);	// copyArray returns a new vector 
+//			cout << " <new code using vector copy constructor> ";
+			v.lons = vector<float> (v.lons.begin()+ilon0, v.lons.begin()+ilonf+1);
 			v.nlons = elonix - wlonix +1;
 			CINFOC << v.nlons << " left: (" << v.lons[0] << " --- " << v.lons[v.nlons-1] << ").\n";
 		}
@@ -335,7 +338,7 @@ int NcFile_handle::readVar(gVar &v, int itime, int iVar){
 	}
 	
 	// if lats are not in SN order, reverse the data along lats
-	if (!latSN)	reverseCube(v.values, v.nlons, v.nlats, v.nlevs);
+	if (!latSN)	reverseCube(&v.values[0], v.nlons, v.nlats, v.nlevs);	// TODO: This reversing can be moved to gVar, only as last step of getting data
 
 	// if either scale_factor or offset is present, convert data..
 	if (v.scale_factor != 1 || v.add_offset != 0){

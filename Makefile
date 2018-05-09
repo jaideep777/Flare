@@ -5,7 +5,7 @@ VERSION = 2
 LIBPATH = -L/usr/local/netcdf-cxx-legacy/lib 	# Netcdf-c++ libaray path
 INCPATH = -I/usr/local/netcdf-cxx-legacy/include -I/usr/local/netcdf-c-4.3.2/include  # need paths to netcdf-c as well as c++ includes
 LDFLAGS =  
-CPPFLAGS = -Wl,--no-as-needed -std=c++11 -fPIC 
+CPPFLAGS = -O3 -Wl,--no-as-needed -std=c++11 -fPIC 
 
 LIBS = -lnetcdf_c++ -pthread
 

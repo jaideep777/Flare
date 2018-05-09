@@ -178,7 +178,7 @@ int gVar::printGridIP(ostream &lfout){
 
 int gVar::printValues(ostream &lfout){
 	lfout << "> Values: (" << values.size() << ")\n";
-	printCube(values, nlons, nlats, nlevs, missing_value);
+	printCube(&values[0], nlons, nlats, nlevs, missing_value);
 }
 
 // returns the index corresponding time just <= gt
@@ -721,6 +721,7 @@ gVar gVar::trend(double gt1, double gt2){
 	msecs = ((double) (end - start)) * 1000 / CLOCKS_PER_SEC;
 	
 	cout << "Execution time is " << msecs/1000 << " sec" << endl;
+
 //	if (count > 0) lterpCube(b1, *this, lterp_indices);	// We want to preserve current values if no new values were read
 	return b1;
 }

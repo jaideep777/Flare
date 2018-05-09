@@ -51,48 +51,61 @@ int main(){
 
 
 	start = clock();
-	upper_bound(v.begin(), v.end(), 555555.5);
+	for (int i=0; i<1000; ++i) upper_bound(v.begin(), v.end(), 555555.5);
 	end = clock();
 	cout << "Execution time for stl::upper_bound is " << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms" << endl;
 
 	start = clock();
-	gsm_upper_bound(v, 555555.5, 0, v.size());
+	for (int i=0; i<1000; ++i) gsm_upper_bound(v, 555555.5, 0, v.size());
 	end = clock();
 	cout << "Execution time for gsm_upper_bound is " << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms" << endl;
 
 	
-	// test coarsegraining on a real large variable
-	NcError err(NcError::silent_nonfatal);
+//	// test coarsegraining on a real large variable
+//	NcError err(NcError::silent_nonfatal);
 
-	vector <float> ilim(4);
-	ilim[0] = -180;
-	ilim[1] = 180;
-	ilim[2] = -90;
-	ilim[3] = 90;
+//	vector <float> ilim(4);
+//	ilim[0] = -180;
+//	ilim[1] = 180;
+//	ilim[2] = -90;
+//	ilim[3] = 90;
+//	
+//	gVar hires;
+//	hires.createOneShot("/media/jaideep/Totoro/Data/MODIS_50KM_06_16/converted_nc_files/LST_MOD11C3.A2006.nc", ilim);
+//	hires.printGrid();
+
+//	int nlons;
+//	vector <float> a = createCoord(ilim[0]+0.125, ilim[1]-0.125, 0.25, nlons);
+//	
+//	start = clock();
+//	for (int i=0; i<7200; ++i){
+//		int my_upperbound = gsm_upper_bound(a, hires.lons[i]);
+//	}
+//	end = clock();
+//	cout << "Execution time for gsm_upper_bound is " << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms" << endl;
+
+
+//	start = clock();
+//	for (int i=0; i<7200; ++i){
+//		vector <float>::iterator stl_upperbound = upper_bound(a.begin(), a.end(), hires.lons[i]);
+//	}
+//	end = clock();
+//	cout << "Execution time for stl::upper_bound is " << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms" << endl;
 	
-	gVar hires;
-	hires.createOneShot("/media/jaideep/Totoro/Data/MODIS_50KM_06_16/converted_nc_files/LST_MOD11C3.A2006.nc", ilim);
-	hires.printGrid();
 
-	int nlons;
-	vector <float> a = createCoord(ilim[0]+0.125, ilim[1]-0.125, 0.25, nlons);
+	vector <float> a = {0,1,2,3,4};
+	iota(a.begin(), a.end(), 5);
+	for_each(a.begin(), a.end(), [](float x){cout << x << " ";});
+	cout << endl;
 	
-	start = clock();
-	for (int i=0; i<7200; ++i){
-		int my_upperbound = gsm_upper_bound(a, hires.lons[i]);
-	}
-	end = clock();
-	cout << "Execution time for gsm_upper_bound is " << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms" << endl;
-
-
-	start = clock();
-	for (int i=0; i<7200; ++i){
-		vector <float>::iterator stl_upperbound = upper_bound(a.begin(), a.end(), hires.lons[i]);
-	}
-	end = clock();
-	cout << "Execution time for stl::upper_bound is " << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms" << endl;
+	float missing_val= 7;
+	for_each(a.begin(), a.end(), [missing_val](float &x){ x = (x==missing_val)? missing_val:0;});
+	for_each(a.begin(), a.end(), [](float x){cout << x << " ";});
+	cout << endl;
 	
 	
 	return 0;
 
 }
+
+

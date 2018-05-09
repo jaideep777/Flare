@@ -156,19 +156,19 @@ void printArray(float v[], int n, ostream &lfout=cout);	// print n elements of a
 void printArray(vector <float> &v, ostream &lfout = cout, string send="", int n=0);	// print float vector
 void printArray2d(float v[], int rows, int columns);	// print 2d array with rows & columns
 void printArray2d(vector <float> &v, int rows, int columns);	// print float vector 2d
-void printCube(vector <float> &v, int nx, int ny, int nz=1, 
+void printCube(float v[], int nx, int ny, int nz=1, 
 				float ignoreVal = std_missing_value); // print a data cube, ignore missing_values
 
-void setZero(vector <float> &v);	// set all of vector to zero
-void setValue(vector <float> &v, float value); // set all elements of vector to value
+//void setZero(vector <float> &v);	// set all of vector to zero
+//void setValue(vector <float> &v, float value); // set all elements of vector to value
 
 void reverseArray(vector <float> &orig);	// reverse given array
-void reverseCube(vector <float> &v, int nx, int ny, 
+void reverseCube(float v[], int nx, int ny, 
 				 int nz=1, int n4=1, int n5=1); // reverse a data cube along lat dimension
 
-vector <float> copyArray(vector <float> &v, int i2, int i1=0); // copy v[i1:i2] into new array (returned)
+//vector <float> copyArray(vector <float> &v, int i2, int i1=0); // copy v[i1:i2] into new array (returned)
 
-int gsm_upper_bound (vector<float> &sorted_vec, float val, int first=0, int last=-1);
+//int gsm_upper_bound (vector<float> &sorted_vec, float val, int first=0, int last=-1);
 
 int ncIndexLo(vector <float> &v, float val); // lower bound, edge for outliers
 int ncIndexHi(vector <float> &v, float val); // upper bound, edge for outliers
