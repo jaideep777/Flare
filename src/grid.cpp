@@ -59,7 +59,7 @@ vector <float> createCoord_from_edges(double x0, double xf, double dx, int &nx){
 }
 
 // print a gridded variable along with 2d coordinates defined on x, y
-void printVar(vector <float> &x, vector <float> &y, vector <float> &data){
+void printVar(vector <float> &x, vector <float> &y, float * data){
 	int nx = x.size(), ny = y.size();
 	cout << "\nx->\t ";
 	for (int i=0; i< nx; ++i) cout << x[i] << "\t ";
@@ -141,7 +141,7 @@ vector <int> bilIndices(vector <float> &lons, vector <float> &lats,
 
 inline float bilinear_mn(int m, int n, float x, float y, float iz,
 				   vector <float> &lons, vector <float> &lats, 
-				   vector <float> &data, float missingVal){
+				   float * data, float missingVal){
 	// m, n are input
 
 	// check if (x,y) lies in grid
@@ -182,7 +182,7 @@ inline float bilinear_mn(int m, int n, float x, float y, float iz,
 // return bilinear interpolated value at point (x,y) from grid {lons,lats}
 float bilinear(float x, float y, float iz, 
 			   vector <float> &lons, vector <float> &lats, 
-			   vector <float> &data, float missingVal){
+			   float * data, float missingVal){
 	// get nearest neighbor indices
 	vector <int> uvs = findGridBoxSW(x,y,lons, lats);
 	int m = uvs[0], n = uvs[1];
@@ -199,7 +199,7 @@ float bilinear(float x, float y, float iz,
 float bilinear(int ilat, int ilon, int iz, vector <int> &indices,
 			   vector <float> &lons, vector <float> &lats, 
 			   vector <float> &mlons, vector <float> &mlats,
-			   vector <float> &data, float missingVal){
+			   float * data, float missingVal){
 	int nlons, nlats;
 	
 	// get nearest neighbor indices
@@ -215,7 +215,7 @@ float bilinear(int ilat, int ilon, int iz, vector <int> &indices,
 
 inline float cellVal_mn(int m, int n, float x, float y, float iz, 
 						vector <float> &lons, vector <float> &lats, 
-						vector <float> &data, float missingVal){
+						float * data, float missingVal){
 	// m, n are input
 	// check if (x,y) lies in grid
 	if (m < 0 || n < 0) return missingVal;
@@ -229,7 +229,7 @@ inline float cellVal_mn(int m, int n, float x, float y, float iz,
 // return value at gridcell containing point (x,y) in grid {lons,lats}
 float cellVal(float x, float y, float iz, 
 			   vector <float> &lons, vector <float> &lats, 
-			   vector <float> &data, float missingVal){
+			   float * data, float missingVal){
 	// get index of cell containing (x,y)
 	vector <int> uvs = findGridBoxC(x,y,lons, lats);
 	int m = uvs[0], n = uvs[1];
@@ -243,7 +243,7 @@ float cellVal(float x, float y, float iz,
 float cellVal(int ilat, int ilon, int iz, vector <int> &indices,
 			  vector <float> &lons, vector <float> &lats, 
 			  vector <float> &mlons, vector <float> &mlats,
-			  vector <float> &data, float missingVal){
+			  float * data, float missingVal){
 	// get nearest neighbor indices
 	int m = indices[IX2(ilon, ilat, mlons.size())*2 + 0]; // this ID uses model nlons, nlats
 	int n = indices[IX2(ilon, ilat, mlons.size())*2 + 1]; // because it is on model grid
@@ -266,9 +266,9 @@ gVar mask(gVar &v, gVar &m, float val){
 		return temp;
 	}
 
-	gVar temp; 
-	temp.copyMeta(v); 
-	temp.copyValues(v); // must copy values because unmasked values from v must be retained.
+	gVar temp = v; 
+//	temp.copyMeta(v); 
+//	temp.copyValues(v); // must copy values because unmasked values from v must be retained.
 	for (int ilev=0; ilev < v.nlevs; ++ilev){
 		for (int ilat=0; ilat < v.nlats; ++ilat){
 			for (int ilon=0; ilon < v.nlons; ++ilon){
@@ -297,7 +297,7 @@ int cellRegridCube(gVar &v, gVar &out, vector <int> &indices){
 				float f = cellVal(ilat, ilon, ilev, indices,
 								   v.lons, v.lats, 
 								   xlons, xlats,
-								   v.values, v.missing_value);
+								   &v.values[0], v.missing_value);
 				if (f != v.missing_value) out(ilon,ilat,ilev) = f;
 				else out(ilon,ilat,ilev) = out.missing_value;
 			}
@@ -319,7 +319,7 @@ int lterpCube(gVar &v, gVar &out, vector <int> &indices){
 				float f = bilinear(ilat, ilon, ilev, indices,
 								   v.lons, v.lats, 
 								   xlons, xlats,
-								   v.values, v.missing_value);
+								   &v.values[0], v.missing_value);
 				if (f != v.missing_value) out(ilon,ilat,ilev) = f;
 				else out(ilon,ilat,ilev) = out.missing_value;
 			}
@@ -331,10 +331,10 @@ int lterpCube(gVar &v, gVar &out, vector <int> &indices){
 
 // interpolate variable v onto grid {xlons,xlats} (i.e. with metadata from v)
 gVar lterp(gVar &v, vector <float> &xlons, vector <float> &xlats){
-	gVar temp; temp.copyMeta(v);
-	temp.lats = xlats; temp.nlats = xlats.size();
-	temp.lons = xlons; temp.nlons = xlons.size();
-	temp.values.resize(temp.nlons*temp.nlats*temp.nlevs);
+	gVar temp; temp.copyMeta(v, xlons, xlats, v.levs);
+//	temp.lats = xlats; temp.nlats = xlats.size();
+//	temp.lons = xlons; temp.nlons = xlons.size();
+//	temp.values.resize(temp.nlons*temp.nlats*temp.nlevs);
 	for (int ilev=0; ilev < temp.nlevs; ++ilev){
 		for (int ilat=0; ilat < temp.nlats; ++ilat){
 			for (int ilon=0; ilon < temp.nlons; ++ilon){
@@ -349,16 +349,11 @@ gVar lterp(gVar &v, vector <float> &xlons, vector <float> &xlats){
 // coarse grain by summing or averaging high resolution data points within each target grid cell
 gVar coarseGrain(string fun, gVar &hires, vector <float> &xlons, vector <float> &xlats){
 	cout << "Coarsegraining..."; cout.flush();
-	gVar temp; temp.copyMeta(hires);
-	temp.lats = xlats; temp.nlats = xlats.size();
-	temp.lons = xlons; temp.nlons = xlons.size();
-	temp.values.resize(temp.nlons*temp.nlats*temp.nlevs);	// TODO: This is why resize was not done in copyMeta
+	gVar temp; temp.copyMeta(hires, xlons, xlats, hires.levs);
 	temp.fill(0);
 
-	gVar counts = temp;
-	counts.nlevs = 1;
-	counts.levs = vector <float> (1,0);
-	counts.values.resize(temp.nlons*temp.nlats);
+	vector <float> clev(1,0);
+	gVar counts; counts.copyMeta(temp, temp.lons, temp.lats, clev);
 	
 	for (int ilev=0; ilev < hires.nlevs; ++ilev){
 //		cout << " lev = " << ilev << ",";

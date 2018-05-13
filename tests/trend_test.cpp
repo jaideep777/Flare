@@ -5,7 +5,7 @@
 #include <algorithm>
 using namespace std;
 
-// g++ -I/usr/local/netcdf-c-4.3.2/include -I/usr/local/netcdf-cxx-legacy/include -I/home/jaideep/codes/FIRE_CODES/libgsm_v2/include -L/home/jaideep/codes/FIRE_CODES/libgsm_v2/lib -L/usr/local/netcdf-cxx-legacy/lib -o 1 trend_test.cpp -l:libgsm.so.2 -lnetcdf_c++ 
+// g++ -I/usr/local/netcdf-c-4.3.2/include -I/usr/local/netcdf-cxx-legacy/include -I/home/jaideep/codes/libgsm_v3/include -L/home/jaideep/codes/libgsm_v3/lib -L/usr/local/netcdf-cxx-legacy/lib -o 1 trend_test.cpp -l:libgsm.so.3 -lnetcdf_c++ 
 
 
 int main(){

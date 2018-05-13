@@ -72,10 +72,7 @@ gVar::gVar(string name, string units, string tunits){
 	}
 }
 
-// copy all data except values vector into self.
-int gVar:: copyMeta(const gVar &v){
-	ntimes = v.ntimes; nlevs = v.nlevs; nlats = v.nlats; nlons = v.nlons;
-	times = v.times; levs = v.levs; lats = v.lats; lons = v.lons;
+int gVar:: _copyMeta(const gVar & v){
 	tbase = v.tbase; tscale = v.tscale; tstep = v.tstep; //t = v.t;
 	varname = v.varname; varunits = v.varunits;
 	scale_factor = v.scale_factor; add_offset = v.add_offset;
@@ -83,11 +80,37 @@ int gVar:: copyMeta(const gVar &v){
 	missing_value = v.missing_value;
 	gridlimits = v.gridlimits;
 	
+	ntimes = v.ntimes; 
+	times = v.times; 
+	t = v.t;
+}
+
+// copy all data except values vector into self.
+int gVar:: copyMeta(const gVar &v){
+
+	_copyMeta(v);
+	nlevs = v.nlevs; nlats = v.nlats; nlons = v.nlons;
+	levs = v.levs; lats = v.lats; lons = v.lons;
+	
 	values.resize(nlons*nlats*nlevs);
 	
-	t = v.t;
 	return 0;
 }
+
+
+// copy all data except values vector into self.
+int gVar:: copyMeta(const gVar &v, vector <float> &_lons, vector <float> &_lats, vector <float> &_levs){
+
+	_copyMeta(v);
+	nlevs = _levs.size(); nlats = _lats.size(); nlons = _lons.size();
+	levs = _levs; lats = _lats; lons = _lons;
+	
+	values.resize(nlons*nlats*nlevs);
+	
+	return 0;
+}
+
+
 
 int gVar::initMetaFromFile(string filename){
 	float glimits_globe[4] = {0, 360, -90, 90};
@@ -198,22 +221,24 @@ double gVar::ix2gt_IST(int ix){
 
 // *** Return interploated value of the variable at given coordinates  ***
 float gVar::getValue(float xlon, float xlat, float ilev){
-	return bilinear(xlon, xlat, ilev, lons, lats, values, missing_value);
+	return bilinear(xlon, xlat, ilev, lons, lats, &values[0], missing_value);
 }
 
 // *** Return cell value of the variable at given coordinates  ***
 float gVar::getCellValue(float xlon, float xlat, float ilev){
-	return cellVal(xlon, xlat, ilev, lons, lats, values, missing_value);
+	return cellVal(xlon, xlat, ilev, lons, lats, &values[0], missing_value);
 }
 
 
 // -------------------- FUNCTIONS ON SELF -------------------------
 
 int gVar::fill(float f){
-	for (int i=0; i<values.size(); ++i){
-		if (values[i] != missing_value)
-			values[i] = f;
-	}
+//	for (int i=0; i<values.size(); ++i){
+//		if (values[i] != missing_value)
+//			values[i] = f;
+//	}
+	for_each(values.begin(), values.end(), 
+			 [this, f](float &x){ x = (x==missing_value)? missing_value:f; });
 }
 
 int gVar::sqrtVar(){
@@ -430,7 +455,7 @@ int gVar::loadInputFileMeta(){
 	ifile_handle->readVarAtts(*ipvar);
 	
 	// calculate regridding indices
-	lterp_indices = bilIndices(ipvar->lons, ipvar->lats, lons, lats);
+	lterp_indices = bilIndices(ipvar->lons, ipvar->lats, lons, lats);	// TODO: This is slowing down large file reading. Move.
 	
 }
 
@@ -512,23 +537,6 @@ int gVar::readVar_it(int tid){
 	ifile_handle->readVar(*ipvar, tid, ipvar->ivar1);
 	end = clock();
 	cout << "readVar_it: " << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms." << endl; 
-
-	lterpCube(*ipvar, *this, lterp_indices);
-}
-
-int gVar::readVar_it_parallel(int tid){
-	if (ifile_handle == NULL){
-		CERR << "gVar::readVar_it(" << varname << "): NcInputStream not initialized" << endl;
-		return 1;
-	}
-
-	clock_t start, end;
-	start = clock();
-
-	ifile_handle->readVar_parallel(*ipvar, tid, ipvar->ivar1);
-	end = clock();
-	cout << "readVar_it_parallel: " << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms." << endl; 
-
 
 	lterpCube(*ipvar, *this, lterp_indices);
 }
@@ -678,10 +686,7 @@ gVar gVar::trend(double gt1, double gt2){
 		if (tend < 0) break;
 
 		for (int i=tstart; i<=tend; ++i){ 
-//			thread t1(NcFile_handle::readVar, ifile_handle, *ipvar, i, ipvar->ivar1);
-//			t1.join();
 			ifile_handle->readVar(*ipvar, i, ipvar->ivar1);	// readCoords() would have set ivar1
-//			double gt = ix2gt(i);
 			
 			for (int i=0; i<temp.values.size(); ++i){
 				sxy[i] += (*ipvar)[i]*count;

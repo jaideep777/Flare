@@ -72,7 +72,7 @@ extern bool gsm_errors_on;
 
 template <typename T>
 class BufferedVector{
-	private:
+	public:
 	T * data;		// array that will be used for processing
 	T * membuf;	// array that will be used for reading data into
 	int len;
@@ -91,7 +91,7 @@ class BufferedVector{
 	void resize(int n, T fillVal = 0);
 	void print(string name = "");	
 	
-	T& operator[](int i);
+	T& operator[] (int i) const;
 	BufferedVector<T>& operator=(const BufferedVector& pv);
 	
 	void swap();
@@ -227,7 +227,10 @@ class gVar{
 
 	int initMetaFromFile(string filename);
 	
-	int copyMeta(const gVar &v);	// copy grid and variable attributes
+	int _copyMeta(const gVar & v);	// copy all metadata excecpt coords
+	int copyMeta(const gVar &v);	// copy all metadata including coords and resize
+	int copyMeta(const gVar &v, vector <float> &_lons, vector <float> &_lats, vector <float> &_levs); // copy meta from v but replace coords (useful in interpolations/coarsegraining functions)	
+	
 	int copyValues(const gVar &v);	// copy values vector and missing_value from v
 
 	int setCoords(vector <double> &t, vector <float> &le, vector <float> &la, vector <float> &lo);
@@ -270,13 +273,11 @@ class gVar{
 	
 	int readVar_gt(double gt, int mode); 
 	int readVar_it(int tid);
-	int readVar_it_parallel(int tid);
 
 	int readVar_reduce_mean(double gt1, double gt2);
 //	int readVar_reduce_sd(double gt1, double gt2);
 	gVar trend(double gt1, double gt2);
 	gVar trend_gpu(double gt1, double gt2);
-	gVar trend_par(double gt1, double gt2);
 	
 	// these 2 functions create a gVar in one shot by reading the first record in specified file
 	// createOneShot uses file's coords, readOneShot uses variable's coords and interpolates data
@@ -352,7 +353,7 @@ vector <float> createCoord(double x0, double xf, double dx, int &nx);	// x0 and 
 vector <float> createCoord_from_edges(double x0, double xf, double dx, int &nx); // x0 and xf are edges of 1st and last gridbox
 
 // print a gridded variable along with 2d coordinates defined on x, y
-void printVar(vector <float> &x, vector <float> &y, vector <float> &data);
+void printVar(vector <float> &x, vector <float> &y, float * data);
 
 
 // find index (u,v) of gridbox containing point (x,y)
@@ -381,26 +382,26 @@ vector <int> bilIndices(vector <float> &lons, vector <float> &lats,
 // return bilinear interpolated value at point (x,y) in grid {lons,lats}
 float bilinear(float x, float y, float iz, 
 			   vector <float> &lons, vector <float> &lats, 
-			   vector <float> &data, float missingVal = std_missing_value);
+			   float * data, float missingVal = std_missing_value);
 
 // return bilinear interpolated value at point (x,y) in grid {lons,lats}
 // use bilIndices instead of finding them in situ
 float bilinear(int ilat, int ilon, int iz, vector <int> &indices,
 			   vector <float> &lons, vector <float> &lats, 
 			   vector <float> &mlons, vector <float> &mlats,
-			   vector <float> &data, float missingVal = std_missing_value);
+			   float * data, float missingVal = std_missing_value);
 
 // return value at gridcell containing point (x,y) in grid {lons,lats}
 float cellVal(float x, float y, float iz, 
 			   vector <float> &lons, vector <float> &lats, 
-			   vector <float> &data, float missingVal = std_missing_value);
+			   float * data, float missingVal = std_missing_value);
 
 // return value at gridcell containing point (x,y) in grid {lons,lats}
 // use bilIndices instead of finding them in situ
 float cellVal(int ilat, int ilon, int iz, vector <int> &indices,
 			   vector <float> &lons, vector <float> &lats, 
 			   vector <float> &mlons, vector <float> &mlats,
-			   vector <float> &data, float missingVal = std_missing_value);
+			   float * data, float missingVal = std_missing_value);
 
 // mask variable v using m as mask
 // for all points in v, if (m <= val) v = missing_value

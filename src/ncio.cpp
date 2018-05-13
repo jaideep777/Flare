@@ -102,6 +102,8 @@ void NcFile_handle::setMapLimits(float xwlon, float xelon, float xslat, float xn
 //	 sets the correct order of lats and lons according to model requirements
 int NcFile_handle::readCoords(gVar &v, bool rr){
 
+	clock_t start = clock(), end;
+
 //	CINFO << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
 	// get number of variables
 	CINFO << "> Reading metadata from file: " << fname << "\n";
@@ -215,7 +217,10 @@ int NcFile_handle::readCoords(gVar &v, bool rr){
 		if (rr) levVar->get(&v.levs[0], v.nlevs);
 		CINFOC << v.nlevs << " read.\n";
 	}
-	
+
+	end = clock();
+	CDEBUG << "execution time = " << double(end-start)/CLOCKS_PER_SEC*1000 << " ms" << endl;
+
 	if ( tVar){
 		CINFO << "  reading t... ";
 		ntimes = v.ntimes = *(tVar->edges());	// otherwise constructor has init to 0
@@ -249,9 +254,11 @@ int NcFile_handle::readCoords(gVar &v, bool rr){
 		v.tstep = (v.times[v.times.size()-1] - v.times[0])/(v.times.size()-1)*v.tscale;    // average tstep in hours
 		CINFOC << gt2string(v.ix2gt(0)) << " --- " << gt2string(v.ix2gt(v.ntimes-1)) << ").\n";
 	}
-	CINFO << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
 	gsm_log->flush();
 	
+	CINFO << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
+	end = clock();
+	CDEBUG << "execution time = " << double(end-start)/CLOCKS_PER_SEC*1000 << " ms" << endl;
 	return 0;
 }
 
@@ -306,13 +313,15 @@ int NcFile_handle::readVar(gVar &v, int itime, int iVar){
 		return 1;
 	}
 
-	CDEBUG << "readVar_it(" << v.varname << "): ";
-	if (v.times.size() > 0) CDEBUGC << gt2string(v.ix2gt(itime)) << endl;
-	else CDEBUGC << "2D map" << endl;
+	CDEBUG << "NcfileHandle::readVar(" << v.varname << "): ";
+	if (v.times.size() > 0) CDEBUGC << gt2string(v.ix2gt(itime)) ;
+	else CDEBUGC << "2D map" ;
 	
 	// file is in read mode.. continue.
 	if (iVar == -1) iVar = v.ivar1;
-
+	
+	clock_t start = clock(), end;
+	
 	// allocate space for values
 	v.values.resize(v.nlevs*v.nlats*v.nlons); // no need to fill values 
 	NcVar * vVar = dFile->get_var(iVar);
@@ -336,6 +345,9 @@ int NcFile_handle::readVar(gVar &v, int itime, int iVar){
 			 << vVar->num_dims() << "\n";
 		return 1;
 	}
+
+	end = clock();
+	CDEBUGC << "\t....... (" << double(end-start)/CLOCKS_PER_SEC*1000 << " ms | " << v.nlevs*v.nlons*v.nlats*sizeof(float)/(double(end-start)/CLOCKS_PER_SEC)*1e-9 << " Gb/s)"<< endl;
 	
 	// if lats are not in SN order, reverse the data along lats
 	if (!latSN)	reverseCube(&v.values[0], v.nlons, v.nlats, v.nlevs);	// TODO: This reversing can be moved to gVar, only as last step of getting data

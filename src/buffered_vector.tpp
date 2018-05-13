@@ -93,7 +93,7 @@ void BufferedVector<T>::resize(int n, T fillVal){
 
 
 template <typename T>
-T& BufferedVector<T>::operator[](int i){
+T& BufferedVector<T>::operator[](int i) const {
 	return data[i];
 }
 
