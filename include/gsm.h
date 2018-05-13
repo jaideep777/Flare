@@ -214,6 +214,7 @@ class gVar{
 	vector <string>		filenames;					// list of filenames (genrated during init)
 	int curr_file;
 	gVar * ipvar;	// gVar to read data into
+	string regriddingMethod;
 	
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~
 	public:
@@ -265,7 +266,8 @@ class gVar{
 	gVar operator / (const gVar &v);
 
 	// reading functions
-	int createNcInputStream(vector <string> files, vector <float> glim);
+	void setRegriddingMethod(string m);
+	int createNcInputStream(vector <string> files, vector <float> glim, string rm = "bilinear");
 	int loadInputFileMeta();
 	int whichNextFile(double gt);
 	int updateInputFile(double gt);
@@ -299,7 +301,7 @@ class gVar{
 //	this class has no variables by itself and must input all relevant gVars
 //	therefore destructor frees all pointers.
 class NcFile_handle{
-public:
+	public:
 	NcFile * dFile;
 	string fname;
 	string mode;
@@ -318,6 +320,7 @@ public:
 	// NOTE: above indices are defined on the native arrays and not reversed ones
 	bool mplimited; // if true, map limits are set
 	
+	int firstVarID;
 	
 	// constructor. Only initializes variables. Does not open file.
 	NcFile_handle();	// open NC object (nc file)
@@ -328,7 +331,11 @@ public:
 	~NcFile_handle();	// dFile must be deleted in destructor
 
 	// reading functions
-	int readCoords(gVar &v, bool rr = true); // read coord metadata, read values if rr is true
+	int getMeta();
+	int readCoordData(gVar &v);
+	int readTime(gVar &v);
+	
+	int readCoords(gVar &v); // read coord metadata, read values if rr is true
 	int getVarID(string varname);	// get variable id (ivar) from name
 	int readVarAtts(gVar &v, int ivar = -1); // get variable name, units, missing_value etc.
 	int readVar(gVar &v, int itime, int iVar = -1); // read variable with index iVar from file into "v"

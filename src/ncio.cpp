@@ -39,6 +39,7 @@ NcFile_handle::NcFile_handle(){
 	dFile = NULL; // crucial - needed to check if dFile has been allocated
 	lonDim = latDim = levDim = tDim = NULL;
 	lonVar = latVar = levVar = tVar = NULL;
+	firstVarID = -1;
 }
 
 // ------------------------- INIT ----------------------------
@@ -91,17 +92,49 @@ void NcFile_handle::setMapLimits(float xwlon, float xelon, float xslat, float xn
 
 // ------------------------- READING ----------------------------
 
-//int NcFile_handle::readTime(gVar &v){
+int NcFile_handle::readTime(gVar &v){
+	clock_t start = clock(), end;
+	if ( tVar){
+		CINFO << "  reading t... ";
+		ntimes = v.ntimes = *(tVar->edges());	// otherwise constructor has init to 0
+		v.times.resize(v.ntimes);
+		tVar->get(&v.times[0], v.ntimes);
+		// set itime0 from sim start time
+		
+		// read and set time base settings
+		// (this is from earlier function settbase() )
+		NcAtt * a = tVar->get_att("units");
+		string datestr = a->as_string(0);
 
-//}
+		string unit, junk, sdate, stime;
+		stringstream ss;
+		ss.clear(); ss.str(datestr);
+		ss >> unit >> junk >> sdate >> stime;
+		if (stime == "") stime = "0:0:0";
+		
+		v.tbase = ymd2gday(sdate) + hms2xhrs(stime); // note this time is in GMT
+		if (unit == "hours") v.tscale = 1.0f;
+		else if (unit == "days") v.tscale = 24.0f;
+		else if (unit == "months") {
+			CWARN << "WARNING: using months as time units! 365.2524 days/yr will be considered.\n";
+			v.tscale = (365.2524/12.0)*24.0;
+		}
+		else {
+			CERR << "ERROR setting base time in getCoords(): invalid time units!\n";
+			return 1;
+		}
+		v.tstep = (v.times[v.times.size()-1] - v.times[0])/(v.times.size()-1)*v.tscale;    // average tstep in hours
+		CINFOC << v.ntimes << " read: (" 
+			   << gt2string(v.ix2gt(0)) << " --- " << gt2string(v.ix2gt(v.ntimes-1)) << ").";
+	}
+	end = clock();
+	CINFOC << " [" << double(end-start)/CLOCKS_PER_SEC*1000 << " ms]" << endl; 
+	// NOTE: For some reason, reading the time vector from .nc is slow. Takes ~1 ms. Rest are 0.01 ms
 
-// THE MOST PAINFUL NCIO FUNCTION!!
-// this function:
-//	 reads most of the metadata - read # coords, coord values
-//	 sets the lat lon limits
-//	 sets the correct order of lats and lons according to model requirements
-int NcFile_handle::readCoords(gVar &v, bool rr){
+}
 
+
+int NcFile_handle::getMeta(){
 	clock_t start = clock(), end;
 
 //	CINFO << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
@@ -136,27 +169,39 @@ int NcFile_handle::readCoords(gVar &v, bool rr){
 	else ++ncoords;
 	CINFO << "\t" << ncoords << " coordinates found" << endl;
 		
-	v.ivar1 = 0;
+	firstVarID = 0;
 	CINFO << "> Attempting to find 1st variable... ";
 	while (1){
-		NcVar * vVar = dFile->get_var(v.ivar1);
-		if (vVar->num_dims() < ncoords) ++v.ivar1;
+		NcVar * vVar = dFile->get_var(firstVarID);
+		if (vVar->num_dims() < ncoords) ++firstVarID;
 		else break;
 	}
-	CINFOC << dFile->get_var(v.ivar1)->name() << " (" << v.ivar1 << ")" << endl;
+	CINFOC << dFile->get_var(firstVarID)->name() << " (" << firstVarID << ")";
+	end = clock();
+	CINFOC << " [" << double(end-start)/CLOCKS_PER_SEC*1000 << " ms]" << endl; 
+
+}
+
+// THE MOST PAINFUL NCIO FUNCTION!!
+// this function:
+//	 reads most of the metadata - read # coords, coord values
+//	 sets the lat lon limits
+//	 sets the correct order of lats and lons according to model requirements
+int NcFile_handle::readCoordData(gVar &v){
 	 
 	// read lats, lons metadata from file
-	// read actual values only is rr is true
+	// read actual values only if rr is true
 
 	// if lat order is found N-S in file, reverse it. 
 	// in this model lat order will be S-N (i.e lats increase with index)
 	// all data reading will depend crucially on the variable latSN
+	clock_t start = clock(), end;
 	CINFO << "> Reading coordinates.\n";
 	if (latVar){
 		CINFO << "  reading lats... ";
 		nlats = v.nlats = *(latVar->edges());	// otherwise constructor has init to 0
 		v.lats.resize(v.nlats);
-		if (rr) latVar->get(&v.lats[0], v.nlats);
+		latVar->get(&v.lats[0], v.nlats);
 		CINFOC << v.nlats << " read.\n";
 
 		float dlat = v.lats[1] - v.lats[0];
@@ -187,7 +232,7 @@ int NcFile_handle::readCoords(gVar &v, bool rr){
 		CINFO << "  reading lons... ";
 		nlons = v.nlons = *(lonVar->edges());	// otherwise constructor has init to 0
 		v.lons.resize(v.nlons);
-		if (rr) lonVar->get(&v.lons[0], v.nlons);
+		lonVar->get(&v.lons[0], v.nlons);
 		CINFOC << v.nlons << " read.\n";
 		
 //		CINFO << "bring lons to principle range (0-360)...";
@@ -214,51 +259,25 @@ int NcFile_handle::readCoords(gVar &v, bool rr){
 		CINFO << "  reading levs... ";
 		nlevs = v.nlevs = *(levVar->edges());	// otherwise constructor has init to 1
 		v.levs.resize(v.nlevs);
-		if (rr) levVar->get(&v.levs[0], v.nlevs);
+		levVar->get(&v.levs[0], v.nlevs);
 		CINFOC << v.nlevs << " read.\n";
 	}
 
-	end = clock();
-	CDEBUG << "execution time = " << double(end-start)/CLOCKS_PER_SEC*1000 << " ms" << endl;
+	// allocate space for values
+	v.values.resize(v.nlevs*v.nlats*v.nlons); // no need to fill values 
 
-	if ( tVar){
-		CINFO << "  reading t... ";
-		ntimes = v.ntimes = *(tVar->edges());	// otherwise constructor has init to 0
-		v.times.resize(v.ntimes);
-		if (rr) tVar->get(&v.times[0], v.ntimes);
-		CINFOC << v.ntimes << " read: (";
-		// set itime0 from sim start time
-		
-		// read and set time base settings
-		// (this is from earlier function settbase() )
-		NcAtt * a = tVar->get_att("units");
-		string datestr = a->as_string(0);
-
-		string unit, junk, sdate, stime;
-		stringstream ss;
-		ss.clear(); ss.str(datestr);
-		ss >> unit >> junk >> sdate >> stime;
-		if (stime == "") stime = "0:0:0";
-	
-		v.tbase = ymd2gday(sdate) + hms2xhrs(stime); // note this time is in GMT
-		if (unit == "hours") v.tscale = 1.0f;
-		else if (unit == "days") v.tscale = 24.0f;
-		else if (unit == "months") {
-			CWARN << "WARNING: using months as time units! 365.2524 days/yr will be considered.\n";
-			v.tscale = (365.2524/12.0)*24.0;
-		}
-		else {
-			CERR << "ERROR setting base time in getCoords(): invalid time units!\n";
-			return 1;
-		}
-		v.tstep = (v.times[v.times.size()-1] - v.times[0])/(v.times.size()-1)*v.tscale;    // average tstep in hours
-		CINFOC << gt2string(v.ix2gt(0)) << " --- " << gt2string(v.ix2gt(v.ntimes-1)) << ").\n";
-	}
-	gsm_log->flush();
-	
-	CINFO << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
 	end = clock();
-	CDEBUG << "execution time = " << double(end-start)/CLOCKS_PER_SEC*1000 << " ms" << endl;
+	CINFO << "+ Reading Coord Data [" << double(end-start)/CLOCKS_PER_SEC*1000 << " ms]" << endl; 
+	return 0;
+}
+
+
+int NcFile_handle::readCoords(gVar &v){
+	getMeta();
+	v.ivar1 = firstVarID;
+	readCoordData(v);
+	readTime(v);
+	CINFO << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
 	return 0;
 }
 
@@ -313,7 +332,7 @@ int NcFile_handle::readVar(gVar &v, int itime, int iVar){
 		return 1;
 	}
 
-	CDEBUG << "NcfileHandle::readVar(" << v.varname << "): ";
+	CDEBUG << "NcfileHandle::readVar(" << v.varname << ", t=" << itime <<  "): ";
 	if (v.times.size() > 0) CDEBUGC << gt2string(v.ix2gt(itime)) ;
 	else CDEBUGC << "2D map" ;
 	
@@ -322,8 +341,6 @@ int NcFile_handle::readVar(gVar &v, int itime, int iVar){
 	
 	clock_t start = clock(), end;
 	
-	// allocate space for values
-	v.values.resize(v.nlevs*v.nlats*v.nlons); // no need to fill values 
 	NcVar * vVar = dFile->get_var(iVar);
 	
 	// read data. cur is set at the SW corner of grid / grid-limits.
@@ -347,7 +364,7 @@ int NcFile_handle::readVar(gVar &v, int itime, int iVar){
 	}
 
 	end = clock();
-	CDEBUGC << "\t....... (" << double(end-start)/CLOCKS_PER_SEC*1000 << " ms | " << v.nlevs*v.nlons*v.nlats*sizeof(float)/(double(end-start)/CLOCKS_PER_SEC)*1e-9 << " Gb/s)"<< endl;
+	CDEBUGC << " [" << v.nlevs*v.nlons*v.nlats*sizeof(float)/1e6 << " Mb / " << double(end-start)/CLOCKS_PER_SEC*1000 << " ms @ " << v.nlevs*v.nlons*v.nlats*sizeof(float)/(double(end-start)/CLOCKS_PER_SEC)*1e-9 << " Gb/s]"<< endl;
 	
 	// if lats are not in SN order, reverse the data along lats
 	if (!latSN)	reverseCube(&v.values[0], v.nlons, v.nlats, v.nlevs);	// TODO: This reversing can be moved to gVar, only as last step of getting data
@@ -548,17 +565,21 @@ int NcFile_handle::writeVar(gVar &v, NcVar* vVar, int itime){
 		return 1;
 	}
 	
+	clock_t start = clock(), end;
 	CDEBUG << "Write variable (" << v.varname << ") to file";
 	// actually write the data
 	if (tVar) {
-		CDEBUGC << " at index " << itime << endl;
+		CDEBUGC << " at index " << itime;
 		vVar->put_rec(&v.values[0], itime);	// if time dimension exists, write a record
 	}
 	else {	
-		CDEBUGC << endl;
+		CDEBUGC << "FAILED! No tVar. ";
 		if (v.nlevs <=1 ) vVar->put(&v.values[0], v.nlats, v.nlons);	// else write a single map
 		else vVar->put(&v.values[0], v.nlevs, v.nlats, v.nlons);
 	}
+	end = clock();
+	CDEBUGC << " [" << v.nlevs*v.nlons*v.nlats*sizeof(float)/1e6 << " Mb / " << double(end-start)/CLOCKS_PER_SEC*1000 << " ms @ " << v.nlevs*v.nlons*v.nlats*sizeof(float)/(double(end-start)/CLOCKS_PER_SEC)*1e-9 << " Gb/s]"<< endl;
+
 	return 0;
 }
 

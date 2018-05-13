@@ -35,7 +35,7 @@ int main(){
 	hires.createOneShot("/media/jaideep/Totoro/Data/precip_imd/rf_imd.1901.nc", glim);
 	hires.fill(0);
 	hires.printGrid();
-	hires.printValues();
+//	hires.printValues();
 
 
 	return 0;

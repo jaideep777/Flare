@@ -155,7 +155,6 @@ gVar gVar::trend_gpu(double gt1, double gt2){
 
 
 /*
-
 int main(){
 	
 	// ~~~~~~ Some NetCDF Essentials ~~~~~~~~

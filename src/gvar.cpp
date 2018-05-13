@@ -39,6 +39,7 @@ gVar::gVar(){
 	outNcVar = NULL;
 	ivar1=-1;
 	t=-1;
+	regriddingMethod = "";
 }
 
 gVar::gVar(string name, string units, string tunits){
@@ -52,6 +53,7 @@ gVar::gVar(string name, string units, string tunits){
 	outNcVar = NULL;
 	ivar1=-1;
 	t = -1;
+	regriddingMethod = "";
 	
 	// read time unit string and set tbase and tscale
 	string unit, junk, sdate, stime;
@@ -79,7 +81,7 @@ int gVar:: _copyMeta(const gVar & v){
 	ncoords = v.ncoords; ivar1 = v.ivar1;
 	missing_value = v.missing_value;
 	gridlimits = v.gridlimits;
-	
+
 	ntimes = v.ntimes; 
 	times = v.times; 
 	t = v.t;
@@ -113,12 +115,13 @@ int gVar:: copyMeta(const gVar &v, vector <float> &_lons, vector <float> &_lats,
 
 
 int gVar::initMetaFromFile(string filename){
-	float glimits_globe[4] = {0, 360, -90, 90};
+	float glimits_globe[4] = {-180, 360, -90, 90};
 	ifile_handle = new NcFile_handle;
 	int i = ifile_handle->open(filename, "r", glimits_globe);
 	ifile_handle->readCoords(*this);
 	ifile_handle->readVarAtts(*this);
 	ifile_handle->close();
+	values.resize(nlons*nlats*nlevs);
 	delete ifile_handle; ifile_handle = NULL;
 }
 
@@ -410,9 +413,14 @@ gVar gVar::operator / (const gVar &v){
 
  
 
+void gVar::setRegriddingMethod(string m){
+	regriddingMethod = m;
+}
+
+
 // in all input stream functions, the fileIO members of ipvar are not touched 
 // (in fact that cant be touched because they are private)
-int gVar::createNcInputStream(vector <string> files, vector <float> glim){
+int gVar::createNcInputStream(vector <string> files, vector <float> glim, string rm){
 
 	clock_t start, end;
 	start = clock();
@@ -433,9 +441,25 @@ int gVar::createNcInputStream(vector <string> files, vector <float> glim){
 	ipvar = new gVar;					// allocate gVar for input
 	
 	loadInputFileMeta();	// read metadata from 1st input file
-	
+		
 	end = clock();
-	cout << "createNcInputStream: " << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms." << endl; 
+	CDEBUG << "createNcInputStream [" << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms]" << endl; 
+
+	regriddingMethod = rm;
+	if (regriddingMethod == "bilinear" || regriddingMethod == "nn") {
+		start = clock();
+		lterp_indices = bilIndices(ipvar->lons, ipvar->lats, lons, lats);	// recalculate lterp indices only if file was updated 
+		end = clock();
+		CDEBUG << "bilIndices [" << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms]" << endl; 
+	}
+	else if (regriddingMethod == "none"){
+		// TODO: check if coordinates match
+		if (values.size() != ipvar->values.size()){
+			CERR << "(" << varname << ") createInputStream: Interpolation specified to NONE but grid does not match ipvar's\n"; 
+			return 1;
+		}
+	}
+	
 }
 
 int gVar::loadInputFileMeta(){
@@ -454,8 +478,8 @@ int gVar::loadInputFileMeta(){
 	ifile_handle->readCoords(*ipvar);
 	ifile_handle->readVarAtts(*ipvar);
 	
-	// calculate regridding indices
-	lterp_indices = bilIndices(ipvar->lons, ipvar->lats, lons, lats);	// TODO: This is slowing down large file reading. Move.
+//	// calculate regridding indices
+//	lterp_indices = bilIndices(ipvar->lons, ipvar->lats, lons, lats);	// TODO: This is slowing down large file reading. Move.
 	
 }
 
@@ -478,6 +502,7 @@ int gVar::updateInputFile(double gt){
 	int next_file = whichNextFile(gt);
 
 //	cout << prev_file << " " << curr_file << " " << next_file << endl;
+	if (next_file == prev_file) return 0;	// returns 0 when no update is needed (requested time slice is in the same file)
 
 	while (curr_file != next_file){
 
@@ -501,7 +526,7 @@ int gVar::updateInputFile(double gt){
 		}
 	}
 
-	return 0;
+	return 1; // returns 1 when file was be updated (requested time slice is in the same file)
 }
 
 
@@ -519,9 +544,13 @@ int gVar::readVar_gt(double gt, int mode){
 		return 1;
 	}
 	 
-	updateInputFile(gt);
+	int update = updateInputFile(gt);
 	ifile_handle->readVar_gt(*ipvar, gt, mode, ipvar->ivar1);	// readCoords() would have set ivar1
-	lterpCube(*ipvar, *this, lterp_indices);
+	
+	if (regriddingMethod == "bilinear") lterpCube(*ipvar, *this, lterp_indices);
+	else if (regriddingMethod == "none") copy(ipvar->values.begin(), ipvar->values.end(), values.begin());
+	else CERR << "Dont know how to transfer read data to gVar" << endl;
+	
 	return 0;
 }
 
@@ -538,7 +567,9 @@ int gVar::readVar_it(int tid){
 	end = clock();
 	cout << "readVar_it: " << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms." << endl; 
 
-	lterpCube(*ipvar, *this, lterp_indices);
+	if (regriddingMethod == "bilinear") lterpCube(*ipvar, *this, lterp_indices);
+	else if (regriddingMethod == "none") copy(ipvar->values.begin(), ipvar->values.end(), values.begin());
+	else CERR << "Dont know how to transfer read data to gVar" << endl;
 }
 
 
@@ -562,8 +593,15 @@ int gVar::createOneShot(string filename, vector<float> glim){
 int gVar::readOneShot(string filename, vector <float> glim){
 	ipvar = new gVar();
 	ipvar->createOneShot(filename, glim);
-	lterp_indices = bilIndices(ipvar->lons, ipvar->lats, lons, lats);
-	lterpCube(*ipvar, *this, lterp_indices);	// does not copy metadata
+	if (regriddingMethod == "bilinear"){
+		lterp_indices = bilIndices(ipvar->lons, ipvar->lats, lons, lats);
+		lterpCube(*ipvar, *this, lterp_indices);	// does not copy metadata
+	} 	
+	else if (regriddingMethod == "none"){
+		copy(ipvar->values.begin(), ipvar->values.end(), values.begin());
+	}
+	else CERR << "Dont know how to transfer read data to gVar" << endl;
+
 	delete ipvar; ipvar = NULL;
 }
 
@@ -640,7 +678,13 @@ int gVar::readVar_reduce_mean(double gt1, double gt2){
 	
 	CDEBUG << "----------- Read " << count << " timesteps from " << varname << endl;
 	temp = temp/count;	
-	if (count > 0) lterpCube(temp, *this, lterp_indices);	// We want to preserve current values if no new values were read
+
+	if (count > 0){	// transfer data to gVar only if count > 0: We want to preserve current values if no new values were read
+		if (regriddingMethod == "bilinear") lterpCube(*ipvar, *this, lterp_indices);
+		else if (regriddingMethod == "none") copy(ipvar->values.begin(), ipvar->values.end(), values.begin());
+		else CERR << "Dont know how to transfer read data to gVar" << endl;
+	}
+
 }
 
 
