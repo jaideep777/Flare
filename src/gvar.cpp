@@ -560,12 +560,12 @@ int gVar::readVar_it(int tid){
 		return 1;
 	}
 
-	clock_t start, end;
-	start = clock();
+//	clock_t start, end;
+//	start = clock();
 
 	ifile_handle->readVar(*ipvar, tid, ipvar->ivar1);
-	end = clock();
-	cout << "readVar_it: " << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms." << endl; 
+//	end = clock();
+//	cout << "readVar_it: " << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms." << endl; 
 
 	if (regriddingMethod == "bilinear") lterpCube(*ipvar, *this, lterp_indices);
 	else if (regriddingMethod == "none") copy(ipvar->values.begin(), ipvar->values.end(), values.begin());
@@ -680,8 +680,8 @@ int gVar::readVar_reduce_mean(double gt1, double gt2){
 	temp = temp/count;	
 
 	if (count > 0){	// transfer data to gVar only if count > 0: We want to preserve current values if no new values were read
-		if (regriddingMethod == "bilinear") lterpCube(*ipvar, *this, lterp_indices);
-		else if (regriddingMethod == "none") copy(ipvar->values.begin(), ipvar->values.end(), values.begin());
+		if (regriddingMethod == "bilinear") lterpCube(temp, *this, lterp_indices);
+		else if (regriddingMethod == "none") copy(temp.values.begin(), temp.values.end(), values.begin()); // TODO: This does not copy missing_value, so missing values are treated as valid. FIX 
 		else CERR << "Dont know how to transfer read data to gVar" << endl;
 	}
 
