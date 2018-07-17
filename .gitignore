@@ -61,5 +61,8 @@ aclocal.m4
 #tests/Makefile
 #!tests/*.cpp
 #!tests/*.cu
+tests/*_test
+.libs
+tests/*.trs
 
 

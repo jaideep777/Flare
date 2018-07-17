@@ -1,5 +1,4 @@
-Gridded Spatial Modelling library
-=================================
+# Gridded Spatial Modelling library
 
 libGSM is a simple library for building spatial models on 
 geographical grids using NetCDF file format for data 
@@ -24,17 +23,31 @@ Spatial models with NetCDF can be quickly and easily written
 using libGSM. 
 
 
+# Installation
 
-Acknowledgement
-===============
+You must have the NetCDF-C++ legacy version (v4.2) installed before 
+you proceed with installation. If NetCDF-C++ v4.2 is installed in 
+/path/to/netcdfcpp, and NetCDF-c is installed in /path/to/netcdf-c
+then just execute:
+
+```
+export CPP_FLAGS=-I/path/to/netcdf-c/include
+export LD_FLAGS=-L/path/to/netcdf-c/lib
+
+./configure --with-netcdf=/path/to/netcdfcpp
+make
+make check
+make install
+```
+
+# Acknowledgement
 
 While using libGSM, kindly acknowledge the author Jaideep Joshi. 
 The project can be found at the following link:
 https://github.com/jaideep777/Gridded-Spatial-Modelling-library 
 
 
-Open Source Components Used
-===========================
+## Open Source Components Used
 
 This application uses Open Source components. You can find the 
 source code of their open source projects along with license information 
@@ -51,6 +64,7 @@ Project: netCDF-cxx4 https://github.com/Unidata/netcdf-cxx4
 Copyright 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 University
 Corporation for Atmospheric Research/Unidata.
+
 
 
 
