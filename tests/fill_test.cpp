@@ -1,8 +1,8 @@
 #include <iostream>
-#include <gsm.h>
 #include <netcdfcpp.h>
 #include <vector>
 #include <algorithm>
+#include "../include/gsm.h"
 using namespace std;
 
 // g++ -O3 -I/usr/local/netcdf-c/include -I/usr/local/netcdf-cxx-legacy/include -I/home/jaideep/codes/libgsm_v3/include -L/home/jaideep/codes/libgsm_v3/lib -L/usr/local/netcdf-cxx-legacy/lib -o 1 fill_test.cpp -l:libgsm.so.3 -lnetcdf_c++ 

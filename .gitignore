@@ -5,6 +5,7 @@
 *.obj
 *.cu_o 
 */*.cu_o
+*.Plo
 
 # Precompiled Headers
 *.gch
@@ -28,10 +29,37 @@
 *.exe
 *.out
 *.app
+*.Po
 
+# Data files / archives
 *.txt
 *.dat
 *.nc
 *.so.*
 1
+*~
+*.gz
+
+*.log
+*.trs
+*.status
+
+autom4te.cache
+build
+build-aux
+m4/*
+!m4/ax_*
+stamp-h1
+Makefile
+Makefile.in
+config*
+configure
+!configure.ac
+libtool
+
+
+#tests/Makefile
+#!tests/*.cpp
+#!tests/*.cu
+
 
