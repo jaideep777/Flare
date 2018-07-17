@@ -56,7 +56,7 @@ config*
 configure
 !configure.ac
 libtool
-
+aclocal.m4
 
 #tests/Makefile
 #!tests/*.cpp
