@@ -8,7 +8,7 @@ This library includes functions for for performing operations
 on latitude/longitude/levels and time, along with smaller
 utility functions for printing data to an output stream.
 
-This library provides two features:
+This library provides the following features:
 
 1) Gridded Variables - Objects of this class include 
 storage for gridded data along with meta-data, such as lat-lon
@@ -19,6 +19,10 @@ such as addition, multiplication etc.
 can read and write to netcdf files in just one or two commands,
 automatically handling data distributed over multiple files and
 interpolation of data into the desired grid.
+
+3) GPU-accelerated versions of functions. Currently, the trend 
+function has a GPU version. Other functions are under 
+development.
 
 Spatial models with NetCDF can be quickly and easily written 
 using FLARE. 
