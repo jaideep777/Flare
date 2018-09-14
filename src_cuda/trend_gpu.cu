@@ -1,5 +1,5 @@
 #include <iostream>
-#include <gsm.h>
+#include "../include/gsm.h"
 #include <netcdfcpp.h>
 #include <vector>
 #include <algorithm>
