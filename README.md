@@ -31,8 +31,9 @@ you proceed with installation. If NetCDF-C++ v4.2 is installed in
 then just execute:
 
 ```
-export CPP_FLAGS=-I/path/to/netcdf-c/include
-export LD_FLAGS=-L/path/to/netcdf-c/lib
+autoreconf --install
+export CPPFLAGS=-I/path/to/netcdf-c/include
+export LDFLAGS=-L/path/to/netcdf-c/lib
 
 ./configure --with-netcdf=/path/to/netcdfcpp
 make
