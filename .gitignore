@@ -50,7 +50,6 @@ build-aux
 m4/*
 !m4/ax_*
 stamp-h1
-Makefile
 Makefile.in
 config*
 configure
@@ -64,5 +63,5 @@ aclocal.m4
 tests/*_test
 .libs
 tests/*.trs
-
+.Rhistory
 
