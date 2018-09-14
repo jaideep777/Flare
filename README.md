@@ -1,6 +1,6 @@
 # Gridded Spatial Modelling library
 
-libGSM is a simple library for building spatial models on 
+FLARE is a GPU-accelerated library for building spatial models on 
 geographical grids using NetCDF file format for data 
 input/output.
 
@@ -20,7 +20,7 @@ provides wrappers for easily reading netcdf files into gridded
 variables.
 
 Spatial models with NetCDF can be quickly and easily written 
-using libGSM. 
+using FLARE. 
 
 
 # Installation
