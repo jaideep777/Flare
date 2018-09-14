@@ -45,7 +45,7 @@ make install
 
 While using libGSM, kindly acknowledge the author Jaideep Joshi. 
 The project can be found at the following link:
-https://github.com/jaideep777/Gridded-Spatial-Modelling-library 
+https://github.com/jaideep777/Flare
 
 
 ## Open Source Components Used
