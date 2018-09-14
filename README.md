@@ -32,11 +32,12 @@ using FLARE.
 
 You must have the NetCDF-C++ legacy version (v4.2) installed before 
 you proceed with installation. You will also need the CUDA toolkit.
-Please edit the paths to these libraries in the Makefile and type
 
 ```
-make
+mkdir builddir lib
+make LIBPATH="-L/path/to/netcdf-cxx-legacy/lib -L/path/to/cuda/lib64" INCPATH="-I/path/to/netcdf-cxx-legacy/include -I/path/to/netcdf-c/include -I/path/to/cuda/include"
 ```
+then copy the libs folder to desired location
 
 # Acknowledgement
 
