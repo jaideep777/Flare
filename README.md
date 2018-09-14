@@ -1,4 +1,4 @@
-# Gridded Spatial Modelling library
+# FLARE Computing Library
 
 FLARE is a GPU-accelerated library for building spatial models on 
 geographical grids using NetCDF file format for data 
@@ -8,16 +8,17 @@ This library includes functions for for performing operations
 on latitude/longitude/levels and time, along with smaller
 utility functions for printing data to an output stream.
 
-This library provides two classes:
+This library provides two features:
 
-1) Gridded Variable (gVar) - Objects of this class include 
+1) Gridded Variables - Objects of this class include 
 storage for gridded data along with meta-data, such as lat-lon
 arrays and time. This library also provides operators on gVars
 such as addition, multiplication etc.
 
-2) A handle for netCDF files (NcFile_handle) - This class
-provides wrappers for easily reading netcdf files into gridded
-variables.
+2) netCDF input/output streans - These are data streams that 
+can read and write to netcdf files in just one or two commands,
+automatically handling data distributed over multiple files and
+interpolation of data into the desired grid.
 
 Spatial models with NetCDF can be quickly and easily written 
 using FLARE. 
@@ -26,19 +27,11 @@ using FLARE.
 # Installation
 
 You must have the NetCDF-C++ legacy version (v4.2) installed before 
-you proceed with installation. If NetCDF-C++ v4.2 is installed in 
-/path/to/netcdfcpp, and NetCDF-c is installed in /path/to/netcdf-c
-then just execute:
+you proceed with installation. You will also need the CUDA toolkit.
+Please edit the paths to these libraries in the Makefile and type
 
 ```
-autoreconf --install
-export CPPFLAGS=-I/path/to/netcdf-c/include
-export LDFLAGS=-L/path/to/netcdf-c/lib
-
-./configure --with-netcdf=/path/to/netcdfcpp
 make
-make check
-make install
 ```
 
 # Acknowledgement
