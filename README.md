@@ -57,7 +57,7 @@ then copy the libs folder to desired location
 
 # Acknowledgement
 
-While using libGSM, kindly acknowledge the author Jaideep Joshi. 
+While using FLARE, kindly acknowledge the author Jaideep Joshi. 
 The project can be found at the following link:
 https://github.com/jaideep777/Flare
 
