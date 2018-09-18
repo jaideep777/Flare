@@ -10,33 +10,46 @@ utility functions for printing data to an output stream.
 
 This library provides the following features:
 
-1) Gridded Variables - Objects of this class include 
+* Gridded Variables - Objects of this class include 
 storage for gridded data along with meta-data, such as lat-lon
 arrays and time. This library also provides operators on gVars
 such as addition, multiplication etc.
 
-2) netCDF input/output streans - These are data streams that 
-can read and write to netcdf files in just one or two commands,
+* NetCDF input/output streams - These are data streams that 
+can read from and write to netcdf files, 
 automatically handling data distributed over multiple files and
 interpolation of data into the desired grid.
 
-3) GPU-accelerated versions of functions. Currently, the trend 
+* 2D Regridding (linear interpolation, coarse-graining), 
+masking functions
+
+* Time arithmatic, vector arithmatic utilities
+
+* Initializer class - To quickly read configuration files to 
+initialize model variables
+
+* GPU-accelerated Turbulence Engine - A synthetic turbulence 
+generator to create spatial heterogeneity and simulate fluid flow
+
+* GPU-accelerated logistic resource dynamics - A spatial diffusible
+resource that grows at a logistic growth rate 
+
+* GPU-accelerated versions of grid functions. Currently, the trend 
 function has a GPU version. Other functions are under 
 development.
 
-Spatial models with NetCDF can be quickly and easily written 
-using FLARE. 
 
 
 # Installation
 
 You must have the NetCDF-C++ legacy version (v4.2) installed before 
 you proceed with installation. You will also need the CUDA toolkit.
-Please edit the paths to these libraries in the Makefile and type
 
 ```
-make
+mkdir builddir lib
+make LIBPATH="-L/path/to/netcdf-cxx-legacy/lib -L/path/to/cuda/lib64" INCPATH="-I/path/to/netcdf-cxx-legacy/include -I/path/to/netcdf-c/include -I/path/to/cuda/include"
 ```
+then copy the libs folder to desired location
 
 # Acknowledgement
 
@@ -62,6 +75,7 @@ Project: netCDF-cxx4 https://github.com/Unidata/netcdf-cxx4
 Copyright 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 University
 Corporation for Atmospheric Research/Unidata.
+
 
 
 
