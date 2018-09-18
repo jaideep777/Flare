@@ -25,7 +25,10 @@
 
 #include <iostream>
 #include <math.h>
-#include "../include/gsm.h"
+#include "../include/gvar.h"
+#include "../include/grid.h"
+#include "../include/constants.h"
+#include "../include/arrayutils.h"
 
 
 // create coordinate vector given x0, xf and number of points

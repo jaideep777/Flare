@@ -23,9 +23,12 @@
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-#include <math.h>
-#include "../include/gsm.h"
-
+#include <cmath>
+#include "../include/gvar.h"
+#include "../include/ncio.h"
+#include "../include/constants.h"
+#include "../include/time.h"
+#include "../include/arrayutils.h"
 
 /******************       class NcFile_handle      ***********************/
 

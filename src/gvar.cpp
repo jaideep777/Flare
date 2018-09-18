@@ -23,10 +23,16 @@
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-#include "../include/gsm.h"
 #include <cmath>
 #include <algorithm>
 #include <ctime>
+#include <netcdfcpp.h>
+#include "../include/gvar.h"
+#include "../include/time.h"
+#include "../include/arrayutils.h"
+#include "../include/grid.h"
+#include "../include/ncio.h"
+
 
 gVar::gVar(){
 	ntimes = 0; nlevs = 1; nlats = 0; nlons = 0;

@@ -6,9 +6,10 @@ LIBPATH = -L/usr/local/netcdf-cxx-legacy/lib -L/usr/local/cuda/lib64	# Netcdf-c+
 INCPATH = -I/usr/local/netcdf-cxx-legacy/include -I/usr/local/netcdf-c/include -I/usr/local/cuda/include  # need paths to netcdf-c as well as c++ includes
 LDFLAGS =  
 CPPFLAGS = -O3 -Wl,--no-as-needed -std=c++11 -fPIC 
-CUDAFLAGS = -std=c++11 -Xcompiler -fPIC -arch=sm_21
+CUDAFLAGS = -std=c++11 -Xcompiler -fPIC -arch=sm_21 -Wno-deprecated-gpu-targets
 
-LIBS = -lnetcdf_c++ -lcudart
+LIBS = -lnetcdf_c++ -lgsl -lgslcblas 
+CUDA_LIBS = -lcudart -lcurand -lcufft
 
 SOURCEDIR = src
 CUDA_SOURCEDIR = src_cuda
@@ -27,13 +28,13 @@ dir:
 	mkdir -p $(BUILDDIR)
 
 $(TARGET): $(OBJECTS) $(CUDA_OBJECTS)
-	g++ -shared $(LIBPATH) $(LDFLAGS) -o $(OUTLIBPATH)/$(TARGET).so.$(VERSION) $(OBJECTS) $(CUDA_OBJECTS) $(LIBS)
+	g++ -shared $(LIBPATH) $(LDFLAGS) -o $(OUTLIBPATH)/$(TARGET).so.$(VERSION) $(OBJECTS) $(CUDA_OBJECTS) $(CUDA_LIBS)
 
 $(OBJECTS): $(BUILDDIR)/%.o : $(SOURCEDIR)/%.cpp
 	g++ -c $(CPPFLAGS) $(INCPATH) $< -o $@ 
 
 $(CUDA_OBJECTS): $(BUILDDIR)/%.cu_o : $(CUDA_SOURCEDIR)/%.cu
-	/usr/local/cuda/bin/nvcc -c $(CUDAFLAGS) $(INCPATH) $< -o $@ 
+	nvcc -c $(CUDAFLAGS) $(INCPATH) $< -o $@ 
 
 install:
 	cp $(OUTLIBPATH)/$(TARGET).so.$(VERSION) $(INSTALLDIR)

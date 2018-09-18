@@ -14,6 +14,8 @@
 
 #include <cuda_runtime.h>
 #include <sstream>
+#include <iostream>
+#include <cstdlib>
 using namespace std;
 
 // ============================ SOME DEBUG UTILS ==========================//

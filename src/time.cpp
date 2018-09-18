@@ -23,7 +23,9 @@
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-#include "../include/gsm.h"
+#include <sstream>
+#include "../include/time.h"
+#include "../include/arrayutils.h"
 
 //// general GSM options functions
 //void setDebugFlag(bool f) {debug_on = f;};

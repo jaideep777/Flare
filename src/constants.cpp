@@ -23,7 +23,8 @@
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-#include "../include/gsm.h"
+#include "../include/constants.h"
+#include <iostream>
 
 bool gsm_info_on = true;
 bool gsm_debug_on = true;
