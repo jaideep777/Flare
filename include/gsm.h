@@ -24,8 +24,8 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 
-#ifndef VECUTILS
-#define VECUTILS
+#ifndef GSM_H
+#define GSM_H
 
 #include <iostream>
 #include <vector>
@@ -431,3 +431,8 @@ gVar binary(gVar v, float thresh=0);
 
 #endif
 
+#include "../src_cuda/cuda_device.h"
+#include "initializer.h"
+#include "palettes.h"
+#include "turbulence.h"
+#include "resource.h"

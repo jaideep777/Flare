@@ -4,17 +4,30 @@
 #include <vector>
 #include <algorithm>
 #include <cuda_runtime.h>
+#include "cuda_device.h"
 using namespace std;
 
 // g++ -I/usr/local/netcdf-c-4.3.2/include -I/usr/local/netcdf-cxx-legacy/include -I/home/jaideep/codes/FIRE_CODES/libgsm_v2/include -L/home/jaideep/codes/FIRE_CODES/libgsm_v2/lib -L/usr/local/netcdf-cxx-legacy/lib -o 1 trend_test.cpp -l:libgsm.so.2 -lnetcdf_c++ 
 
-#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
-inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true){
-   if (code != cudaSuccess){
-      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
-      if (abort) exit(code);
-   }
-}
+//#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+//inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true){
+//   if (code != cudaSuccess){
+//      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+//      if (abort) exit(code);
+//   }
+//}
+
+// This will output the proper error string when calling cudaGetLastError
+//#define getLastCudaError(ans) { _getLastCudaError(__FILE__, __LINE__, ans); }
+//inline void _getLastCudaError(const char *file, int line, string s=""){
+//	string errMessage = s;
+//	cudaError_t err = cudaGetLastError();
+//	if( err != cudaSuccess){
+//		cerr << file << "(" << line << ") : Last Cuda Error - " << errMessage 
+//			 << " (" << int(err) << "): " << cudaGetErrorString(err) << ".\n";
+//		exit(-1);
+//	}
+//}
 
 
 __global__ void init_residuals_kernel(float * sxx, float * syy, float * sxy, float * sx, float * sy, int count, int nvals){
@@ -111,10 +124,10 @@ gVar gVar::trend_gpu(double gt1, double gt2){
 			ifile_handle->readVar(*ipvar, i, ipvar->ivar1);	// this is the slowest step which will run in parallel with the kernel execution. Hence no need to parallelize GPU-IO and kernel execution 
 			
 			cudaMemcpy(var_dev, &(ipvar->values[0]), ipvar->values.size()*sizeof(float), cudaMemcpyHostToDevice);
-			gpuErrchk(cudaGetLastError());
+			getLastCudaError("memcpy"); //cudaGetLastError());
 
 			update_residuals_kernel <<< nblocks, blockSize >>> (var_dev, sxx_dev, syy_dev, sxy_dev, sx_dev, sy_dev, count, nvals);						
-			gpuErrchk(cudaGetLastError());
+			getLastCudaError("kernel"); //cudaGetLastError());
 						
 			++count;
 		}

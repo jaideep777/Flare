@@ -6,7 +6,7 @@
 
 using namespace std;
 
-// g++ -I/usr/local/cuda/include -I/usr/local/netcdf-c/include -I/usr/local/netcdf-cxx-legacy/include -I/home/chethana/codes/Flare/include -L/home/chethana/codes/Flare/lib -L/usr/local/netcdf-cxx-legacy/lib -L/usr/local/cuda/lib64 -o 1 trend_gpu_test.cpp -l:libflare.so.3 -lnetcdf_c++ -lcudart
+// g++ -I/usr/local/cuda/include -I/usr/local/netcdf-c/include -I/usr/local/netcdf-cxx-legacy/include -I/home/chethana/codes/Flare/include -L/home/chethana/codes/Flare/lib -L/usr/local/netcdf-cxx-legacy/lib -L/usr/local/cuda/lib64 -o 1 resource_test.cpp -l:libflare.so.3 -lnetcdf_c++ -lcudart -lcurand -lcufft -lgsl -lgslcblas
 
 
 int main(int argc, char ** argv){
@@ -39,16 +39,14 @@ int main(int argc, char ** argv){
 		"/home/chethana/codes/gpp.2000-2015.nc",
 	};
 
-	vector <string> infiles(files, files+1); 
-	gVar hires;
-	hires.initMetaFromFile(infiles[0]);
-	hires.createNcInputStream(infiles, glim);
-	hires.printGrid();
 
-	gVar slope = hires.trend_gpu(ymd2gday("2000-1-1"), ymd2gday("2015-12-31"));
-	gVar slope1 = hires.trend(ymd2gday("2000-1-1"), ymd2gday("2015-12-31"));
+	Initializer I("execution_config.r");
+	I.readFile();
+	I.printVars();
+
+	ResourceGrid res;
+	res.init(I);
 	
-	slope.writeOneShot("/tmp/npp.slope.nc");
 	
 	return 0;
 
