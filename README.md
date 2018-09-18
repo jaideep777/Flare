@@ -48,10 +48,6 @@ You must have the following libraries installed to use FLARE.
 * NetCDF-C++ legacy version (v4.2) 
 * libgsl 
 * CUDA toolkit.
-=======
-You must have the NetCDF-C++ legacy version (v4.2) installed before 
-you proceed with installation. You will also need the CUDA toolkit.
->>>>>>> 1928751c31843ed554d25cc92f0a4a0e69b01dd8
 
 ```
 mkdir builddir lib
