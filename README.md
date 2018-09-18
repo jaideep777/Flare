@@ -42,8 +42,11 @@ development.
 
 # Installation
 
-You must have the NetCDF-C++ legacy version (v4.2) installed before 
-you proceed with installation. You will also need the CUDA toolkit.
+You must have the following libraries installed to use FLARE.
+
+* NetCDF-C++ legacy version (v4.2) 
+* libgsl 
+* CUDA toolkit.
 
 ```
 mkdir builddir lib
