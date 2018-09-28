@@ -36,7 +36,7 @@ int main(int argc, char ** argv){
 
 	string files[] = 
 	{
-		"/home/chethana/codes/gpp.2000-2015.nc",
+		"data/gpp.2000-2015.nc",
 	};
 
 	vector <string> infiles(files, files+1); 

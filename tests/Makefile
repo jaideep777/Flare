@@ -1,13 +1,13 @@
 # makefile for libgsm
 
 TARGET = 
-LIBPATH = -L/home/chethana/codes/Flare/lib \
+LIBPATH = -L/home/jaideep/codes/Flare/lib \
 		  -L/usr/local/netcdf-cxx-legacy/lib \
 		  -L/usr/local/cuda/lib64	# Netcdf-c++ libaray path
 		  
 INCPATH = -I/usr/local/netcdf-c/include \
 		  -I/usr/local/netcdf-cxx-legacy/include \
-		  -I/home/chethana/codes/Flare/include \
+		  -I/home/jaideep/codes/Flare/include \
 		  -I/usr/local/cuda/include  # need paths to netcdf-c as well as c++ includes
 		  
 CPPFLAGS = 
