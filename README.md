@@ -4,10 +4,6 @@ FLARE is a GPU-accelerated library for building spatial models on
 geographical grids using NetCDF file format for data 
 input/output.
 
-This library includes functions for for performing operations
-on latitude/longitude/levels and time, along with smaller
-utility functions for printing data to an output stream.
-
 This library provides the following features:
 
 * Gridded Variables - Objects of this class include 
@@ -38,6 +34,7 @@ resource that grows at a logistic growth rate
 function has a GPU version. Other functions are under 
 development.
 
+Detailed PDF Documentation can be found in the docs folder.
 
 
 # Installation
