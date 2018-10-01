@@ -4,6 +4,18 @@
 #include <iostream>
 using namespace std;
 
+/** @file */
+
+/**
+	@brief Constants defined in Flare
+
+	Constants predefined in the library.
+	@author Jaideep Joshi
+	@date Sept 2018	
+	
+*/
+
+
 extern ostream * gsm_log;
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~  DEFS    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/

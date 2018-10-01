@@ -15,6 +15,14 @@ using namespace std;
 // lterp (in grid.h) may have to be rewritten because missing values grow around an existing one.
 class NcFile_handle;
 
+/**
+	@brief gVar class
+
+	Gridded Variable.
+	@author Jaideep Joshi
+	@date Sept 2018	
+	
+*/
 class gVar{
 	public:
 	int ntimes, nlevs, nlats, nlons;
