@@ -34,7 +34,9 @@ resource that grows at a logistic growth rate
 function has a GPU version. Other functions are under 
 development.
 
-Detailed PDF Documentation can be found in the docs folder.
+## Documentation
+
+Detailed PDF Documentation can be found in the docs folder. It is currently under preparation.
 
 
 # Installation
