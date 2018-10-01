@@ -65,3 +65,7 @@ tests/*_test
 tests/*.trs
 .Rhistory
 
+html
+xml
+latex
+

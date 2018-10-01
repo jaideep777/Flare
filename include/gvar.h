@@ -15,27 +15,41 @@ using namespace std;
 // lterp (in grid.h) may have to be rewritten because missing values grow around an existing one.
 class NcFile_handle;
 
-/**
-	@brief gVar class
 
-	Gridded Variable.
-	@author Jaideep Joshi
-	@date Sept 2018	
-	
+/**
+	\ingroup grid
+	\brief Georeferenced Variable.
 */
 class gVar{
 	public:
-	int ntimes, nlevs, nlats, nlons;
-	vector <float> levs, lats, lons;
-	vector <double> times;
-	double tbase;
-	float tscale, tstep; // tscale = hours/time unit || tstep = time step in hours 
-	double t;	// the time for which values are currently held
-	string varname, varunits;
+	int ntimes, //!< Number of timesteps that this variable references (note that at any point, only one timestep is held in the variable).
+		nlevs, 	//!< Number of levels in the data.
+		nlats, 	//!< Number of latitudes (rows) in the data.
+		nlons;	//!< Number of longitudes (columns) in the data.
+
+	vector <float> levs, 	//!< Levels 
+				   lats, 	//!< Latitudes associated with data rows
+				   lons;	//!< Longitudes associated with data columns
+	vector <double> times;	//!< Time vector of the variable (This is useful when reading/writing data to files).
+
+	double tbase;			//!< Base time (values in the time vector are measured in units since this base time)
+
+	float tscale, 	//!< Time unit in hours (hours/time-unit)
+		  tstep; 	//!< Time-step in hours 
+
+	double t;		//!< The time for which values are currently held
+	
+	string varname,		//!< Variable name 
+		   varunits;	//!< Variable units
+		   
 	float scale_factor, add_offset;
-	int ncoords, ivar1; // ivar1 is the index of 1st data variable
-	float missing_value;
-	vector <float> gridlimits;
+
+	int ncoords,	//!< Number of coordinates in the associated inout file 
+		ivar1; 		//!< index of 1st data variable in the associated inout file 
+		
+	float missing_value;	//!< Missing value (what value to treat as missing data)
+
+	vector <float> gridlimits;	//!< Lat-Lon bounds 
 	
 	bool lwrite, lwriteSP;			// 'write to output' flag (nc, singlePointOutput)
 	
@@ -51,7 +65,7 @@ class gVar{
 	
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~
 	public:
-	vector <float> values;	// data store of gVar
+	vector <float> values;	//!< Data values. These are stored as a 1D array.
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -98,7 +112,6 @@ class gVar{
 	gVar operator / (const float x);
 	gVar operator / (const gVar &v);
 
-	// reading functions
 	void setRegriddingMethod(string m);
 	int createNcInputStream(vector <string> files, vector <float> glim, string rm = "bilinear");
 	int loadInputFileMeta();

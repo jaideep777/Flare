@@ -7,6 +7,10 @@
 #include "constants.h"
 using namespace std;
 
+/** \addtogroup utils 
+	\{
+*/
+
 string int2str(int n);
 float str2float(string s);
 int str2int(string s);
@@ -34,17 +38,19 @@ void reverseCube(float v[], int nx, int ny,
 
 //int gsm_upper_bound (vector<float> &sorted_vec, float val, int first=0, int last=-1);
 
-int ncIndexLo(vector <float> &v, float val); // lower bound, edge for outliers
-int ncIndexHi(vector <float> &v, float val); // upper bound, edge for outliers
-int lindexSW(vector <float> &v, float val);  // lower (S/W) bound, missing value for outliers
-int indexC(vector <float> &v, float val);    // cell index by center, missing value for outliers
-vector <float> max_vec(vector <float> &u, vector <float> &v);	// return elementwise maximum 
+int ncIndexLo(vector <float> &v, float val); //!< lower bound, edge for outliers
+int ncIndexHi(vector <float> &v, float val); //!< upper bound, edge for outliers
+int lindexSW(vector <float> &v, float val);  //!< lower (S/W) bound, missing value for outliers
+int indexC(vector <float> &v, float val);    //!< cell index by center, missing value for outliers
+vector <float> max_vec(vector <float> &u, vector <float> &v);	//!< returns elementwise maximum 
 
 // Array operations
-float sum(vector <float> &v);
+float sum(vector <float> &v);	//!< Returns sum of vector
 float avg(vector <float> &v);
 //vector <float> dim_sum(vector <float> v, int idim, vector <float> dimsizes);
 //vector <float> operator * (const vector <float> &x, const vector <float> &y);
 //vector <float> operator / (const vector <float> &x, const float c);
+
+/** \} */
 
 #endif

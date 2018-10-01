@@ -10,6 +10,10 @@
 #define _PALETTES_H_
 
 
+/** @addtogroup utils 
+	@{
+*/
+
 #include <iostream>
 #include <vector>
 #include <cstdlib>		// for random numbers
@@ -26,6 +30,7 @@ class Colour_rgb{
 };
 
 
+//TODO: Make this into a Palette class
 
 Colour_rgb HSVtoRGB(float h, float s, float v );
 
@@ -40,6 +45,8 @@ vector <Colour_rgb> createPalette_ramp(int N, Colour_rgb start, Colour_rgb end);
 void printPalette(vector <Colour_rgb> &p);
 
 #endif
+
+/** @} */
 
 // sample program
 // ------------------

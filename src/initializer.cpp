@@ -18,6 +18,7 @@ void Initializer::setInitFile(string fname){
 }
 
 void Initializer::readFile(){
+	// TODO: Reset maps here
 	fin.open(init_fname.c_str());
 	if (!fin) {
 		cout << "FATAL ERROR: Cannot open initializer file " << init_fname << '\n';
@@ -65,7 +66,7 @@ void Initializer::readFile(){
 	while (fin >> s && s != attr_begin){
 		if (s == "") continue;	// skip empty lines
 		if (s == "#") {getline(fin,s,'\n'); continue;}	// skip #-followed lines (comments)
-		while (fin >> f && f != -1) vf.push_back(f);
+		while (fin >> f && f != -1) vf.push_back(f);	// TODO: Replace -1 with a symbol
 		arrays[s] = vf;
 		vf.resize(0);
 	}

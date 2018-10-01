@@ -4,8 +4,6 @@
 #include <iostream>
 using namespace std;
 
-/** @file */
-
 /**
 	@brief Constants defined in Flare
 
@@ -15,8 +13,11 @@ using namespace std;
 	
 */
 
+/** @defgroup constants Definitions
+	@{
+*/
 
-extern ostream * gsm_log;
+extern ostream * gsm_log; 
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~  DEFS    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
@@ -40,7 +41,9 @@ extern bool gsm_errors_on;
 //const float glimits_india[4] = {66.5, 100.5, 6.5, 38.5};
 //extern float glimits_custom[4];
 
-
+/** 
+	@}
+*/
 
 #endif
 

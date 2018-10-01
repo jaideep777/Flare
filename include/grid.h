@@ -6,6 +6,11 @@
 
 using namespace std;
 
+/** \defgroup grid Grid Operations 
+	\{
+*/
+
+
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~  GRID    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 // create coordinate vector given x0, xf and number of points
 vector <float> createCoord(float x0, float xf, int nx, float &dx);
@@ -83,5 +88,7 @@ gVar coarseGrain_sum(gVar &hires, vector <float> &xlons, vector <float> &xlats);
 gVar coarseGrain_mean(gVar &hires, vector <float> &xlons, vector <float> &xlats);
 
 gVar binary(gVar v, float thresh=0);
+
+/** \} */
 
 #endif
