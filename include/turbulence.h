@@ -8,6 +8,13 @@
 #include "initializer.h"
 using namespace std;
 
+/** \defgroup hetero Spatial Heterogeneity 
+	\brief A GPU implementation of a synthetic turbulence generator to generate spatially heterogeneous fields.  
+*/
+/** \ingroup hetero */
+
+/**	\brief A GPU implementation of a synthetic turbulence generator to generate spatially heterogeneous fields.  
+*/
 class TurbulenceEngine{
 	
 	public:

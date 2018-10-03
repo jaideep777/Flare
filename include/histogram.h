@@ -69,7 +69,7 @@ class Histogram{
 	vector <float> getMids();		//!< Get bin midpoints (Arithmatic mean of the bin ends)
 	vector <float> getMids_log();	//!< Get bin midpoints (Geometric mean of the bin ends)
 	vector <float> getBreaks();		//!< Get the breaks vector
-	int convertToPdf();				//!< Normalize the counts to a probability distribution $\sum c = 1$
+	int convertToPdf();				//!< Normalize the counts to a probability distribution \f$\sum c = 1 \f$
 };
 
 

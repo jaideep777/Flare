@@ -10,7 +10,13 @@
 #include "initializer.h"
 using namespace std;
 
+/** \defgroup resource Spatial Resource Dynamics 
+	\brief A GPU implementation of spatial resource dynamics, including resource growth (at logistic rate), harvest and diffusion 
+*/
+/** \ingroup resource */
 
+/** \brief A GPU implementation of spatial resource dynamics, including resource growth (at logistic rate), harvest and diffusion 
+*/
 class ResourceGrid{
 	
 	public:

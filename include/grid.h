@@ -6,7 +6,8 @@
 
 using namespace std;
 
-/** \defgroup grid Grid Operations 
+/** \defgroup grid Spatial Tools 
+	\brief The Georeference Variable class, NetCDF IO, and spatial operations such as masking, regridding, and coarsegraining.
 	\{
 */
 

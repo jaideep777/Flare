@@ -11,6 +11,8 @@ using namespace std;
 //	NcFile_handle class has resources to read/write Nc Files.
 //	this class has no variables by itself and must input all relevant gVars
 //	therefore destructor frees all pointers.
+/** \brief A handle for NetCDF files
+*/
 class NcFile_handle{
 	public:
 	NcFile * dFile;

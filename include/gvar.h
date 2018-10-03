@@ -42,7 +42,7 @@ class gVar{
 	string varname,		//!< Variable name 
 		   varunits;	//!< Variable units
 		   
-	float scale_factor, add_offset;
+	float scale_factor, add_offset;	// TODO: These should be moved to NcFile_handle, as these are file properties.
 
 	int ncoords,	//!< Number of coordinates in the associated inout file 
 		ivar1; 		//!< index of 1st data variable in the associated inout file 
@@ -70,27 +70,84 @@ class gVar{
 
 
 	public:
+	
+	/**
+		\brief Default Constructor	
+	*/
 	gVar();
+
+	/**
+		\brief Constructor with name and units	
+	*/
 	gVar(string name, string units, string tunits);
 
-	int initMetaFromFile(string filename);
+	/**
+		\brief Set metadata from a NetCDF File.	
+	*/
+	int initMetaFromFile(string filename	//!< NetCDF file name
+						);
 	
+	/**
+		\brief Set Metadata (except coordinates) fom another Georeferenced variable.
+		
+		This function sets all metadata except the coordinates. This is useful in 
+		functions like regridding where coordinates need to be modified. 	
+	*/
 	int _copyMeta(const gVar & v);	// copy all metadata excecpt coords
+
+	/**
+		\brief Set ALL metadata fom another Georeferenced variable.
+		
+		This function sets all metadata including the coordinates from the supplied variable.  	
+	*/
 	int copyMeta(const gVar &v);	// copy all metadata including coords and resize
-	int copyMeta(const gVar &v, vector <float> &_lons, vector <float> &_lats, vector <float> &_levs); // copy meta from v but replace coords (useful in interpolations/coarsegraining functions)	
+
+	/**
+		\brief Set metadata except cooridnates and set coordinates from specified values.
+		
+		This function sets all metadata except the coordinates from the supplied variable. 
+		Coordinates are additionally set using the arguments supplied. 
+		(Useful in interpolations/coarsegraining functions)	
+	*/
+	int copyMeta(const gVar &v, 			//!< Georeferenced variable from which to copy metadata
+				 vector <float> &_lons, 	//!< New lons
+				 vector <float> &_lats, 	//!< New lats
+				 vector <float> &_levs		//!< New levels
+				 ); 
 	
+	/**
+		\brief Copy values from another variable.
+	*/
 	int copyValues(const gVar &v);	// copy values vector and missing_value from v
 
-	int setCoords(vector <double> &t, vector <float> &le, vector <float> &la, vector <float> &lo);
-	int setTimeAtts(int xntimes, double xtbase, float xtscale);
+
+	/**
+		\brief Set coordinates
+	*/
+	int setCoords(vector <double> &t,	//!< Times - Must be in "units since <base_date>"
+				  vector <float> &le,	//!< Levels 
+				  vector <float> &la,	//!< Lats - Must be in ascending order (-90 --> 90)
+				  vector <float> &lo	//!< Lons  
+				  );
+				  
+	/**
+		\brief Set Time attributes (units, base date).
+	*/
+	int setTimeAtts(int xntimes, 		//!< Number of timesteps
+					double xtbase, 		//!< Base time from which the values in the time vector are measured (must be days since 1 March 0000 AD). The ymd2gday() function may be used to calculate the base time in appropriate units.  
+					float xtscale		//!< Hours per time-unit. For e.g., if time unit is days, xtscale = 24, if time unit is hours, xtscale = 1, etc. 
+					);
 
 	int printGrid(ostream &lfout = std::cout);	// print succint grind info
 	int printGridIP(ostream &lfout = std::cout);	// print succint grind info
 	int printValues(ostream &lfout = std::cout); // print values
 	
-	int gt2ix(double gt);	// find index in time coord corresponding to global time (inc day fraction)
-	double ix2gt(int ix);	// find GT fractional gday corresponding to given index 
-	double ix2gt_IST(int ix); // find GT fractional gday for given index but add 5.5 hrs to convert to IST
+	/** \name time-index conversions */
+	//@{
+	int gt2ix(double gt);	//!< find the index in variable's time vector that corresponds to global time gt (including day fraction). The highest index just <= gt is returned. 
+	double ix2gt(int ix);	//!< Convert index ix in the variable's time vector to global time 
+	double ix2gt_IST(int ix); //!< Convert index ix in the variable's time vector to global time +5.5 hours (Indian standard time) 
+	//@}
 	
 	// get value by coords
 	float getValue(float xlon, float xlat, float ilev = 0);		// get interpolated value at (xlon, xlat)
@@ -100,44 +157,82 @@ class gVar{
 	int fill(float f);
 	int sqrtVar();
 	
-	// operators
-	float& operator () (int ilon, int ilat, int ilev);	// get reference to element by coord indices, like n-D array
-	float& operator [] (int i);	// get reference to element by memory index, like 1-D array
-	gVar operator + (const gVar &v);
-	gVar operator + (const float x);
-	gVar operator - (const gVar &v);
-	gVar operator - (const float x);
-	gVar operator * (const gVar &v);
-	gVar operator * (const float x);
-	gVar operator / (const float x);
-	gVar operator / (const gVar &v);
+	/** \name operators */
+	//@{
+	float& operator () (int ilon, int ilat, int ilev);	//!< Get reference to the data element at specified coordinate indices.
+	float& operator [] (int i);	//!< Get reference to the data element by directly accessing the 1D values array.
+	gVar operator + (const gVar &v); //!< Add 2 gVars, returning missing_value when either operand is missing.
+	gVar operator + (const float x); //!< Add a constant to gVar
+	gVar operator - (const gVar &v); //!< Subtract 2 gVars, returning missing_value when either operand is missing.
+	gVar operator - (const float x); //!< Subtract a constant from gVar
+	gVar operator * (const gVar &v); //!< Multiply 2 gVars, returning missing_value when either operand is missing.
+	gVar operator * (const float x); //!< Multiply gVar with a constant 
+	gVar operator / (const float x); //!< Division, returning missing_value when either operand is missing.
+	gVar operator / (const gVar &v); //!< Divide gVar with a constant
+	//@} 
+	
 
-	void setRegriddingMethod(string m);
-	int createNcInputStream(vector <string> files, vector <float> glim, string rm = "bilinear");
+	private:
 	int loadInputFileMeta();
 	int whichNextFile(double gt);
 	int updateInputFile(double gt);
-	int closeNcInputStream();
 	
-	int readVar_gt(double gt, int mode); 
-	int readVar_it(int tid);
+	public:
+	/** \brief Set the regridding method to use when reading data from an input stream.
+		\param m String specifying the regridding method. Currently, possible options 
+		are "bilinear" and "none" (If "none" is specified, the lats-lons in the input 
+		file must match exactly with those in the variable). In future releases, 
+		coarseGrain and Nearest-Neighbour regridding will be supported.  		
+	*/
+	void setRegriddingMethod(string m);
 
-	int readVar_reduce_mean(double gt1, double gt2);
-//	int readVar_reduce_sd(double gt1, double gt2);
-	gVar trend(double gt1, double gt2);
-	gVar trend_gpu(double gt1, double gt2);
-	
+	/** \name One-shot NetCDF reading and writing 
+		These functions can be used to read or write a single time slice from/to a NetCDF file. 
+		The functions automatically read/write all the necessary metadata. These functions are particularly 
+		convenient quickly exchanging data from files and gVars.  
+	*/
+	//@{	 
 	// these 2 functions create a gVar in one shot by reading the first record in specified file
-	// createOneShot uses file's coords, readOneShot uses variable's coords and interpolates data
-	int createOneShot(string filename, vector<float> glim = vector <float> ());
-	int readOneShot(string filename, vector<float> glim = vector <float> ());
-	
-	// writing functions
-	int createNcOutputStream(string filename);
-	int closeNcOutputStream();
-	int writeVar(int itime); 
-
+	int createOneShot(string filename, vector<float> glim = vector <float> ()); 	//!< This function opens the specified file, reads the metadata and the first time slice, and closes the file. 
+	int readOneShot(string filename, vector<float> glim = vector <float> ());		//!< This function opens the specified file, reads the first time slice and interpolates data into the variable's grid, closes the file. 
 	int writeOneShot(string filename);
+	//@}
+
+	/** \name NetCDF input-output streams 
+		These functions create input/output "streams" to repeatedly read time slices from one or more files.
+		If the lats-lons in the file being read are different from those in the variable, the data is automatically interpolated 
+		using the specified regridding method (the default regridding method is bilinear, but can be set using setRegriddingMethod()). 
+	*/
+	//@{	 
+	/** \brief Create an input stream for reading data from one or more files. 
+	
+		Data is automatically interpolated using the specified regridding method. If data is spread over multiple files, all files must have the same coordinates.
+	*/
+	int createNcInputStream(vector <string> files, 		//!< A vector containing names of NetCDF files
+							vector <float> glim, 		//!< Grid limits, to specify what subset of the data should be read. This should be in the order [west-lon, east-lon, south-lat, north-lat]       
+							string rm = "bilinear"		//!< (optional) regridding method
+						   ); 
+	int createNcOutputStream(string filename);	//!< Create an output stream. Data will be written to file "filename".
+	int closeNcInputStream();
+	int closeNcOutputStream();
+
+	int readVar_gt(double gt, int mode);	//!< Read time-slice for time gt from the input stream. If the stream comprises of multiple files, this function will automatically find the file which contains the time slice closest to gt and read data from that file.
+	int readVar_it(int tid);				//!< Read time-slice from index tid from the NetCDF file currently opened in the input stream.
+	int writeVar(int itime); 				//!< Write time-slice to index itime in the output stream
+	//@}
+
+	
+	/** \name High level operations using streams
+		Before calling these functions, an input stream must be created using createNcInputStream()
+	*/
+	//@{	 
+	int readVar_reduce_mean(double gt1, double gt2); //!< Calculate temporal mean of the variable during time interval gt1-gt2
+//	int readVar_reduce_sd(double gt1, double gt2);
+	gVar trend(double gt1, double gt2);		//!< Calculate trend (slope) of the variable during time interval gt1-gt2
+	gVar trend_gpu(double gt1, double gt2);	//!< Calculate trend (slope) of the variable during time interval gt1-gt2 (Use GPU)
+	//@}	
+	
+
 	
 };
 
