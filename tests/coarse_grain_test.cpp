@@ -87,6 +87,10 @@ int main(){
 	
 	lores.writeOneShot("out2.nc");
 
+	gVar lores2; lores2.copyMeta(hires, lons1, lats1, hires.levs);
+	coarseGrain("mean", hires, lores2, indices);
+	lores2.writeOneShot("out3.nc");
+
 
 //	// test gsm_upper_bound and indexC 
 //	int nlons;

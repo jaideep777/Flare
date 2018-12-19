@@ -159,6 +159,22 @@ vector <int> cgIndices(vector <float> &lons, vector <float> &lats,
 }
 
 
+// During initialization, calculate the C index for each point of model grid, 
+// so that it can be resued at every step in nn-remap
+vector <int> nnIndices(vector <float> &lons, vector <float> &lats,
+						vector <float> &mlons, vector <float> &mlats){
+
+//	int gsm_nlats = mlats.size(), gsm_nlons = mlons.size();
+	vector <int> indices(mlats.size()*mlons.size()*2);
+	for (int ilat=0; ilat < mlats.size(); ++ilat){
+		for (int ilon=0; ilon < mlons.size(); ++ilon){
+			vector <int> uvs = findGridBoxC(mlons[ilon], mlats[ilat], lons, lats);
+			indices[IX2(ilon, ilat, mlons.size())*2 + 0] = uvs[0];	// there was a fatal mistake on this line
+			indices[IX2(ilon, ilat, mlons.size())*2 + 1] = uvs[1];	// mlats.size() was being used!!!
+		}
+	}
+	return indices;
+}
 
 
 inline float bilinear_mn(int m, int n, float x, float y, float iz,
@@ -335,7 +351,7 @@ int lterpCube(gVar &v, gVar &out, vector <int> &indices){
 	// get output lats lons from output var
 	vector <float> xlons = out.lons, xlats = out.lats;
 	// grids are OK. proceed with regridding...
-	out.values.resize( xlons.size()*xlats.size()*v.nlevs );
+	out.values.resize( xlons.size()*xlats.size()*v.nlevs );	// TODO: resized without modifying metadata??
 	for (int ilev=0; ilev < v.nlevs; ++ilev){
 		for (int ilat=0; ilat < xlats.size(); ++ilat){
 			for (int ilon=0; ilon < xlons.size(); ++ilon){
@@ -377,16 +393,20 @@ gVar lterp(gVar &v, vector <float> &xlons, vector <float> &xlats){
 	return temp;
 }
 
-// coarse grain by summing or averaging high resolution data points within each target grid cell
-gVar coarseGrain(string fun, gVar &hires, vector <float> &xlons, vector <float> &xlats, vector <int> &indices){
 
+
+int coarseGrain(string fun, gVar &hires, gVar &out, vector <int> &indices){
 	bool use_indices = (indices.size() > 0);
 	CDEBUG << "Coarsegraining (use_indices = " << use_indices << ")... "; cout.flush();
-	gVar temp; temp.copyMeta(hires, xlons, xlats, hires.levs);
-	temp.fill(0);
+
+	if (out.nlevs != hires.nlevs){
+		CERR << "Levels mismatch: " << hires.nlevs << " --> " << out.nlevs << endl; 
+	}
+
+	out.fill(0);
 
 	vector <float> clev(1,0);
-	gVar counts; counts.copyMeta(temp, temp.lons, temp.lats, clev);
+	gVar counts; counts.copyMeta(out, out.lons, out.lats, clev);
 	
 	clock_t start = clock(), end;
 	for (int ilev=0; ilev < hires.nlevs; ++ilev){
@@ -397,19 +417,16 @@ gVar coarseGrain(string fun, gVar &hires, vector <float> &xlons, vector <float> 
 				vector <int> uv(2);
 				
 				if (use_indices){
-//					cout << indices.size() << endl;
-//					cout << IX2(ilon, ilat, hires.lons.size())*2 + 0 << " " << IX2(ilon, ilat, hires.lons.size())*2 + 1 << endl;
 					uv[0] = indices[IX2(ilon, ilat, hires.lons.size())*2 + 0];	// there was a fatal mistake on this line
 					uv[1] = indices[IX2(ilon, ilat, hires.lons.size())*2 + 1];	// mlats.size() was being used!!!
-//					cout << uv[0] << " " << uv[1] << "\n";
 				}
 				else{
-					uv = findGridBoxC(hires.lons[ilon], hires.lats[ilat], xlons, xlats);
+					uv = findGridBoxC(hires.lons[ilon], hires.lats[ilat], out.lons, out.lats);
 				}
 				
 				if (uv[0] != -999 && uv[1] != -999) {
 					if (hires(ilon, ilat, ilev) != hires.missing_value){
-						temp(uv[0],uv[1],ilev) += hires(ilon, ilat, ilev);
+						out(uv[0],uv[1],ilev) += hires(ilon, ilat, ilev);
 						counts(uv[0],uv[1],0) += 1;
 					}
 				}
@@ -417,11 +434,11 @@ gVar coarseGrain(string fun, gVar &hires, vector <float> &xlons, vector <float> 
 		}
 
 //		cout << "averaging..."; cout.flush();
-		for (int ilat=0; ilat < temp.nlats; ++ilat){
-			for (int ilon=0; ilon < temp.nlons; ++ilon){
-				if (counts(ilon,ilat,0) == 0) temp(ilon,ilat, ilev) = temp.missing_value;
+		for (int ilat=0; ilat < out.nlats; ++ilat){
+			for (int ilon=0; ilon < out.nlons; ++ilon){
+				if (counts(ilon,ilat,0) == 0) out(ilon,ilat, ilev) = out.missing_value;
 				else {
-					if (fun == "mean") temp(ilon,ilat,ilev) /= counts(ilon,ilat,0);
+					if (fun == "mean") out(ilon,ilat,ilev) /= counts(ilon,ilat,0);
 				}
 			}
 		}
@@ -430,6 +447,15 @@ gVar coarseGrain(string fun, gVar &hires, vector <float> &xlons, vector <float> 
 	end = clock();
 	CDEBUGC << " [" << double(end-start)/CLOCKS_PER_SEC*1000 << " ms]"<< endl;
 //	cout << "Done!" << endl;
+}
+
+
+// coarse grain by summing or averaging high resolution data points within each target grid cell
+gVar coarseGrain(string fun, gVar &hires, vector <float> &xlons, vector <float> &xlats, vector <int> &indices){
+
+	gVar temp; temp.copyMeta(hires, xlons, xlats, hires.levs);
+	coarseGrain(fun, hires, temp, indices);
+	
 	return temp;
 }
 

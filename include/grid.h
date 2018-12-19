@@ -51,6 +51,12 @@ vector <int> bilIndices(vector <float> &lons, vector <float> &lats,
 vector <int> cgIndices(vector <float> &lons, vector <float> &lats,
 						vector <float> &mlons, vector <float> &mlats);
 
+// During initialization, calculate the C index for each point of model grid, 
+// so that it can be resued at every step in nn-remap
+vector <int> nnIndices(vector <float> &lons, vector <float> &lats,
+						vector <float> &mlons, vector <float> &mlats);
+
+
 // return bilinear interpolated value at point (x,y) in grid {lons,lats}
 float bilinear(float x, float y, float iz, 
 			   vector <float> &lons, vector <float> &lats, 
@@ -90,6 +96,8 @@ int lterpCube(gVar &v, gVar &out, vector <int> &indices);
 int cellRegridCube(gVar &v, gVar &out, vector <int> &indices);
 
 static vector <int> blank_vec;
+
+int coarseGrain(string fun, gVar &hires, gVar &out, vector <int> &indices);
 
 gVar coarseGrain_sum(gVar &hires, vector <float> &xlons, vector <float> &xlats, vector <int> &indices = blank_vec);
 gVar coarseGrain_mean(gVar &hires, vector <float> &xlons, vector <float> &xlats, vector <int> &indices = blank_vec);
