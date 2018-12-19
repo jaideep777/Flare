@@ -28,7 +28,7 @@
 #include <ctime>
 #include <netcdfcpp.h>
 #include "../include/gvar.h"
-#include "../include/time.h"
+#include "../include/time_math.h"
 #include "../include/arrayutils.h"
 #include "../include/grid.h"
 #include "../include/ncio.h"
@@ -110,7 +110,7 @@ int gVar:: copyMeta(const gVar &v){
 int gVar:: copyMeta(const gVar &v, vector <float> &_lons, vector <float> &_lats, vector <float> &_levs){
 
 	_copyMeta(v);
-	nlevs = _levs.size(); nlats = _lats.size(); nlons = _lons.size();
+	nlevs = fmax(_levs.size(),1); nlats = _lats.size(); nlons = _lons.size();
 	levs = _levs; lats = _lats; lons = _lons;
 	
 	values.resize(nlons*nlats*nlevs);
@@ -588,7 +588,7 @@ int gVar::readVar_it(int tid){
 int gVar::createOneShot(string filename, vector<float> glim){
 	ifname = filename;
 
-	float glimits_globe[4] = {0, 360, -90, 90};
+	float glimits_globe[4] = {-180, 360, -90, 90};
 	if (glim.size() < 4) gridlimits = vector <float> (glimits_globe, glimits_globe+4);
 	else gridlimits = glim;
 
@@ -596,6 +596,7 @@ int gVar::createOneShot(string filename, vector<float> glim){
 	int i = ifile_handle->open(ifname, "r", &gridlimits[0]);
 	ifile_handle->readCoords(*this);
 	ifile_handle->readVarAtts(*this);
+//	times = vector<double> (1, times[0]); ntimes=1;
 	ifile_handle->readVar(*this,0);
 	ifile_handle->close();
 	delete ifile_handle; ifile_handle = NULL;

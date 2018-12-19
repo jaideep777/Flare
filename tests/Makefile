@@ -12,8 +12,8 @@ INCPATH = -I/usr/local/netcdf-c/include \
 		  
 CPPFLAGS = 
 
-LIBS = -l:libflare.so.3 -lnetcdf_c++ -lgsl -lgslcblas 
-CUDA_LIBS = -lcudart -lcurand -lcufft
+LIBS = -l:libflare.so.3 -lnetcdf_c++ #-lgsl -lgslcblas 
+CUDA_LIBS = #-lcudart -lcurand -lcufft
 
 SOURCES = $(TARGET).cpp
 

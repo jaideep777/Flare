@@ -24,7 +24,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 #include <sstream>
-#include "../include/time.h"
+#include "../include/time_math.h"
 #include "../include/arrayutils.h"
 
 //// general GSM options functions

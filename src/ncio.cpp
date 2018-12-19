@@ -27,7 +27,7 @@
 #include "../include/gvar.h"
 #include "../include/ncio.h"
 #include "../include/constants.h"
-#include "../include/time.h"
+#include "../include/time_math.h"
 #include "../include/arrayutils.h"
 
 /******************       class NcFile_handle      ***********************/
@@ -96,8 +96,8 @@ void NcFile_handle::setMapLimits(float xwlon, float xelon, float xslat, float xn
 // ------------------------- READING ----------------------------
 
 int NcFile_handle::readTime(gVar &v){
-	clock_t start = clock(), end;
 	if ( tVar){
+		clock_t start = clock(), end;
 		CINFO << "  reading t... ";
 		ntimes = v.ntimes = *(tVar->edges());	// otherwise constructor has init to 0
 		v.times.resize(v.ntimes);
@@ -129,9 +129,9 @@ int NcFile_handle::readTime(gVar &v){
 		v.tstep = (v.times[v.times.size()-1] - v.times[0])/(v.times.size()-1)*v.tscale;    // average tstep in hours
 		CINFOC << v.ntimes << " read: (" 
 			   << gt2string(v.ix2gt(0)) << " --- " << gt2string(v.ix2gt(v.ntimes-1)) << ").";
+		end = clock();
+		CINFOC << " [" << double(end-start)/CLOCKS_PER_SEC*1000 << " ms]" << endl; 
 	}
-	end = clock();
-	CINFOC << " [" << double(end-start)/CLOCKS_PER_SEC*1000 << " ms]" << endl; 
 	// NOTE: For some reason, reading the time vector from .nc is slow. Takes ~1 ms. Rest are 0.01 ms
 
 }
@@ -567,12 +567,12 @@ int NcFile_handle::writeVar(gVar &v, NcVar* vVar, int itime){
 		CERR << "ERROR in writeVar: File not in write mode.\n";
 		return 1;
 	}
-	
+//	cout << "HERE" << endl;
 	clock_t start = clock(), end;
-	CDEBUG << "Write variable (" << v.varname << ") to file";
+	CDEBUG << "Write variable (" << v.varname << ") to file"; gsm_log->flush();
 	// actually write the data
 	if (tVar) {
-		CDEBUGC << " at index " << itime;
+		CDEBUGC << " at index " << itime; gsm_log->flush();
 		vVar->put_rec(&v.values[0], itime);	// if time dimension exists, write a record
 	}
 	else {	

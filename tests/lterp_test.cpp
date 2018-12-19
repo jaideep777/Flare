@@ -66,20 +66,20 @@ int main(){
 	
 	// test coarsegraining on a real large variable
 	vector <float> ilim(4);
-	ilim[0] = -180;
-	ilim[1] = 180;
+	ilim[0] = 0; //-180;
+	ilim[1] = 360; //180;
 	ilim[2] = -90;
 	ilim[3] = 90;
 	
 	gVar hires;
-	hires.createOneShot("data/MOD17A2_GPP.2000.M01.nc", ilim);
+	hires.createOneShot("data/gpp.2000-2015.nc", ilim);
 	hires.printGrid();
 
 	vector <float> lons1 = createCoord(ilim[0]+0.125,ilim[1]-0.125,0.25,nlons);
 	vector <float> lats1 = createCoord(ilim[2]+0.125,ilim[3]-0.125,0.25,nlats);
 
-	gVar lores = coarseGrain_mean(hires, lons1, lats1);
-//	gVar lores = lterp(hires, lons1, lats1);
+//	gVar lores = coarseGrain_mean(hires, lons1, lats1);
+	gVar lores = lterp(hires, lons1, lats1);
 	lores.printGrid();
 	
 	lores.writeOneShot("out1.nc");

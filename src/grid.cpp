@@ -340,6 +340,8 @@ int lterpCube(gVar &v, gVar &out, vector <int> &indices){
 // interpolate variable v onto grid {xlons,xlats} (i.e. with metadata from v)
 gVar lterp(gVar &v, vector <float> &xlons, vector <float> &xlats){
 	gVar temp; temp.copyMeta(v, xlons, xlats, v.levs);
+	CDEBUG << "lterp: Interpolate into " << temp.varname;
+	clock_t start = clock(), end;
 //	temp.lats = xlats; temp.nlats = xlats.size();
 //	temp.lons = xlons; temp.nlons = xlons.size();
 //	temp.values.resize(temp.nlons*temp.nlats*temp.nlevs);
@@ -351,6 +353,8 @@ gVar lterp(gVar &v, vector <float> &xlons, vector <float> &xlats){
 		}
 	}
 	//temp.values = tempvalues;
+	end = clock();
+	CDEBUGC << " [" << double(end-start)/CLOCKS_PER_SEC*1000 << " ms]"<< endl;
 	return temp;
 }
 

@@ -1,7 +1,7 @@
 #include <iostream>
 #include "../include/gvar.h"
 #include "../include/ncio.h"
-#include "../include/time.h"
+#include "../include/time_math.h"
 #include <netcdfcpp.h>
 #include <vector>
 #include <algorithm>

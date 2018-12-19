@@ -374,7 +374,7 @@
 //#include "../src_cuda/cuda_device.h"
 
 #include "constants.h"
-#include "time.h"
+#include "time_math.h"
 #include "arrayutils.h"
 #include "gvar.h"
 #include "ncio.h"
