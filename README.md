@@ -36,7 +36,7 @@ development.
 
 ## Documentation
 
-Detailed PDF Documentation can be found in the docs folder. It is currently under preparation.
+Detailed PDF Documentation can be found in the docs folder. Some sections are under preparation. Web documentation will be available soon.
 
 
 # Installation
