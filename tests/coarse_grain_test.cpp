@@ -78,11 +78,14 @@ int main(){
 	vector <float> lons1 = createCoord(ilim[0]+0.125,ilim[1]-0.125,0.25,nlons);
 	vector <float> lats1 = createCoord(ilim[2]+0.125,ilim[3]-0.125,0.25,nlats);
 
-	gVar lores = coarseGrain_mean(hires, lons1, lats1);
+	vector<int> indices = cgIndices(hires.lons, hires.lats, lons1, lats1);
+	cout << "indices: " << indices.size() << endl;
+
+	gVar lores = coarseGrain_mean(hires, lons1, lats1, indices);
 //	gVar lores = lterp(hires, lons1, lats1);
 	lores.printGrid();
 	
-	lores.writeOneShot("out1.nc");
+	lores.writeOneShot("out2.nc");
 
 
 //	// test gsm_upper_bound and indexC 

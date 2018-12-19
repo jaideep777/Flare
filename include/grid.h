@@ -46,6 +46,10 @@ vector <int> findGridBoxC(float x,float y, vector <float> &lons, vector <float> 
 vector <int> bilIndices(vector <float> &lons, vector <float> &lats,
 				 		vector <float> &mlons, vector <float> &mlats);
 
+// During initialization, calculate the [mglons, mglats] GridBox in which each (lat,lon) lies, 
+// so that it can be resued at every step in coarsegraining
+vector <int> cgIndices(vector <float> &lons, vector <float> &lats,
+						vector <float> &mlons, vector <float> &mlats);
 
 // return bilinear interpolated value at point (x,y) in grid {lons,lats}
 float bilinear(float x, float y, float iz, 
@@ -85,8 +89,10 @@ gVar lterp(gVar &v, vector <float> &xlons, vector <float> &xlats);
 int lterpCube(gVar &v, gVar &out, vector <int> &indices);
 int cellRegridCube(gVar &v, gVar &out, vector <int> &indices);
 
-gVar coarseGrain_sum(gVar &hires, vector <float> &xlons, vector <float> &xlats);
-gVar coarseGrain_mean(gVar &hires, vector <float> &xlons, vector <float> &xlats);
+static vector <int> blank_vec;
+
+gVar coarseGrain_sum(gVar &hires, vector <float> &xlons, vector <float> &xlats, vector <int> &indices = blank_vec);
+gVar coarseGrain_mean(gVar &hires, vector <float> &xlons, vector <float> &xlats, vector <int> &indices = blank_vec);
 
 gVar binary(gVar v, float thresh=0);
 

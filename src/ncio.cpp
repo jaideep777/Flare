@@ -576,7 +576,7 @@ int NcFile_handle::writeVar(gVar &v, NcVar* vVar, int itime){
 		vVar->put_rec(&v.values[0], itime);	// if time dimension exists, write a record
 	}
 	else {	
-		CDEBUGC << "FAILED! No tVar. ";
+		CDEBUGC << "No tVar to write.\n";
 		if (v.nlevs <=1 ) vVar->put(&v.values[0], v.nlats, v.nlons);	// else write a single map
 		else vVar->put(&v.values[0], v.nlevs, v.nlats, v.nlons);
 	}
