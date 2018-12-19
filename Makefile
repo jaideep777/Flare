@@ -28,7 +28,7 @@ dir:
 	mkdir -p $(BUILDDIR) lib
 
 $(TARGET): $(OBJECTS) $(CUDA_OBJECTS)
-	g++ -shared $(LIBPATH) $(LDFLAGS) -o $(OUTLIBPATH)/$(TARGET).so.$(VERSION) $(OBJECTS) $(CUDA_OBJECTS) $(CUDA_LIBS)
+	g++ -shared $(LIBPATH) $(LDFLAGS) -o $(OUTLIBPATH)/$(TARGET).so.$(VERSION) $(OBJECTS) $(CUDA_OBJECTS) $(LIBS) $(CUDA_LIBS)
 
 $(OBJECTS): $(BUILDDIR)/%.o : $(SOURCEDIR)/%.cpp
 	g++ -c $(CPPFLAGS) $(INCPATH) $< -o $@ 

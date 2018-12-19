@@ -5,7 +5,6 @@
 #include <algorithm>
 using namespace std;
 
-// g++ -I/usr/local/netcdf-c-4.3.2/include -I/usr/local/netcdf-cxx-legacy/include -I/home/jaideep/codes/libgsm_v2/include -L/home/jaideep/codes/libgsm_v2/lib -L/usr/local/netcdf-cxx-legacy/lib -o 1 coarse_grain_test.cpp -l:libgsm.so.2 -lnetcdf_c++ 
 
 
 int main(){
@@ -67,13 +66,13 @@ int main(){
 	
 	// test coarsegraining on a real large variable
 	vector <float> ilim(4);
-	ilim[0] = -180;
-	ilim[1] = 180;
+	ilim[0] = 0; //-180;
+	ilim[1] = 360; //180;
 	ilim[2] = -90;
 	ilim[3] = 90;
 	
 	gVar hires;
-	hires.createOneShot("/home/jaideep/codes/Rajiv_carbon_project/MOD17A2_GPP.2000.M01.nc", ilim);
+	hires.createOneShot("data/gpp.2000-2015.nc", ilim);
 	hires.printGrid();
 
 	vector <float> lons1 = createCoord(ilim[0]+0.125,ilim[1]-0.125,0.25,nlons);

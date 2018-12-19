@@ -452,7 +452,7 @@ int gVar::createNcInputStream(vector <string> files, vector <float> glim, string
 	CDEBUG << "createNcInputStream [" << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms]" << endl; 
 
 	regriddingMethod = rm;
-	if (regriddingMethod == "bilinear" || regriddingMethod == "nn") {
+	if (regriddingMethod == "bilinear") {
 		start = clock();
 		lterp_indices = bilIndices(ipvar->lons, ipvar->lats, lons, lats);	// recalculate lterp indices only if file was updated 
 		end = clock();
@@ -465,7 +465,10 @@ int gVar::createNcInputStream(vector <string> files, vector <float> glim, string
 			return 1;
 		}
 	}
-	
+	else {
+		CERR << "(" << varname << ") createInputStream: Interpolation specified to " << rm << " but this is not implemented yet\n"; 
+		return 1;
+	}	
 }
 
 int gVar::loadInputFileMeta(){
@@ -478,14 +481,17 @@ int gVar::loadInputFileMeta(){
 
 	// open new file
 	int i = ifile_handle->open(filenames[curr_file], "r", &gridlimits[0]);
-	if (i != 0) CERR << "NCFILE NOT VALID!!" << endl;
+	if (i != 0){
+		CERR << "Failed to open file: " << filenames[curr_file] << endl;
+		exit(-1);
+	}
 
 	// read metadata
 	ifile_handle->readCoords(*ipvar);
 	ifile_handle->readVarAtts(*ipvar);
 	
 //	// calculate regridding indices
-//	lterp_indices = bilIndices(ipvar->lons, ipvar->lats, lons, lats);	// TODO: This is slowing down large file reading. Move.
+//	lterp_indices = bilIndices(ipvar->lons, ipvar->lats, lons, lats);	
 	
 }
 

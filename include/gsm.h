@@ -371,7 +371,7 @@
 
 //#endif
 
-#include "../src_cuda/cuda_device.h"
+//#include "../src_cuda/cuda_device.h"
 
 #include "constants.h"
 #include "time.h"
