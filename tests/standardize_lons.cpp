@@ -35,9 +35,6 @@ int main(int argc, char ** argv){
 	// set NETCDF error behavior to non-fatal
 	NcError err(NcError::silent_nonfatal);
 
-	// create a grid limits vector for convenience
-	float glimits[] = {-180, 360, -90, 90};
-	vector <float> glim(glimits, glimits+4);
 
 //	string filename = argv[1]; 
 	
@@ -61,19 +58,45 @@ int main(int argc, char ** argv){
 	}
 	cout << endl;
 
+	// create a grid limits vector for convenience
+	float glimits[] = {0, 50, -90, 90};
+	vector <float> glim(glimits, glimits+4);
 
 	gVar vin;
-	vin.createOneShot("data/gpp.intercept.2001-2010.nc");
-
+	vin.createOneShot("data/gpp.intercept.2001-2010.nc", glim);
 	vector <float> &lons = vin.lons;
-	printArray(lons);
+//	printArray(lons);
+
+	float wlon = 30, elon = 180;
+
+	float l[] = {0,30,60,90,120,150,180,210,240,270,300,330};
+//	vector <float> lons(l, l+12);
 
 	auto it = find_if(lons.begin(), lons.end(), [](float x){return x > 180;});	// find first lon > 180
-	int shift = distance(lons.begin(), it);										// array to be shifted by that many elements
+	int shift = lons.size() - distance(lons.begin(), it);						// array to be shifted right by that many elements
 	for_each(it, lons.end(), [](float &x){x -= 360;});							// bring all lons > 180 t0 principle range
+	
+	printArray(lons);
+	cout << "shift by: " << shift << endl;
 	
 	if (it != lons.begin() && it != lons.end()){								// if shift is > 0 and < N, shift both
 		shiftRight(lons.data(), lons.size(), shift);							//    lons and data
+//		shiftCubeRight(vin.values.data(), vin.nlons, vin.nlats, vin.nlevs, shift);
+	}
+
+	int wlonix1 = ncIndexLo(lons, wlon);
+	int elonix1 = ncIndexHi(lons, elon);
+
+	cout << "lon bnds = " << lons[wlonix1] << ", " << lons[elonix1] << endl;
+	
+	bool partialread = (lons[wlonix1]*lons[elonix1] < 0); // range includes 0, then we will have to read in 2 passes
+
+	int wlonix = (wlonix1-shift+lons.size())%lons.size();
+	int elonix = (elonix1-shift+lons.size())%lons.size();
+	cout << "lon bnds = " << l[wlonix] << ", " << l[elonix] << endl;
+
+	if (it != lons.begin() && it != lons.end()){								// if shift is > 0 and < N,
+//		shiftRight(lons.data(), lons.size(), shift);							//    data
 		shiftCubeRight(vin.values.data(), vin.nlons, vin.nlats, vin.nlevs, shift);
 	}
 

@@ -24,6 +24,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 #include <cmath>
+#include <algorithm>
 #include "../include/gvar.h"
 #include "../include/ncio.h"
 #include "../include/constants.h"
@@ -85,7 +86,9 @@ NcFile_handle::~NcFile_handle(){
 }
 
 void NcFile_handle::setMapLimits(float xwlon, float xelon, float xslat, float xnlat){
-	mplimited = (xwlon > 0 || xelon < 360 || xslat > -90 || xnlat < 90)? true:false;
+	if (xwlon > 180) xwlon -= 360;
+	if (xelon > 180) xelon -= 360; 
+	mplimited = (xwlon > -180 || xelon < 180 || xslat > -90 || xnlat < 90)? true:false;
 	wlon = xwlon;
 	elon = xelon;
 	slat = xslat;
@@ -242,19 +245,33 @@ int NcFile_handle::readCoordData(gVar &v){
 //		for (int i=0; i<nlons; ++i) if (v.lons[i] < 0) v.lons[i] += 360;
 //		CINFOC << "Done!\n";
 
+		vector<float>& lons = v.lons;
+		auto it = find_if(lons.begin(), lons.end(), [](float x){return x > 180;});	// find first lon > 180
+		int shift = lons.size() - distance(lons.begin(), it);						// array to be shifted right by that many elements
+		for_each(it, lons.end(), [](float &x){x -= 360;});							// bring all lons > 180 t0 principle range
+	
+		if (it != lons.begin() && it != lons.end()){								// if shift is > 0 and < N, shift both
+			shiftRight(lons.data(), lons.size(), shift);							//    lons and data
+		}
+		CINFO << "  lons shifted by: " << shift << endl;
 
+		
 		if (mplimited){
 			CINFO << "  trim lons... ";
 			// set indices
-			wlonix = ncIndexLo(v.lons, wlon);
-			elonix = ncIndexHi(v.lons, elon);
+			int wlonix1 = ncIndexLo(v.lons, wlon);
+			int elonix1 = ncIndexHi(v.lons, elon);
+
+			wlonix = (wlonix1-shift+lons.size()) % lons.size();
+			elonix = (elonix1-shift+lons.size()) % lons.size();
+
 			ilon0 = (elonix > wlonix)? wlonix:elonix;
 			ilonf = (elonix > wlonix)? elonix:wlonix;
 			// cut array
 //			v.lons = copyArray(v.lons, elonix, wlonix);	// copyArray returns a new vector 
 //			cout << " <new code using vector copy constructor> ";
-			v.lons = vector<float> (v.lons.begin()+ilon0, v.lons.begin()+ilonf+1);
-			v.nlons = elonix - wlonix +1;
+			v.lons = vector<float> (v.lons.begin()+wlonix1, v.lons.begin()+elonix1+1);
+			v.nlons = elonix1 - wlonix1 +1;
 			CINFOC << v.nlons << " left: (" << v.lons[0] << " --- " << v.lons[v.nlons-1] << ").\n";
 		}
 		
