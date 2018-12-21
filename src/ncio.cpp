@@ -242,6 +242,7 @@ int NcFile_handle::readCoordData(gVar &v){
 //		for (int i=0; i<nlons; ++i) if (v.lons[i] < 0) v.lons[i] += 360;
 //		CINFOC << "Done!\n";
 
+
 		if (mplimited){
 			CINFO << "  trim lons... ";
 			// set indices
@@ -256,6 +257,7 @@ int NcFile_handle::readCoordData(gVar &v){
 			v.nlons = elonix - wlonix +1;
 			CINFOC << v.nlons << " left: (" << v.lons[0] << " --- " << v.lons[v.nlons-1] << ").\n";
 		}
+		
 	}
 
 	if (levVar){

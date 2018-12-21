@@ -34,6 +34,9 @@ void reverseArray(vector <float> &orig);	// reverse given array
 void reverseCube(float v[], int nx, int ny, 
 				 int nz=1, int n4=1, int n5=1); // reverse a data cube along lat dimension
 
+void shiftRight(float *v, int n, int shift);
+void shiftCubeRight(float *v, int nx, int ny, int nz, int shift);
+
 //vector <float> copyArray(vector <float> &v, int i2, int i1=0); // copy v[i1:i2] into new array (returned)
 
 //int gsm_upper_bound (vector<float> &sorted_vec, float val, int first=0, int last=-1);

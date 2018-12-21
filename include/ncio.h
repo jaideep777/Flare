@@ -25,6 +25,7 @@ class NcFile_handle{
 	int ncoords, nvars;
 	string levname, levunits;
 	bool latSN;	// if true, lats are SN, increase with index
+	int shift;	// the amount of shift required to bring lons in principle range
 	bool lonPos; // if true, lons range from 0-360 (desired), first index is lon = 0
 	float wlon, elon, slat, nlat;	// map limits
 	int wlonix, elonix, slatix, nlatix;	// map limits indices. 

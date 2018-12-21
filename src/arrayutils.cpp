@@ -126,6 +126,27 @@ void printCube(float v[], int nx, int ny, int nz, float ignoreVal){
 	}	
 }
 
+
+int gcd(int a, int b){
+   return b == 0 ? a : gcd(b, a%b);
+}
+
+
+/*
+Right Shift by M (here = 4)
+1 2 3 4 | 5 6 7 8 9 10
+10 9 8 7 | 6 5 4 3 2 1    <-- reverse (0:N-1)
+7 8 9 10 | 1 2 3 4 5 6    <-- reverse (0:M-1), (M:N-1) 
+*/
+
+
+void shiftRight(float *v, int n, int shift){
+	reverse(v, v+n);
+	reverse(v, v+shift);
+	reverse(v+shift, v+n);
+}
+
+
 void reverseY(float v[], int nx, int ny){
 	for (int i=0; i<ny/2; ++i){
 		for (int j=0; j<nx; ++j){
@@ -133,7 +154,6 @@ void reverseY(float v[], int nx, int ny){
 		}
 	}
 }
-
 
 void reverseCube(float v[], int nx, int ny, int nz, int n4, int n5){
 //	if (nx*ny*nz*n4*n5 != v.size()) {
@@ -143,6 +163,16 @@ void reverseCube(float v[], int nx, int ny, int nz, int n4, int n5){
 //	float temp;
 	for (int k=0; k<nz; ++k) reverseY(v+k*nx*ny, nx,ny);
 }
+
+
+void shiftCubeRight(float *v, int nx, int ny, int nz, int shift){
+	for (int k=0; k<nz; ++k){
+		for (int j=0; j<ny; ++j){
+			shiftRight(&v[IX3(0,j,k,nx,ny)], nx, shift);
+		}
+	}
+}
+
 
 
 bool ascComp(float a, float b){ return (a<b); }
