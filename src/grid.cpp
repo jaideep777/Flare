@@ -398,7 +398,12 @@ gVar lterp(gVar &v, vector <float> &xlons, vector <float> &xlats){
 int coarseGrain(string fun, gVar &hires, gVar &out, vector <int> &indices){
 	bool use_indices = (indices.size() > 0);
 	CDEBUG << "Coarsegraining (use_indices = " << use_indices << ")... "; cout.flush();
-
+//	if (use_indices){
+//		CDEBUG << "Indices: ";
+//		for (int i=0; i<indices.size();++i) CDEBUGC << indices[i] << " ";
+//		CDEBUGC << endl;
+//	}
+	
 	if (out.nlevs != hires.nlevs){
 		CERR << "Levels mismatch: " << hires.nlevs << " --> " << out.nlevs << endl; 
 	}

@@ -198,6 +198,7 @@ int gVar::printGrid(ostream &lfout){
 	lfout << "\tOutput: "; 
 	if (ofile_handle != NULL) lfout << ofile_handle->dFile << "\n";
 	else  lfout << "---\n";
+	lfout << "Regridding method: " << regriddingMethod << "\n";
 	lfout << "-------------------------------------------------------------------------\n\n";
 	lfout.flush();
 	return 0;
@@ -458,6 +459,16 @@ int gVar::createNcInputStream(vector <string> files, vector <float> glim, string
 		end = clock();
 		CDEBUG << "bilIndices [" << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms]" << endl; 
 	}
+	else if (regriddingMethod == "coarsegrain") {
+		start = clock();
+		lterp_indices = cgIndices(ipvar->lons, ipvar->lats, lons, lats);	// recalculate lterp indices only if file was updated 
+		end = clock();
+		CDEBUG << "cgIndices " 
+			   << "(input: {" << ipvar->lons.size() << "," << ipvar->lats.size() 
+			   << "}, output: {" << lons.size() << "," << lats.size() 
+			   << "}, indices: " << lterp_indices.size() << "). " 
+			   << "[" << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms]" << endl; 
+	}
 	else if (regriddingMethod == "none"){
 		// TODO: check if coordinates match
 		if (values.size() != ipvar->values.size()){
@@ -560,6 +571,7 @@ int gVar::readVar_gt(double gt, int mode){
 	ifile_handle->readVar_gt(*ipvar, gt, mode, ipvar->ivar1);	// readCoords() would have set ivar1
 	
 	if (regriddingMethod == "bilinear") lterpCube(*ipvar, *this, lterp_indices);
+	else if (regriddingMethod == "coarsegrain") coarseGrain("mean", *ipvar, *this, lterp_indices);
 	else if (regriddingMethod == "none") copy(ipvar->values.begin(), ipvar->values.end(), values.begin());
 	else CERR << "Dont know how to transfer read data to gVar" << endl;
 	
@@ -580,6 +592,7 @@ int gVar::readVar_it(int tid){
 //	cout << "readVar_it: " << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms." << endl; 
 
 	if (regriddingMethod == "bilinear") lterpCube(*ipvar, *this, lterp_indices);
+	else if (regriddingMethod == "coarsegrain") coarseGrain("mean", *ipvar, *this, lterp_indices);
 	else if (regriddingMethod == "none") copy(ipvar->values.begin(), ipvar->values.end(), values.begin());
 	else CERR << "Dont know how to transfer read data to gVar" << endl;
 }
@@ -609,6 +622,10 @@ int gVar::readOneShot(string filename, vector <float> glim){
 	if (regriddingMethod == "bilinear"){
 		lterp_indices = bilIndices(ipvar->lons, ipvar->lats, lons, lats);
 		lterpCube(*ipvar, *this, lterp_indices);	// does not copy metadata
+	} 	
+	else if (regriddingMethod == "coarsegrain"){
+		lterp_indices = cgIndices(ipvar->lons, ipvar->lats, lons, lats);
+		coarseGrain("mean", *ipvar, *this, lterp_indices);	// does not copy metadata
 	} 	
 	else if (regriddingMethod == "none"){
 		copy(ipvar->values.begin(), ipvar->values.end(), values.begin());
@@ -694,6 +711,7 @@ int gVar::readVar_reduce_mean(double gt1, double gt2){
 
 	if (count > 0){	// transfer data to gVar only if count > 0: We want to preserve current values if no new values were read
 		if (regriddingMethod == "bilinear") lterpCube(temp, *this, lterp_indices);
+		else if (regriddingMethod == "coarsegrain") coarseGrain("mean", temp, *this, lterp_indices);
 		else if (regriddingMethod == "none") copy(temp.values.begin(), temp.values.end(), values.begin()); // TODO: This does not copy missing_value, so missing values are treated as valid. FIX 
 		else CERR << "Dont know how to transfer read data to gVar" << endl;
 	}
