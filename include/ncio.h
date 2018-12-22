@@ -33,14 +33,15 @@ class NcFile_handle{
 	int ilonf, ilatf;
 	// NOTE: above indices are defined on the native arrays and not reversed ones
 	bool mplimited; // if true, map limits are set
+	bool splitRead;	// reading values must be split into 2 steps if lons include 0 and data is 0-360
 	
 	int firstVarID;
 	
 	// constructor. Only initializes variables. Does not open file.
 	NcFile_handle();	// open NC object (nc file)
 	
-	void setMapLimits(float xwlon, float xelon, float xslat, float xnlat);	// set lat-lon limits
-	int  open(string s, string m, const float glimits[4]); // open file s
+//	void setMapLimits(float xwlon, float xelon, float xslat, float xnlat);	// set lat-lon limits
+	int  open(string s, string m, float glimits[4]); // open file s
 	int close(); // close file
 	~NcFile_handle();	// dFile must be deleted in destructor
 
@@ -62,6 +63,9 @@ class NcFile_handle{
 	NcVar * createVar(gVar &v); // create variable v into file matching gVar
 	int writeVar(gVar &v, NcVar * vVar, int itime); // write values into vVar at time itime
 	int writeTimeValues(gVar &v); // write time values
+	
+	private:
+	int read_data_block(NcVar* vVar, int ilon0, int ilat0, int ilev0, int nlons, int nlats, int nlevs, int itime, vector<float>&values);
 };
 
 #endif

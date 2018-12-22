@@ -24,13 +24,21 @@ g++ -I/usr/local/netcdf-c-4.3.2/include -I/usr/local/netcdf-cxx-legacy/include -
 //}
 
 
+void read(int ilon0, int ilat0, int ilev0, int nlons, int nlats, int nlevs, float* source, float* dst){
+//	cout << "reading: \n";
+	for (int ilev=ilev0; ilev < ilev0+nlevs; ++ilev){
+		for (int ilat=ilat0; ilat < ilat0+nlats; ++ilat){
+			for (int ilon=ilon0; ilon < ilon0+nlons; ++ilon){
+//				cout << IX3(ilon-ilon0,ilat-ilat0,ilev-ilev0, nlons, nlats) << " <-- " << IX3(ilon,ilat,ilev,12,2) << endl;
+				dst[IX3(ilon-ilon0,ilat-ilat0,ilev-ilev0, nlons, nlats)] = source[IX3(ilon,ilat,ilev,12,2)];			
+			}
+		}
+	}
+}
+
 
 
 int main(int argc, char ** argv){
-
-	float lon0 = 0.25, lonf =  359.75, lat0 = -89.75, latf = 89.75, dx = 0.5, dy = 0.5, dt0 = 1, dlev = 1;
-	int nlons, nlats, nlevs = 1;
-	//const float glimits_custom[4] = {lon0, lonf, lat0, latf};
 
 	// set NETCDF error behavior to non-fatal
 	NcError err(NcError::silent_nonfatal);
@@ -41,110 +49,126 @@ int main(int argc, char ** argv){
 //	gsm_info_on = true;
 //	gsm_debug_on = true;
 
-	float arr[] = {1,2,3,4,5,6,7,8,9,
-				   11, 22, 33, 44, 55, 66, 77, 88, 99, 
-				   
-				   1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9,
-				   11.1, 22.2, 33.3, 44.4, 55.5, 66.6, 77.7, 88.8, 99.9};
-	
-	shiftCubeRight(arr, 9, 2, 2, 4);
-	
-	for (int k=0; k<2; ++k){
-		for (int j=0; j<2; ++j){
-			for (int i=0; i<9; ++i) cout << arr[IX3(i,j,k,9,2)] << " ";
-			cout << "\n";	
-		}
-		cout << "\n";	
-	}
-	cout << endl;
+	float l[] = {0,30,60,90,120,150,180,210,240,270,300,330};
 
-	// create a grid limits vector for convenience
-	float glimits[] = {0, 50, -90, 90};
+	float arr[] = {0,30,60,90,120,150,180,210,240,270,300,330,
+				   0,3,6,9,12,15,18,21,24,27,30,33, 
+				   
+				   0,.30,.60,.90,.120,.150,.180,.210,.240,.270,.300,.330,
+				   0,3.0,6.0,9.0,12.0,15.0,18.0,21.0,24.0,27.0,30.0,33.0};
+	
+	
+	vector <float> lons(l,l+12);
+	vector <float> lats(2); lats[0] = -60; lats[1] = 60;
+	vector <float> levs(2); levs[0] = 0; levs[1] = 1;
+	int nlons = 12, nlats = 2, nlevs = 2;
+	
+	vector <float> lons_orig = lons;
+	
+	cout << "   ";
+	for (int i=0; i<nlons; ++i) cout << i << "  "; 
+	cout << "\n   ";
+	printArray(lons);	
+	printCube(arr, nlons,nlats,nlevs);
+
+	float glimits[] = {-180, -40, -40, 40};
 	vector <float> glim(glimits, glimits+4);
+
+	if (glim[0] > 180) glim[0] -= 360;
+	if (glim[1] > 180) glim[1] -= 360;
+
+	if (glim[1] < glim[0]){
+		cout << "Incorrect Lon bounds: [" << glim[0] << ", " << glim[1] << "]\n";
+		exit (1);
+	}
+
+	auto it = find_if(lons.begin(), lons.end(), [](float x){return x > 180;});	// find first lon > 180
+	for_each(it, lons.end(), [](float &x){x -= 360;});							// bring all lons > 180 t0 principle range
+	int shift = lons.size() - distance(lons.begin(), it);						// array to be shifted right by (n-it) elements
+
+	cout << "Shift right by: " << shift << endl;
+
+	if (it != lons.begin() && it != lons.end()){								// if shift is > 0 and < N, 
+		shiftRight(lons.data(), lons.size(), shift);							//    shift lons 
+	}
+
+	cout << "   ";
+	for (int i=0; i<nlons; ++i) cout << i << "  "; 
+	cout << "\n   ";
+	printArray(lons);	
+	printCube(arr, nlons,nlats,nlevs);
+	
+	int wlonix1 = ncIndexLo(lons, glim[0]);
+	int elonix1 = ncIndexHi(lons, glim[1]);
+
+
+	vector <float> lons_trim(&lons[wlonix1], &lons[elonix1]+1);
+
+	int wlonix = (wlonix1-shift+lons.size()) % lons.size();
+	int elonix = (elonix1-shift+lons.size()) % lons.size();
+
+	cout << "Calculated bound indices: " << wlonix << " " << elonix << endl;
+	
+	bool splitRead = (wlonix > elonix);
+	
+	vector <float> arr_trim;
+	if (!splitRead){
+		int nlons_trim = elonix-wlonix+1;
+		arr_trim.resize(nlons_trim*nlats*nlevs);
+		read(wlonix, 0, 0, nlons_trim, nlats, nlevs, arr, arr_trim.data());
+
+		cout << "\n   ";
+		printArray(lons_trim);	
+		printCube(arr_trim.data(), nlons_trim, nlats, nlevs);
+	}
+	else{
+		cout << "Reading in splits: [0, " << elonix << "], [" << wlonix << ", " << nlons-1 << "]\n";   
+		int nlons1 = elonix-0+1;
+		vector <float> seg1(nlons1*nlats*nlevs); 
+		read(0, 0, 0, nlons1, nlats, nlevs, arr, seg1.data());
+
+		int nlons2 = nlons-1-wlonix+1;
+		vector <float> seg2(nlons2*nlats*nlevs); 
+		read(wlonix, 0, 0, nlons2, nlats, nlevs, arr, seg2.data());
+		
+		printCube(seg1.data(), nlons1, nlats, nlevs);
+		printCube(seg2.data(), nlons2, nlats, nlevs);
+		
+		int nlons_trim = nlons1+nlons2;
+		arr_trim.resize(nlons_trim*nlats*nlevs);
+		cout << "Resized array lons: " <<  nlons_trim << endl;
+		
+	
+		for (int ilev=0; ilev < nlevs; ++ilev){
+			for (int ilat=0; ilat < nlats; ++ilat){
+				for (int ilon=0; ilon < nlons2; ++ilon){
+					arr_trim[IX3(ilon,ilat,ilev, nlons_trim, nlats)] = seg2[IX3(ilon,ilat,ilev, nlons2, nlats)];
+				}
+			}
+		}
+		for (int ilev=0; ilev < nlevs; ++ilev){
+			for (int ilat=0; ilat < nlats; ++ilat){
+				for (int ilon=0; ilon < nlons1; ++ilon){
+					arr_trim[IX3(ilon+nlons2,ilat,ilev, nlons_trim, nlats)] = seg1[IX3(ilon,ilat,ilev, nlons1, nlats)];
+				}
+			}
+		}
+		
+		cout << "\n   ";
+		printArray(lons_trim);	
+		printCube(arr_trim.data(), nlons_trim, nlats, nlevs);
+
+	}
+
+
+
+//	// create a grid limits vector for convenience
 
 	gVar vin;
 	vin.createOneShot("data/gpp.intercept.2001-2010.nc", glim);
-	vector <float> &lons = vin.lons;
-//	printArray(lons);
+	vin.writeOneShot("gpp_out.nc");
 
-	float wlon = 30, elon = 180;
 
-	float l[] = {0,30,60,90,120,150,180,210,240,270,300,330};
-//	vector <float> lons(l, l+12);
-
-	auto it = find_if(lons.begin(), lons.end(), [](float x){return x > 180;});	// find first lon > 180
-	int shift = lons.size() - distance(lons.begin(), it);						// array to be shifted right by that many elements
-	for_each(it, lons.end(), [](float &x){x -= 360;});							// bring all lons > 180 t0 principle range
-	
-	printArray(lons);
-	cout << "shift by: " << shift << endl;
-	
-	if (it != lons.begin() && it != lons.end()){								// if shift is > 0 and < N, shift both
-		shiftRight(lons.data(), lons.size(), shift);							//    lons and data
-//		shiftCubeRight(vin.values.data(), vin.nlons, vin.nlats, vin.nlevs, shift);
-	}
-
-	int wlonix1 = ncIndexLo(lons, wlon);
-	int elonix1 = ncIndexHi(lons, elon);
-
-	cout << "lon bnds = " << lons[wlonix1] << ", " << lons[elonix1] << endl;
-	
-	bool partialread = (lons[wlonix1]*lons[elonix1] < 0); // range includes 0, then we will have to read in 2 passes
-
-	int wlonix = (wlonix1-shift+lons.size())%lons.size();
-	int elonix = (elonix1-shift+lons.size())%lons.size();
-	cout << "lon bnds = " << l[wlonix] << ", " << l[elonix] << endl;
-
-	if (it != lons.begin() && it != lons.end()){								// if shift is > 0 and < N,
-//		shiftRight(lons.data(), lons.size(), shift);							//    data
-		shiftCubeRight(vin.values.data(), vin.nlons, vin.nlats, vin.nlevs, shift);
-	}
-
-	printArray(lons);
-
-	vin.writeOneShot("gpp_sl.nc");
-	
-//	vin.initMetaFromFile("data/gpp.intercept.2001-2010.nc");
-//	vin.createNcInputStream(vector<string>(1,"data/gpp.intercept.2001-2010.nc"), glim, "none");
-//	vin.printGrid();
-////	fti.printValues();	
-//	
-//	
-//	gVar vout;
-//	vout.copyMeta(vin);
-//	vout.createNcOutputStream();
-//	fto.nlons = nlons;
-//	fto.values.resize(fto.nlons*fto.nlats*fto.nlevs, 0);
-
-//	NcFile_handle fto_handle;
-//	fto_handle.open(filename+"_sl.nc","w", glimits);
-//	fto_handle.writeCoords(fto);
-//	NcVar* vVar = fto_handle.createVar(fto);
-//	fto_handle.writeTimeValues(fto);
-//	fto.printGrid();
-
-//	for (int t=0; t<fti.ntimes; ++t){
-
-//		fti_handle.readVar(fti,t);
-
-//		for (int ilon=0; ilon<fti.nlons; ++ilon){
-//			for (int ilat=0; ilat<fti.nlats; ++ilat){
-//				float xlon = fto.lons[ilon]; if (xlon > 180) xlon -= 360;
-//				float xlat = fto.lats[ilat];
-//				for (int ilev=0; ilev<fti.nlevs; ++ilev){
-//					fto(ilon,ilat,ilev) = fti.getCellValue(xlon, xlat, ilev);
-//				}
-//			}	
-//		}	
-
-//		fto_handle.writeVar(fto, vVar, t); // write data at time index ix
-//		cout << t << "\n";	
-//	}
-
-//	fto_handle.close();
-//	fti_handle.close();
-//		
-	cout << "> Successfully wrote fire NC file!!\n";
 }
 
 

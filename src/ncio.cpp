@@ -47,7 +47,7 @@ NcFile_handle::NcFile_handle(){
 }
 
 // ------------------------- INIT ----------------------------
-int NcFile_handle::open(string s, string m, const float glimits[4]){
+int NcFile_handle::open(string s, string m, float glimits[4]){
 	fname = s;
 	mode = m;
 	CINFO << "Open file: " << s; gsm_log->flush();
@@ -61,11 +61,19 @@ int NcFile_handle::open(string s, string m, const float glimits[4]){
 	if (!dFile)	{CERR << "Failed to open File: " << s << endl; return 1;}
 	
 	if (mode == "r"){
-		mplimited = (glimits[0] > 0 || glimits[1] < 360 || glimits[2] > -90 || glimits [3] < 90)? true:false; 
-		wlon = glimits[0]; //0.f;
-		elon = glimits[1]; //360.f;
-		slat = glimits[2]; //-90.f;
-		nlat = glimits[3]; //90.f;
+		if (glimits[0] > 180) glimits[0] -= 360;
+		if (glimits[1] > 180) glimits[1] -= 360; 
+
+		if (glimits[1] < glimits[0]){
+			CERR << "Failed to open file: " << s << " - Incorrect Lon bounds: [" << glimits[0] << ", " << glimits[1] << "]" << endl;
+			return 1;
+		}
+
+		mplimited = (glimits[0] > -180 || glimits[1] < 180 || glimits[2] > -90 || glimits [3] < 90)? true:false; 
+		wlon = glimits[0]; 
+		elon = glimits[1]; 
+		slat = glimits[2]; 
+		nlat = glimits[3]; 
 	}
 		
 	if (dFile->is_valid()) {CINFOC << "... Success!" << endl; return 0;}
@@ -85,15 +93,15 @@ NcFile_handle::~NcFile_handle(){
 //	dFile = NULL;
 }
 
-void NcFile_handle::setMapLimits(float xwlon, float xelon, float xslat, float xnlat){
-	if (xwlon > 180) xwlon -= 360;
-	if (xelon > 180) xelon -= 360; 
-	mplimited = (xwlon > -180 || xelon < 180 || xslat > -90 || xnlat < 90)? true:false;
-	wlon = xwlon;
-	elon = xelon;
-	slat = xslat;
-	nlat = xnlat;
-}
+//void NcFile_handle::setMapLimits(float xwlon, float xelon, float xslat, float xnlat){
+//	if (xwlon > 180) xwlon -= 360;
+//	if (xelon > 180) xelon -= 360; 
+//	mplimited = (xwlon > -180 || xelon < 180 || xslat > -90 || xnlat < 90)? true:false;
+//	wlon = xwlon;
+//	elon = xelon;
+//	slat = xslat;
+//	nlat = xnlat;
+//}
 
 
 // ------------------------- READING ----------------------------
@@ -148,7 +156,7 @@ int NcFile_handle::getMeta(){
 	CINFO << "> Reading metadata from file: " << fname << "\n";
 	nvars = 0;
 	nvars = dFile->num_vars();
-	CINFO << '\t' << nvars << " variables found.\n";
+	CINFO << "    " << nvars << " variables found.\n";
 
 	// Get the coordinate variables
 	ncoords = 0;
@@ -173,7 +181,7 @@ int NcFile_handle::getMeta(){
 	if (!tVar) tVar = dFile->get_var("TIME");
 	if (!tVar) {CWARN << "time not found.\n"; tVar = 0;}
 	else ++ncoords;
-	CINFO << "\t" << ncoords << " coordinates found" << endl;
+	CINFO << "    " << ncoords << " coordinates found" << endl;
 		
 	firstVarID = 0;
 	CINFO << "> Attempting to find 1st variable... ";
@@ -214,7 +222,7 @@ int NcFile_handle::readCoordData(gVar &v){
 		latSN = (dlat < 0)? false:true;
 		
 		if (mplimited){
-			CINFO << "  trim lats... ";
+			CINFO << "    trim lats... ";
 			// set indices
 			slatix = ncIndexLo(v.lats, slat);
 			nlatix = ncIndexHi(v.lats, nlat);
@@ -228,7 +236,7 @@ int NcFile_handle::readCoordData(gVar &v){
 		}
 
 		if (!latSN){
-			CINFO << "  lats array is N-S. Reversing...";
+			CINFO << "    lats array is N-S. Reversing...";
 			reverseArray(v.lats);
 			CINFOC << " Done.\n";
 		}
@@ -241,39 +249,34 @@ int NcFile_handle::readCoordData(gVar &v){
 		lonVar->get(&v.lons[0], v.nlons);
 		CINFOC << v.nlons << " read.\n";
 		
-//		CINFO << "bring lons to principle range (0-360)...";
-//		for (int i=0; i<nlons; ++i) if (v.lons[i] < 0) v.lons[i] += 360;
-//		CINFOC << "Done!\n";
-
 		vector<float>& lons = v.lons;
-		auto it = find_if(lons.begin(), lons.end(), [](float x){return x > 180;});	// find first lon > 180
-		int shift = lons.size() - distance(lons.begin(), it);						// array to be shifted right by that many elements
-		for_each(it, lons.end(), [](float &x){x -= 360;});							// bring all lons > 180 t0 principle range
-	
-		if (it != lons.begin() && it != lons.end()){								// if shift is > 0 and < N, shift both
-			shiftRight(lons.data(), lons.size(), shift);							//    lons and data
-		}
-		CINFO << "  lons shifted by: " << shift << endl;
 
+		auto it = find_if(lons.begin(), lons.end(), [](float x){return x > 180;});	// find first lon > 180
+		for_each(it, lons.end(), [](float &x){x -= 360;});							// bring all lons > 180 t0 principle range
+		int shift = lons.size() - distance(lons.begin(), it);						// array to be shifted right by (n-it) elements
+
+		CINFO << "    shift lons right by: " << shift << endl;
+
+		if (it != lons.begin() && it != lons.end()){								// if shift is > 0 and < N, 
+			shiftRight(lons.data(), lons.size(), shift);							//    shift lons 
+		}
+
+		int wlonix1 = ncIndexLo(lons, wlon);
+		int elonix1 = ncIndexHi(lons, elon);
+
+		wlonix = (wlonix1-shift+lons.size()) % lons.size();
+		elonix = (elonix1-shift+lons.size()) % lons.size();
+
+		splitRead = (wlonix > elonix);			// whether data will have to be read in 2 passes
 		
 		if (mplimited){
-			CINFO << "  trim lons... ";
-			// set indices
-			int wlonix1 = ncIndexLo(v.lons, wlon);
-			int elonix1 = ncIndexHi(v.lons, elon);
+			CINFO << "    trim lons... ";
 
-			wlonix = (wlonix1-shift+lons.size()) % lons.size();
-			elonix = (elonix1-shift+lons.size()) % lons.size();
-
-			ilon0 = (elonix > wlonix)? wlonix:elonix;
-			ilonf = (elonix > wlonix)? elonix:wlonix;
-			// cut array
-//			v.lons = copyArray(v.lons, elonix, wlonix);	// copyArray returns a new vector 
-//			cout << " <new code using vector copy constructor> ";
-			v.lons = vector<float> (v.lons.begin()+wlonix1, v.lons.begin()+elonix1+1);
-			v.nlons = elonix1 - wlonix1 +1;
+			v.lons = vector<float>(&v.lons[wlonix1], &v.lons[elonix1]+1);
+			v.nlons = v.lons.size();
 			CINFOC << v.nlons << " left: (" << v.lons[0] << " --- " << v.lons[v.nlons-1] << ").\n";
 		}
+		
 		
 	}
 
@@ -289,7 +292,7 @@ int NcFile_handle::readCoordData(gVar &v){
 	v.values.resize(v.nlevs*v.nlats*v.nlons); // no need to fill values 
 
 	end = clock();
-	CINFO << "+ Reading Coord Data [" << double(end-start)/CLOCKS_PER_SEC*1000 << " ms]" << endl; 
+	CINFO << "  = [" << double(end-start)/CLOCKS_PER_SEC*1000 << " ms]" << endl; 
 	return 0;
 }
 
@@ -346,6 +349,33 @@ int NcFile_handle::readVarAtts(gVar &v, int ivar){
 	return 0;
 }
 
+
+int NcFile_handle::read_data_block(NcVar* vVar, int ilon0, int ilat0, int ilev0, int _nlons, int _nlats, int _nlevs, int itime, vector<float>&values){
+	// read data. cur is set at the SW corner of grid / grid-limits.
+	if (vVar->num_dims() == 4){ 
+		vVar->set_cur(itime, ilev0, ilat0, ilon0); // set the starting time at itime and lat/lon/lev at SW corner
+		vVar->get(&values[0], 1, _nlevs, _nlats, _nlons);
+	}	
+	else if (vVar->num_dims() == 3){ 
+		vVar->set_cur(itime, ilat0, ilon0); // set the starting time at itime and lat/lon/lev at SW corner
+		vVar->get(&values[0], 1, _nlats, _nlons);
+	}
+	else if (vVar->num_dims() == 2){
+		vVar->set_cur(ilat0, ilon0);
+		vVar->get(&values[0], _nlats, _nlons);
+		CWARN << "(" << "" << ") treating 2D Variable as lat-lon map..\n";
+	}
+	else{
+		CERR << "Variables with only 2/3/4 dimensions are supported! Dims found: " 
+			 << vVar->num_dims() << "\n";
+		return 1;
+	}
+	
+	return 0;
+
+}
+
+
 // if file has only 1 variable, then ivar = ivar1
 // ivar need to be specified only in case the file has multiple variables
 int NcFile_handle::readVar(gVar &v, int itime, int iVar){
@@ -355,7 +385,7 @@ int NcFile_handle::readVar(gVar &v, int itime, int iVar){
 	}
 
 	CDEBUG << "NcfileHandle::readVar(" << v.varname << ", t=" << itime <<  "): ";
-	if (v.times.size() > 0) CDEBUGC << gt2string(v.ix2gt(itime)) ;
+	if (v.times.size() > 0) CDEBUGC << gt2string(v.ix2gt(itime));
 	else CDEBUGC << "2D map" ;
 	
 	// file is in read mode.. continue.
@@ -365,24 +395,43 @@ int NcFile_handle::readVar(gVar &v, int itime, int iVar){
 	
 	NcVar * vVar = dFile->get_var(iVar);
 	
-	// read data. cur is set at the SW corner of grid / grid-limits.
-	if (vVar->num_dims() == 4){ 
-		vVar->set_cur(itime, 0, ilat0, ilon0); // set the starting time at itime and lat/lon/lev at SW corner
-		vVar->get(&v.values[0], 1, v.nlevs, v.nlats, v.nlons);
-	}	
-	else if (vVar->num_dims() == 3){ 
-		vVar->set_cur(itime, ilat0, ilon0); // set the starting time at itime and lat/lon/lev at SW corner
-		vVar->get(&v.values[0], 1, v.nlats, v.nlons);
+	if (!splitRead){
+		int nlons_trim = elonix-wlonix+1;
+		v.values.resize(nlons_trim*v.nlats*v.nlevs);
+		read_data_block(vVar, wlonix, ilat0, 0, nlons_trim, v.nlats, v.nlevs, itime, v.values);
+		if (v.nlons != nlons_trim) CERR << "Mismatch in calculation of nlons after trimming: " << v.nlons << " / " << nlons_trim << endl;
 	}
-	else if (vVar->num_dims() == 2){
-		vVar->set_cur(ilat0, ilon0);
-		vVar->get(&v.values[0], v.nlats, v.nlons);
-		CWARN << "(" << v.varname << ") treating 2D Variable as lat-lon map..\n";
-	}
-	else{
-		CERR << "Variables with only 2/3/4 dimensions are supported! Dims found: " 
-			 << vVar->num_dims() << "\n";
-		return 1;
+
+	else {
+		CDEBUGC << " in 2 passes: [0, " << elonix << "], [" << wlonix << ", " << nlons-1 << "] ";   
+		int nlons1 = elonix-0+1;
+		vector <float> seg1(nlons1*v.nlats*v.nlevs); 
+		read_data_block(vVar, 0, ilat0, 0, nlons1, v.nlats, v.nlevs, itime, seg1);
+
+		int nlons2 = nlons-1-wlonix+1;
+		vector <float> seg2(nlons2*v.nlats*v.nlevs); 
+		read_data_block(vVar, wlonix, ilat0, 0, nlons2, v.nlats, v.nlevs, itime, seg2);
+		
+		int nlons_trim = nlons1+nlons2;
+		v.values.resize(nlons_trim*v.nlats*v.nlevs);
+		
+		for (int ilev=0; ilev < v.nlevs; ++ilev){
+			for (int ilat=0; ilat < v.nlats; ++ilat){
+				for (int ilon=0; ilon < nlons2; ++ilon){
+					v.values[IX3(ilon,ilat,ilev, nlons_trim, v.nlats)] = seg2[IX3(ilon,ilat,ilev, nlons2, v.nlats)];
+				}
+			}
+		}
+		for (int ilev=0; ilev < v.nlevs; ++ilev){
+			for (int ilat=0; ilat < v.nlats; ++ilat){
+				for (int ilon=0; ilon < nlons1; ++ilon){
+					v.values[IX3(ilon+nlons2,ilat,ilev, nlons_trim, v.nlats)] = seg1[IX3(ilon,ilat,ilev, nlons1, v.nlats)];
+				}
+			}
+		}
+		
+
+		if (v.nlons != nlons_trim) CERR << "Mismatch in calculation of nlons after trimming: " << v.nlons << " / " << nlons_trim << endl;
 	}
 
 	end = clock();
@@ -572,7 +621,7 @@ NcVar * NcFile_handle::createVar(gVar &v){
 	vVar->add_att("scale_factor", 1.0f);
 	vVar->add_att("add_offset", 0.0f);
 	vVar->add_att("_FillValue", v.missing_value);
-	vVar->add_att("mising_value", v.missing_value);
+	vVar->add_att("missing_value", v.missing_value);
 	
 	// actual data not written here because ..
 	// we need to write data into already created variable
@@ -586,7 +635,6 @@ int NcFile_handle::writeVar(gVar &v, NcVar* vVar, int itime){
 		CERR << "ERROR in writeVar: File not in write mode.\n";
 		return 1;
 	}
-//	cout << "HERE" << endl;
 	clock_t start = clock(), end;
 	CDEBUG << "Write variable (" << v.varname << ") to file"; gsm_log->flush();
 	// actually write the data

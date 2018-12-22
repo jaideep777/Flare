@@ -21,12 +21,12 @@ extern ostream * gsm_log;
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~  DEFS    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-#define CDEBUG if (gsm_debug_on) (*gsm_log) << "<GSM debug> "
+#define CDEBUG if (gsm_debug_on) (*gsm_log) << "> GSM debug | "
 #define CDEBUGC if (gsm_debug_on) (*gsm_log)
-#define CINFO if (gsm_info_on) (*gsm_log) << "<GSM info> "
+#define CINFO if (gsm_info_on) (*gsm_log) << "> GSM info  | "
 #define CINFOC if (gsm_info_on) (*gsm_log)
-#define CWARN if (gsm_warnings_on) cout << "<GSM WARNING> "
-#define CERR if (gsm_errors_on) cout << "<GSM ERROR> "
+#define CWARN if (gsm_warnings_on) cout << "> GSM WARNING | "
+#define CERR if (gsm_errors_on) cout << "> GSM ERROR | "
 
 const double t_tol = 1e-3;	// tolerance when comparing gt values
 							// corresponds to ~86 sec
