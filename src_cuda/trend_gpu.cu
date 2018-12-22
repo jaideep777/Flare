@@ -2,7 +2,7 @@
 #include "../include/gvar.h"
 #include "../include/ncio.h"
 #include "../include/time_math.h"
-#include <netcdfcpp.h>
+//#include <netcdf>
 #include <vector>
 #include <algorithm>
 #include <cuda_runtime.h>
@@ -123,7 +123,7 @@ gVar gVar::trend_gpu(double gt1, double gt2){
 		if (tend < 0) break;
 
 		for (int i=tstart; i<=tend; ++i){ 
-			ifile_handle->readVar(*ipvar, i, ipvar->ivar1);	// this is the slowest step which will run in parallel with the kernel execution. Hence no need to parallelize GPU-IO and kernel execution 
+			ifile_handle->readVar(*ipvar, i);	// this is the slowest step which will run in parallel with the kernel execution. Hence no need to parallelize GPU-IO and kernel execution 
 			
 			cudaMemcpy(var_dev, &(ipvar->values[0]), ipvar->values.size()*sizeof(float), cudaMemcpyHostToDevice);
 			getLastCudaError("memcpy"); //cudaGetLastError());

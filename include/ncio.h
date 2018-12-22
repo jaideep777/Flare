@@ -1,10 +1,11 @@
 #ifndef NCIO_H
 #define NCIO_H
 
-#include <netcdfcpp.h>
+#include <netcdf>
 #include "constants.h"
 #include "gvar.h"
 using namespace std;
+using namespace netCDF;
 
 /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~  NCIO    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
@@ -19,8 +20,8 @@ class NcFile_handle{
 	string fname;
 	string mode;
 	static const int NC_ERR = 2;
-	NcVar *tVar, *levVar, *latVar, *lonVar;
-	NcDim *tDim, *levDim, *latDim, *lonDim;
+	NcVar tVar, levVar, latVar, lonVar;
+	NcDim tDim, levDim, latDim, lonDim;
 	int ntimes, nlevs, nlats, nlons;
 	int ncoords, nvars;
 	string levname, levunits;
@@ -36,6 +37,7 @@ class NcFile_handle{
 	bool splitRead;	// reading values must be split into 2 steps if lons include 0 and data is 0-360
 	
 	int firstVarID;
+	NcVar firstVar;
 	
 	// constructor. Only initializes variables. Does not open file.
 	NcFile_handle();	// open NC object (nc file)
@@ -51,17 +53,17 @@ class NcFile_handle{
 	int readTime(gVar &v);
 	
 	int readCoords(gVar &v); // read coord metadata, read values if rr is true
-	int getVarID(string varname);	// get variable id (ivar) from name
-	int readVarAtts(gVar &v, int ivar = -1); // get variable name, units, missing_value etc.
-	int readVar(gVar &v, int itime, int iVar = -1); // read variable with index iVar from file into "v"
-	int readVar_gt(gVar &v, double gt, int mode, int iVar = -1); // read variable corresponding to GT gt
+//	int getVarID(string varname);	// get variable id (ivar) from name
+	int readVarAtts(gVar &v, string vname = ""); // get variable name, units, missing_value etc.
+	int readVar(gVar &v, int itime, string vname = ""); // read variable with index iVar from file into "v"
+	int readVar_gt(gVar &v, double gt, int mode, string vname = ""); // read variable corresponding to GT gt
 		// as specified by mode: 0 = hold values from previous step, 1 = interpolate
-	int readVar_parallel(gVar &v, int itime, int iVar = -1);
+	int readVar_parallel(gVar &v, int itime, string vname = "");
 	
 	// writing functions
 	int writeCoords(gVar &v, bool wr = true); // write coord metadata, write values if wr is true
-	NcVar * createVar(gVar &v); // create variable v into file matching gVar
-	int writeVar(gVar &v, NcVar * vVar, int itime); // write values into vVar at time itime
+	NcVar createVar(gVar &v); // create variable v into file matching gVar
+	int writeVar(gVar &v, NcVar vVar, int itime); // write values into vVar at time itime
 	int writeTimeValues(gVar &v); // write time values
 	
 	private:

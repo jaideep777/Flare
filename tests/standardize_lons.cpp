@@ -1,6 +1,6 @@
 #include <iostream>
 #include <math.h>
-#include <netcdfcpp.h>
+#include <netcdf>
 #include <fstream>
 #include <vector>
 #include <sstream>
@@ -41,7 +41,7 @@ void read(int ilon0, int ilat0, int ilev0, int nlons, int nlats, int nlevs, floa
 int main(int argc, char ** argv){
 
 	// set NETCDF error behavior to non-fatal
-	NcError err(NcError::silent_nonfatal);
+	//NcError err(NcError::silent_nonfatal);
 
 
 //	string filename = argv[1]; 
@@ -71,7 +71,7 @@ int main(int argc, char ** argv){
 	printArray(lons);	
 	printCube(arr, nlons,nlats,nlevs);
 
-	float glimits[] = {-180, -40, -40, 40};
+	float glimits[] = {-100, 100, -60, 60};
 	vector <float> glim(glimits, glimits+4);
 
 	if (glim[0] > 180) glim[0] -= 360;
@@ -166,7 +166,8 @@ int main(int argc, char ** argv){
 
 	gVar vin;
 	vin.createOneShot("data/gpp.intercept.2001-2010.nc", glim);
-	vin.writeOneShot("gpp_out.nc");
+	vin.printGrid();
+	vin.writeOneShot("gpp1.nc");
 
 
 }

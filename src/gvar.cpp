@@ -26,13 +26,15 @@
 #include <cmath>
 #include <algorithm>
 #include <ctime>
-#include <netcdfcpp.h>
+#include <netcdf>
+#include <sstream>
 #include "../include/gvar.h"
 #include "../include/time_math.h"
 #include "../include/arrayutils.h"
 #include "../include/grid.h"
 #include "../include/ncio.h"
-
+using namespace std;
+using namespace netCDF;
 
 gVar::gVar(){
 	ntimes = 0; nlevs = 1; nlats = 0; nlons = 0;
@@ -42,7 +44,7 @@ gVar::gVar(){
 	ipvar = NULL;			// set all 4 pointers in class to Null
 	ifile_handle = NULL;	// they will be allocated by filo IO functions
 	ofile_handle = NULL;
-	outNcVar = NULL;
+//	outNcVar = NULL;
 	ivar1=-1;
 	t=-1;
 	regriddingMethod = "";
@@ -56,7 +58,7 @@ gVar::gVar(string name, string units, string tunits){
 	ipvar = NULL;			// set all 4 pointers in class to Null
 	ifile_handle = NULL;
 	ofile_handle = NULL;
-	outNcVar = NULL;
+//	outNcVar = NULL;
 	ivar1=-1;
 	t = -1;
 	regriddingMethod = "";
@@ -568,7 +570,7 @@ int gVar::readVar_gt(double gt, int mode){
 	}
 	 
 	int update = updateInputFile(gt);
-	ifile_handle->readVar_gt(*ipvar, gt, mode, ipvar->ivar1);	// readCoords() would have set ivar1
+	ifile_handle->readVar_gt(*ipvar, gt, mode);	// readCoords() would have set ivar1
 	
 	if (regriddingMethod == "bilinear") lterpCube(*ipvar, *this, lterp_indices);
 	else if (regriddingMethod == "coarsegrain") coarseGrain("mean", *ipvar, *this, lterp_indices);
@@ -587,7 +589,7 @@ int gVar::readVar_it(int tid){
 //	clock_t start, end;
 //	start = clock();
 
-	ifile_handle->readVar(*ipvar, tid, ipvar->ivar1);
+	ifile_handle->readVar(*ipvar, tid);
 //	end = clock();
 //	cout << "readVar_it: " << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms." << endl; 
 
@@ -645,9 +647,9 @@ int gVar::createNcOutputStream(string filename){
 	ofile_handle = new NcFile_handle;
 	int i = ofile_handle->open(filename, "w", NULL);	// gridlimits are not required for writing
 	ofile_handle->writeCoords(*this);
-	if (ofile_handle->tVar) ofile_handle->writeTimeValues(*this);
+	if (!ofile_handle->tVar.isNull()) ofile_handle->writeTimeValues(*this);
 	outNcVar = ofile_handle->createVar(*this);
-	if (outNcVar->is_valid()) CDEBUG << "Succesfully created variable in file " << filename << endl;
+//	if (!outNcVar.isNull()) CDEBUG << "Succesfully created variable in file " << filename << endl;
 }
 
 
@@ -693,7 +695,7 @@ int gVar::readVar_reduce_mean(double gt1, double gt2){
 		if (tend < 0) break;
 
 		for (int i=tstart; i<=tend; ++i){ 
-			ifile_handle->readVar(*ipvar, i, ipvar->ivar1);	// readCoords() would have set ivar1
+			ifile_handle->readVar(*ipvar, i);	// readCoords() would have set ivar1
 			temp = temp + *ipvar;
 			++count;
 		}
@@ -761,7 +763,7 @@ gVar gVar::trend(double gt1, double gt2){
 		if (tend < 0) break;
 
 		for (int i=tstart; i<=tend; ++i){ 
-			ifile_handle->readVar(*ipvar, i, ipvar->ivar1);	// readCoords() would have set ivar1
+			ifile_handle->readVar(*ipvar, i);	// readCoords() would have set ivar1
 			
 			for (int i=0; i<temp.values.size(); ++i){
 				sxy[i] += (*ipvar)[i]*count;

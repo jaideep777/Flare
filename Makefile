@@ -2,13 +2,13 @@
 
 TARGET = libflare
 VERSION = 3
-LIBPATH = -L/usr/local/netcdf-cxx-legacy/lib -L/usr/local/cuda/lib64	# Netcdf-c++ libaray path
-INCPATH = -I/usr/local/netcdf-cxx-legacy/include -I/usr/local/netcdf-c/include -I/usr/local/cuda/include  # need paths to netcdf-c as well as c++ includes
+LIBPATH = -L/usr/local/netcdf-cxx4/lib -L/usr/local/cuda/lib64	# Netcdf-c++ libaray path
+INCPATH = -I/usr/local/netcdf-cxx4/include -I/usr/local/netcdf-c/include -I/usr/local/cuda/include  # need paths to netcdf-c as well as c++ includes
 LDFLAGS =  
 CPPFLAGS = -O3 -Wl,--no-as-needed -std=c++11 -fPIC 
 CUDAFLAGS = -std=c++11 -Xcompiler -fPIC -arch=sm_35 -Wno-deprecated-gpu-targets
 
-LIBS = -lnetcdf_c++ -lgsl -lgslcblas 
+LIBS = -lnetcdf_c++4 -lgsl -lgslcblas 
 CUDA_LIBS = -lcudart -lcurand -lcufft
 
 SOURCEDIR = src

@@ -4,7 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <netcdfcpp.h>
+#include <netcdf>
 
 using namespace std;
 
@@ -56,7 +56,7 @@ class gVar{
 	private:
 	string ifname, ofname;	// input and output filenames
 	NcFile_handle *ifile_handle, *ofile_handle;	// ip and op file handles
-	NcVar * outNcVar;		// output NcVar
+	netCDF::NcVar outNcVar;		// output NcVar
 	vector <int> 		lterp_indices;			// interpolation indices (generated during init)
 	vector <string>		filenames;					// list of filenames (genrated during init)
 	int curr_file;
