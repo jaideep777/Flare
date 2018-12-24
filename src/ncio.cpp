@@ -194,7 +194,7 @@ int NcFile_handle::getMeta(){
 	
 	if (latVar.isNull()) CWARN << "Lat not found\n";
 	if (lonVar.isNull()) CWARN << "Lon not found\n";
-	if (levVar.isNull()) CWARN << "Lev not found\n";
+//	if (levVar.isNull()) CWARN << "Lev not found\n";
 	if (tVar.isNull())   CWARN << "Time not found\n";
 
 	CINFO << "    " << ncoords << " coordinates found" << endl;
@@ -336,14 +336,12 @@ int NcFile_handle::readCoords(gVar &v){
 int NcFile_handle::readVarAtts(gVar &v, string vname){
 	NcVar nVar;
 	if (vname == "") nVar = firstVar;	// ivar not specified, default is -1, so set it to ivar1
-	else  dFile->getVar(vname);
+	else  nVar = dFile->getVar(vname);
 
 	string s; 
 	float f;
 	// name
 	v.varname = nVar.getName();
-	
-	NcVarAtt A;
 	
 	// units
 	try{
@@ -380,8 +378,7 @@ int NcFile_handle::readVarAtts(gVar &v, string vname){
 	catch(NcException &e){
 		v.add_offset = 0.f;
 	}
-	// apparently variables created with pointers need not be deleted..
-	// deleting messes up the variable IDs
+
 	return 0;
 }
 

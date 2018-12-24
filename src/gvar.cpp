@@ -696,7 +696,7 @@ int gVar::readVar_reduce_mean(double gt1, double gt2){
 
 		for (int i=tstart; i<=tend; ++i){ 
 			ifile_handle->readVar(*ipvar, i);	// readCoords() would have set ivar1
-			temp = temp + *ipvar;
+			temp = temp + *ipvar;				// TODO: IMPORTANT: need gVar count like in trend to ignore missing values
 			++count;
 		}
 

@@ -7,11 +7,13 @@ using namespace netCDF;
 
 int main(){
 	
-	NcFile f("data/gpp.intercept.2001-2010.nc", NcFile::read);
+	NcFile f("data/MOD17A2_GPP.2000.M01.nc", NcFile::read);
 	if (!f.isNull() ) cout << "Success\n";
 	
 	NcVar lonVar = f.getVar("lon");
 	if (lonVar.isNull()) cout << "Found lon\n";
+	
+	cout << "NcVar has size = " << sizeof(NcVar) << endl;
 	
 	vector <NcDim> dims = lonVar.getDims();
 	cout << "var has " << dims.size() << " dims\n";
