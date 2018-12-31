@@ -57,6 +57,9 @@ configure
 libtool
 aclocal.m4
 
+tests/bin
+bin
+
 #tests/Makefile
 #!tests/*.cpp
 #!tests/*.cu

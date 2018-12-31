@@ -646,7 +646,7 @@ int NcFile_handle::writeCoords(gVar &v, bool wr){
 // time coord is written seperately because several times number of times
 // is determined later 
 int NcFile_handle::writeTimeValues(gVar &v){
-	for (auto i : v.times) cout << i << " "; cout << endl;
+//	for (auto i : v.times) cout << i << " "; cout << endl;
 	tVar.putVar(&v.times[0]);
 	CINFO << "> Written time vector to file." << endl;
 }
