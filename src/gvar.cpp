@@ -123,7 +123,7 @@ int gVar:: copyMeta(const gVar &v, vector <float> &_lons, vector <float> &_lats,
 
 
 int gVar::initMetaFromFile(string filename){
-	float glimits_globe[4] = {-180, 360, -90, 90};
+	float glimits_globe[4] = {-180, 180, -90, 90};
 	ifile_handle = new NcFile_handle;
 	int i = ifile_handle->open(filename, "r", glimits_globe);
 	ifile_handle->readCoords(*this);
@@ -156,7 +156,7 @@ int gVar:: copyValues(const gVar &v){
 
 int gVar::setCoords(vector <double> &t, vector <float> &le, vector <float> &la, vector <float> &lo){
 	times = t; levs = le; lats = la; lons = lo;
-	ntimes = t.size(); nlevs = le.size(); nlats = la.size(); nlons = lo.size();
+	ntimes = t.size(); nlevs = fmax(1,le.size()); nlats = la.size(); nlons = lo.size();
 	if (ntimes >2) tstep = (times[1] - times[0])*tscale;	// tstep in hours
 	else tstep = 0;
 	values.resize(nlons*nlats*nlevs);
@@ -647,13 +647,14 @@ int gVar::createNcOutputStream(string filename){
 	ofile_handle = new NcFile_handle;
 	int i = ofile_handle->open(filename, "w", NULL);	// gridlimits are not required for writing
 	ofile_handle->writeCoords(*this);
-	if (!ofile_handle->tVar.isNull()) ofile_handle->writeTimeValues(*this);
+//	if (!ofile_handle->tVar.isNull()) ofile_handle->writeTimeValues(*this);
 	outNcVar = ofile_handle->createVar(*this);
 //	if (!outNcVar.isNull()) CDEBUG << "Succesfully created variable in file " << filename << endl;
 }
 
 
 int gVar::closeNcOutputStream(){
+	if (!ofile_handle->tVar.isNull()) ofile_handle->writeTimeValues(*this);
 	ofile_handle->close();
 	delete ofile_handle; ofile_handle = NULL;
 }

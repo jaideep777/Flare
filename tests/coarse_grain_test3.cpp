@@ -1,6 +1,6 @@
 #include <iostream>
 #include <gsm.h>
-#include <netcdfcpp.h>
+#include <netcdf>
 #include <vector>
 #include <algorithm>
 using namespace std;
@@ -12,11 +12,11 @@ int main(){
 	
 	// ~~~~~~ Some NetCDF Essentials ~~~~~~~~
 	// set NETCDF error behavior to non-fatal
-	NcError err(NcError::silent_nonfatal);
+//	NcError err(NcError::silent_nonfatal);
 	
 	// specify log file for gsm
-	ofstream gsml("gsm_log.txt");
-	gsm_log = &gsml;
+//	ofstream gsml("gsm_log.txt");
+//	gsm_log = &gsml;
 
 	// create a grid limits vector for convenience
 	float glimits[] = {-180, 180, -90, 90};
@@ -25,13 +25,13 @@ int main(){
 
 	// create the coordinates for our georeferenced variable
 	int nlons, nlats, nlevs, ntimes;
-	vector <float> lons = createCoord(-180+.5/2,180-0.5/2,0.5,nlons);
-	vector <float> lats = createCoord(-90+.5/2,90-.5/2,0.5,nlats);
+	vector <float> lons = createCoord(-180+1./2,180-1./2,1,nlons);
+	vector <float> lats = createCoord(-90+1./2,90-1./2,1,nlats);
 	vector <float> levs = createCoord(1,1,1,nlevs);
 	vector <double> times(1); 
 	times[0]=0;
 
-	vector <string> infiles(1, "/media/jaideep/Totoro/Data/Fire_BA_GFED4/GFED4.0_MQ_0.25deg.1995-2016.nc"); 
+	vector <string> infiles(1, "/home/jaideep/Data/Fire_BA_GFED4.1s/nc/GFED_4.1s_0.5deg.1997-2016.nc"); 
 	gVar hires;
 	hires.initMetaFromFile(infiles[0]);
 	hires.createNcInputStream(infiles, glim);
@@ -41,7 +41,7 @@ int main(){
 	lores.copyMeta(hires);
 	lores.setCoords(lores.times, levs, lats, lons);
 	lores.printGrid();
-	lores.createNcOutputStream("/media/jaideep/Totoro/Data/Fire_BA_GFED4/GFED4.0_MQ_0.5deg.1995-2016.nc");
+	lores.createNcOutputStream("/home/jaideep/Data/Fire_BA_GFED4.1s/nc/GFED_4.1s_1deg.1997-2016.nc");
 
 	for (int t=0; t<lores.ntimes; ++t){
 		hires.readVar_it(t);
