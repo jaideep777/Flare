@@ -156,6 +156,7 @@ class gVar{
 	// functions on gVars 
 	int fill(float f);
 	int sqrtVar();
+	int logshift(float a);	//!< Performs log(a + self)
 	
 	/** \name operators */
 	//@{

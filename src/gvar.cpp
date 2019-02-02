@@ -260,6 +260,14 @@ int gVar::sqrtVar(){
 	}
 }
 
+int gVar::logshift(float a){
+	for (int i=0; i<values.size(); ++i){
+		if (values[i] != missing_value)
+			values[i] = log(a+values[i]);
+	}
+}
+
+
 //int gVar::levMax(){
 //	vector <float> vmax(nlons*nlats, -1e20);
 //	
@@ -603,7 +611,7 @@ int gVar::readVar_it(int tid){
 int gVar::createOneShot(string filename, vector<float> glim){
 	ifname = filename;
 
-	float glimits_globe[4] = {-180, 360, -90, 90};
+	float glimits_globe[4] = {-180, 180, -90, 90};
 	if (glim.size() < 4) gridlimits = vector <float> (glimits_globe, glimits_globe+4);
 	else gridlimits = glim;
 
@@ -625,6 +633,10 @@ int gVar::readOneShot(string filename, vector <float> glim){
 		lterp_indices = bilIndices(ipvar->lons, ipvar->lats, lons, lats);
 		lterpCube(*ipvar, *this, lterp_indices);	// does not copy metadata
 	} 	
+	else if (regriddingMethod == "nearest"){
+		lterp_indices = nnIndices(ipvar->lons, ipvar->lats, lons, lats);
+		cellRegridCube(*ipvar, *this, lterp_indices);	// does not copy metadata
+	} 	
 	else if (regriddingMethod == "coarsegrain"){
 		lterp_indices = cgIndices(ipvar->lons, ipvar->lats, lons, lats);
 		coarseGrain("mean", *ipvar, *this, lterp_indices);	// does not copy metadata
@@ -632,7 +644,7 @@ int gVar::readOneShot(string filename, vector <float> glim){
 	else if (regriddingMethod == "none"){
 		copy(ipvar->values.begin(), ipvar->values.end(), values.begin());
 	}
-	else CERR << "Dont know how to transfer read data to gVar" << endl;
+	else CERR << "readOneShot(): Unsupported regridding method specified: " << regriddingMethod << endl;
 
 	delete ipvar; ipvar = NULL;
 }

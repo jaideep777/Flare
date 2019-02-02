@@ -324,6 +324,8 @@ gVar mask(gVar &v, gVar &m, float val){
 // copy values from v to out with cellRegridding (on grid of out)
 // cellRegrid = regrid using cell values rather than interpolated ones
 int cellRegridCube(gVar &v, gVar &out, vector <int> &indices){
+	CDEBUG << "cellRegridCube (remap_nn): Interpolate into " << out.varname;
+	clock_t start = clock(), end;
 	// get output lats lons from output var
 	vector <float> xlons = out.lons, xlats = out.lats;
 	// grids are OK. proceed with regridding...
@@ -342,11 +344,13 @@ int cellRegridCube(gVar &v, gVar &out, vector <int> &indices){
 		}
 	}
 	out.t = v.t; // copy the current time value because it is related to values
+	end = clock();
+	CDEBUGC << " [" << double(end-start)/CLOCKS_PER_SEC*1000 << " ms]"<< endl;
 }
 
 // copy values from v to out with interpolation (on grid of out)
 int lterpCube(gVar &v, gVar &out, vector <int> &indices){
-	CDEBUG << "lterpCube: Interpolate into " << out.varname;
+	CDEBUG << "lterpCube (remap_bil): Interpolate into " << out.varname;
 	clock_t start = clock(), end;
 	// get output lats lons from output var
 	vector <float> xlons = out.lons, xlats = out.lats;
