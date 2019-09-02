@@ -17,16 +17,19 @@ int main(int argc, char** argv){
 	
 	// specify log file for gsm
 //	ofstream gsml("gsm_log.txt");
-//	gsm_log = &gsml;
+	gsm_log = &cout;
 
 	float res = str2float(argv[1]);
+	string ifile = argv[2];
+	string ofile = argv[3];
+	
 
 	// create a grid limits vector for convenience
-	float glimits[] = {-180, 180, -90, 90};
-	vector <float> glim(glimits, glimits+4);
+//	float glimits[] = {-180, 180, -90, 90};
+	vector <float> glim = {-180, 180, -90, 90}; //(glimits, glimits+4);
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	vector <string> infiles(1, argv[2]); 
+	vector <string> infiles(1, ifile); 
 	gVar hires;
 	hires.initMetaFromFile(infiles[0]);
 	hires.printGrid();
@@ -51,10 +54,10 @@ int main(int argc, char** argv){
 
 	if (hires.times.empty()){
 		lores.readVar_it(0);
-		lores.writeOneShot(argv[3]);
+		lores.writeOneShot(ofile);
 	}
 	else{
-		lores.createNcOutputStream(argv[3]);
+		lores.createNcOutputStream(ofile);
 		for (int t=0; t<lores.ntimes; ++t){
 			lores.readVar_it(t);
 			lores.writeVar(t);
