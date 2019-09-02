@@ -469,6 +469,12 @@ int gVar::createNcInputStream(vector <string> files, vector <float> glim, string
 		end = clock();
 		CDEBUG << "bilIndices [" << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms]" << endl; 
 	}
+	if (regriddingMethod == "nearest") {
+		start = clock();
+		lterp_indices = nnIndices(ipvar->lons, ipvar->lats, lons, lats);	// recalculate lterp indices only if file was updated 
+		end = clock();
+		CDEBUG << "nnIndices [" << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms]" << endl; 
+	}
 	else if (regriddingMethod == "coarsegrain") {
 		start = clock();
 		lterp_indices = cgIndices(ipvar->lons, ipvar->lats, lons, lats);	// recalculate lterp indices only if file was updated 
@@ -581,6 +587,7 @@ int gVar::readVar_gt(double gt, int mode){
 	ifile_handle->readVar_gt(*ipvar, gt, mode);	// readCoords() would have set ivar1
 	
 	if (regriddingMethod == "bilinear") lterpCube(*ipvar, *this, lterp_indices);
+	else if (regriddingMethod == "nearest") cellRegridCube(*ipvar, *this, lterp_indices);
 	else if (regriddingMethod == "coarsegrain") coarseGrain("mean", *ipvar, *this, lterp_indices);
 	else if (regriddingMethod == "none") copy(ipvar->values.begin(), ipvar->values.end(), values.begin());
 	else CERR << "Dont know how to transfer read data to gVar" << endl;
@@ -602,9 +609,11 @@ int gVar::readVar_it(int tid){
 //	cout << "readVar_it: " << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms." << endl; 
 
 	if (regriddingMethod == "bilinear") lterpCube(*ipvar, *this, lterp_indices);
+	else if (regriddingMethod == "nearest") cellRegridCube(*ipvar, *this, lterp_indices);
 	else if (regriddingMethod == "coarsegrain") coarseGrain("mean", *ipvar, *this, lterp_indices);
 	else if (regriddingMethod == "none") copy(ipvar->values.begin(), ipvar->values.end(), values.begin());
 	else CERR << "Dont know how to transfer read data to gVar" << endl;
+
 }
 
 
@@ -726,6 +735,7 @@ int gVar::readVar_reduce_mean(double gt1, double gt2){
 
 	if (count > 0){	// transfer data to gVar only if count > 0: We want to preserve current values if no new values were read
 		if (regriddingMethod == "bilinear") lterpCube(temp, *this, lterp_indices);
+		else if (regriddingMethod == "nearest") cellRegridCube(temp, *this, lterp_indices);	// does not copy metadata
 		else if (regriddingMethod == "coarsegrain") coarseGrain("mean", temp, *this, lterp_indices);
 		else if (regriddingMethod == "none") copy(temp.values.begin(), temp.values.end(), values.begin()); // TODO: This does not copy missing_value, so missing values are treated as valid. FIX 
 		else CERR << "Dont know how to transfer read data to gVar" << endl;
