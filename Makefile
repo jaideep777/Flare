@@ -9,7 +9,7 @@ CPPFLAGS = -O3 -Wl,--no-as-needed -std=c++11 -fPIC
 CUDAFLAGS = -std=c++11 -Xcompiler -fPIC -arch=sm_35 -Wno-deprecated-gpu-targets
 
 LIBS = -lnetcdf_c++4 -lgsl -lgslcblas 
-CUDA_LIBS = -lcudart -lcurand -lcufft
+CUDA_LIBS = #-lcudart -lcurand -lcufft
 
 SOURCEDIR = src
 CUDA_SOURCEDIR = src_cuda

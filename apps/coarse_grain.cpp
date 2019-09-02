@@ -16,8 +16,8 @@ int main(int argc, char** argv){
 //	NcError err(NcError::silent_nonfatal);
 	
 	// specify log file for gsm
-	ofstream gsml("gsm_log.txt");
-	gsm_log = &gsml;
+//	ofstream gsml("gsm_log.txt");
+//	gsm_log = &gsml;
 
 	float res = str2float(argv[1]);
 
@@ -48,19 +48,27 @@ int main(int argc, char** argv){
 	lores.setCoords(hires.times, hires.levs, lats, lons);
 	lores.printGrid();
 	lores.createNcInputStream(infiles, glim, "coarsegrain");
-	lores.createNcOutputStream(argv[3]);
 
-	for (int t=0; t<lores.ntimes; ++t){
-		lores.readVar_it(t);
-		lores.writeVar(t);
-		cout << "t = " << t << endl;
+	if (hires.times.empty()){
+		lores.readVar_it(0);
+		lores.writeOneShot(argv[3]);
 	}
-
-	lores.closeNcOutputStream();
+	else{
+		lores.createNcOutputStream(argv[3]);
+		for (int t=0; t<lores.ntimes; ++t){
+			lores.readVar_it(t);
+			lores.writeVar(t);
+			cout << "t = " << t << endl;
+		}
+		lores.closeNcOutputStream();
+	}
+	
 	lores.closeNcInputStream();	
 		
 	return 0;
 
 }
+
+
 
 

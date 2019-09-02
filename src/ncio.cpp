@@ -185,7 +185,7 @@ int NcFile_handle::getMeta(){
 			++ncoords;
 		}
 
-		else if (var == "time" || var == "TIME" || var == "LEV" ){
+		else if (var == "time" || var == "TIME" ){
 			tVar = it->second;
 			++ncoords;
 		}

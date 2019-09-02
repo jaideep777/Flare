@@ -383,8 +383,8 @@
 #include "histogram.h"
 #include "initializer.h"
 #include "palettes.h"
-#include "turbulence.h"
-#include "resource.h"
+/*#include "turbulence.h"*/
+/*#include "resource.h"*/
 #include "simple_math.h"
 
 

@@ -27,6 +27,7 @@
 #include <sstream>
 #include <string>
 #include <functional>
+#include <numeric>
 #include "../include/arrayutils.h"
 
 

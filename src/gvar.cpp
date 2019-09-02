@@ -312,7 +312,7 @@ gVar gVar::operator + (const gVar &v){
 	for (int i=0; i<nlevs*nlons*nlats; ++i){
 		if (values[i] != missing_value && v.values[i] != v.missing_value)
 			temp.values[i] = values[i] + v.values[i];
-		else temp.values[i] = std_missing_value;
+		else temp.values[i] = std_missing_value;	// TODO: set this to temp.mising_value instead
 	}
 	temp.missing_value = std_missing_value;
 	return temp;
