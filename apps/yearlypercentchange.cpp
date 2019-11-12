@@ -67,24 +67,46 @@ int main(int argc, char** argv){
 	in.printGrid();
 	in.createNcInputStream(infiles, glim, "none");
 	
+
 	if (in.times.empty()){
 		CERR << "Input file has no time dimension" << endl;
 	}
 	else{
-		in.createNcOutputStream(ofile);
+
+		gVar change;
+		change.copyMeta(in);
+		change.createNcOutputStream(ofile);
+	
 		int year0 = gt2year(in.ix2gt(0));
+		int year_prev = year0;
+		in.readVar_reduce_mean(ymd2gday(year0,1,1), ymd2gday(year0,12,31));
+		gVar prev = in;
+		
 		int year;
-		for (year=year0; year<=gt2year(in.ix2gt(in.ntimes-1)); ++year){
+		for (year=year0+1; year<=gt2year(in.ix2gt(in.ntimes-1)); ++year){
 			cout << "year = " << year << endl;
+			
 			in.readVar_reduce_mean(ymd2gday(year,1,1), ymd2gday(year,12,31));
-			in.writeVar(year-gt2year(in.ix2gt(0)));
+			
+			cout << "~~~~>> Calculating change from " << year_prev << " to " << year << endl;
+
+			for (int i=0; i< in.values.size(); ++i){
+				if (prev[i] == 0) change[i] = change.missing_value;
+				else if (in[i] != in.missing_value && prev[i] != prev.missing_value) change[i] = (in[i] - prev[i])/prev[i]*100;
+				else change[i] = change.missing_value;
+			}
+			
+			prev = in;
+			year_prev = year;
+			
+			change.writeVar(year-1-year0);
 		}
 		
-		vector <double> times(year-year0+1);
+		vector <double> times(year-year0+1 -1);
 		for (int i=0; i<times.size(); ++i) times[i] = i*365.2524 + 365.2524/2;
-		in.overwriteTime(times, "days since "+int2str(year0)+"-1-1");
+		change.overwriteTime(times, "days since "+int2str(year0)+"-1-1");
 		
-		in.closeNcOutputStream();
+		change.closeNcOutputStream();
 	}
 	
 	in.closeNcInputStream();	

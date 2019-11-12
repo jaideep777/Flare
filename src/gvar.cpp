@@ -113,7 +113,7 @@ int gVar:: copyMeta(const gVar &v){
 int gVar:: copyMeta(const gVar &v, vector <float> &_lons, vector <float> &_lats, vector <float> &_levs){
 
 	_copyMeta(v);
-	nlevs = fmax(_levs.size(),1); nlats = _lats.size(); nlons = _lons.size();
+	nlevs = fmax(_levs.size(),1); nlats = _lats.size(); nlons = _lons.size();	// TODO: fmax --> max
 	levs = _levs; lats = _lats; lons = _lons;
 	
 	values.resize(nlons*nlats*nlevs);
@@ -691,7 +691,28 @@ int gVar::writeOneShot(string filename){
 	closeNcOutputStream();
 }
 
+int gVar::overwriteTime(vector <double> &times_new, string tunits){
+//	ofile_handle->overwriteTimeValues(times, time_units);
+		// read time unit string and set tbase and tscale
+	string unit, junk, sdate, stime;
+	stringstream ss;
+	ss.clear(); ss.str(tunits);
+	ss >> unit >> junk >> sdate >> stime;
+	if (stime == "") stime = "0:0:0";
+	
+	tbase = ymd2gday(sdate) + hms2xhrs(stime); // note this time is in GMT
+	if (unit == "hours") tscale = 1.0f;
+	else if (unit == "days") tscale = 24.0f;
+	else if (unit == "months") {
+		CWARN << "Using months as time units! 365.2524 days/yr will be considered.\n";
+		tscale = (365.2524/12.0)*24.0;
+	}
+	else {
+		CERR << "ERROR setting base time in getCoords(): invalid time units!\n";
+	}
 
+	times = times_new; ntimes = times_new.size();
+}
 
 // -----------------------------------------------------------------------
 // Functions to read data and compute aggregates between specified times
@@ -835,7 +856,7 @@ gVar gVar::trend(double gt1, double gt2, gVar * P){
 //	gVar P;
 	if (P != NULL){
 		P->copyMeta(t);
-		P->values.resize(t.values.size());
+//		P->values.resize(t.values.size());
 		
 		for(int ilat=0; ilat<P->nlats; ++ilat){
 			for (int ilon=0; ilon<P->nlons; ++ilon){
@@ -928,7 +949,7 @@ gVar gVar::yearlytrend(int year1, int year2, gVar * P){
 //	gVar P;
 	if (P != NULL){
 		P->copyMeta(t);
-		P->values.resize(t.values.size());
+//		P->values.resize(t.values.size());
 		
 		for(int ilat=0; ilat<P->nlats; ++ilat){
 			for (int ilon=0; ilon<P->nlons; ++ilon){
@@ -966,7 +987,6 @@ gVar gVar::yearlytrend(int year1, int year2, gVar * P){
 //    gVar count; count.copyMeta(*ipvar);
 //	count.fill(0);
 //	printGrid();
-//	//int count = 0;
 //	
 //	clock_t start, end;
 //	double msecs;

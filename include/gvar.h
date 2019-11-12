@@ -220,6 +220,7 @@ class gVar{
 	int readVar_gt(double gt, int mode);	//!< Read time-slice for time gt from the input stream. If the stream comprises of multiple files, this function will automatically find the file which contains the time slice closest to gt and read data from that file.
 	int readVar_it(int tid);				//!< Read time-slice from index tid from the NetCDF file currently opened in the input stream.
 	int writeVar(int itime); 				//!< Write time-slice to index itime in the output stream
+	int overwriteTime(vector <double> &times_new, string tunits);
 	//@}
 
 	

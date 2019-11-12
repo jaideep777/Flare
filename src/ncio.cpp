@@ -651,6 +651,15 @@ int NcFile_handle::writeTimeValues(gVar &v){
 	CINFO << "> Written time vector to file." << endl;
 }
 
+
+int NcFile_handle::overwriteTimeValues(vector <double> &times, string time_units){
+//	tDim = dFile->addDim("time");	// unlimited dimension
+//	tVar = dFile->addVar("time", ncFloat, tDim);
+	CINFO << "> Overwriting time values." << endl;
+	tVar.putAtt("units", time_units.c_str());
+	tVar.putVar(times.data());
+}
+
 NcVar NcFile_handle::createVar(gVar &v){
 	if (mode != "w"){
 		CERR << "ERROR in createVar: File not in write mode.\n";

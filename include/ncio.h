@@ -65,6 +65,7 @@ class NcFile_handle{
 	NcVar createVar(gVar &v); // create variable v into file matching gVar
 	int writeVar(gVar &v, NcVar vVar, int itime); // write values into vVar at time itime
 	int writeTimeValues(gVar &v); // write time values
+	int overwriteTimeValues(vector <double> &times, string time_units);
 	
 	private:
 	int read_data_block(NcVar* vVar, int ilon0, int ilat0, int ilev0, int nlons, int nlats, int nlevs, int itime, vector<float>&values);
