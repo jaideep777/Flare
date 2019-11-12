@@ -28,6 +28,7 @@
 #include <ctime>
 #include <netcdf>
 #include <sstream>
+#include <gsl/gsl_cdf.h>
 #include "../include/gvar.h"
 #include "../include/time_math.h"
 #include "../include/arrayutils.h"
@@ -745,26 +746,27 @@ int gVar::readVar_reduce_mean(double gt1, double gt2){
 
 
 
-gVar gVar::trend(double gt1, double gt2){
+gVar gVar::trend(double gt1, double gt2, gVar * P){
 
 	
-	gVar temp; temp.copyMeta(*ipvar);
-	temp.fill(0);
-	int count = 0;
+    gVar count; count.copyMeta(*ipvar);
+	count.fill(0);
+	printGrid();
+	//int count = 0;
 	
-	gVar Sxx = temp, 
-		 Syy = temp, 
-		 Sxy = temp;
+	gVar Sxx = count, 
+		 Syy = count, 
+		 Sxy = count;
 
-	gVar sxy = temp, 
-		 sx = temp, 
-		 sy = temp, 
-		 sxx = temp, 
-		 syy = temp;
+	gVar sxy = count, 
+		 sx = count, 
+		 sy = count, 
+		 sxx = count, 
+		 syy = count;
 
-	gVar b1 = temp, 
-		 s = temp,
-		 t = temp; 
+//	gVar b1 = temp, 
+//		 s = temp,
+//		 t = temp; 
 	
 	updateInputFile(gt1);	// this will give correct OR one previous file
 	while (gt1 > ipvar->ix2gt(ipvar->times.size()-1)){	// increment curr_file as long as gt1 +outside file range
@@ -776,7 +778,7 @@ gVar gVar::trend(double gt1, double gt2){
 	double msecs;
 	start = clock();
 	
-	CDEBUG << "readVar_reduce_mean (" << varname << ") :" << gt2string(gt1) << " " << gt2string(gt2) << endl;
+	CDEBUG << "trend (" << varname << ") :" << gt2string(gt1) << " " << gt2string(gt2) << endl;
 	while(1){
 //		cout << (ipvar->times[0]) << " " << (ipvar->times[ipvar->times.size()-1]) << " "  << (gt1-ipvar->tbase)*24.0/ipvar->tscale <<  endl;
 		int tstart = lower_bound(ipvar->times.begin(), ipvar->times.end(), (gt1-ipvar->tbase)*24.0/ipvar->tscale) - ipvar->times.begin();	   // first elem >= gt1 
@@ -785,18 +787,23 @@ gVar gVar::trend(double gt1, double gt2){
 
 		if (tend < 0) break;
 
-		for (int i=tstart; i<=tend; ++i){ 
-			ifile_handle->readVar(*ipvar, i);	// readCoords() would have set ivar1
+		for (int k=tstart; k<=tend; ++k){ 
+			ifile_handle->readVar(*ipvar, k);	// readCoords() would have set ivar1
 			
-			for (int i=0; i<temp.values.size(); ++i){
-				sxy[i] += (*ipvar)[i]*count;
-				sx[i] += count;
-				sy[i] += (*ipvar)[i];
-				sxx[i] += count*count;
-				syy[i] += (*ipvar)[i] * (*ipvar)[i];
+			float xk = k-tstart;
+			
+			for (int i=0; i<ipvar->values.size(); ++i){
+				
+				if ((*ipvar)[i] != ipvar->missing_value){
+					sxy[i] += (*ipvar)[i]*xk;
+					sx[i] += xk;
+					sy[i] += (*ipvar)[i];
+					sxx[i] += xk*xk;
+					syy[i] += (*ipvar)[i] * (*ipvar)[i];
+					++count[i];
+				}
 			}
 			
-			++count;
 		}
 
 		if (tend >= ipvar->times.size()-1){ // if tend was the last time in file, then load next file and continue reading
@@ -806,22 +813,43 @@ gVar gVar::trend(double gt1, double gt2){
 		}
 		else break;
 	}
-	
-	CDEBUG << "----------- Read " << count << " timesteps from " << varname << endl;
+		
+
+	for (int i=0; i<count.values.size(); ++i){
+		if (count.values[i] <= 2) count.values[i] = count.missing_value;
+	}
 	
 	Sxy = sxy - sx*sy/count;
 	Sxx = sxx - sx*sx/count;
 	Syy = syy - sy*sy/count;
 	
-	b1 = Sxy/Sxx;
-	s = (Syy - b1*Sxy)/(count-2);
+	gVar b1 = Sxy/Sxx;
+	gVar s = (Syy - b1*Sxy)/(count-2);
 	s.sqrtVar();
-	
+
 	gVar sqrt_Sxx = Sxx;
 	sqrt_Sxx.sqrtVar();
 	
-	t = b1/(s/sqrt_Sxx);
-
+	gVar t = b1/(s/sqrt_Sxx);
+	
+//	gVar P;
+	if (P != NULL){
+		P->copyMeta(t);
+		P->values.resize(t.values.size());
+		
+		for(int ilat=0; ilat<P->nlats; ++ilat){
+			for (int ilon=0; ilon<P->nlons; ++ilon){
+				if (count(ilon, ilat, 0) != count.missing_value){
+					double p_temp = gsl_cdf_tdist_P (fabs(t(ilon,ilat,0)), count(ilon,ilat,0)-2);
+					(*P)(ilon,ilat,0) = 2*(1 - p_temp);
+				}
+				else{
+					(*P)(ilon,ilat,0) = P->missing_value;
+				}
+			}
+		}
+	}	
+	
 	end = clock();
 	msecs = ((double) (end - start)) * 1000 / CLOCKS_PER_SEC;
 	
@@ -830,6 +858,153 @@ gVar gVar::trend(double gt1, double gt2){
 //	if (count > 0) lterpCube(b1, *this, lterp_indices);	// We want to preserve current values if no new values were read
 	return b1;
 }
+
+
+gVar gVar::yearlytrend(int year1, int year2, gVar * P){
+
+    gVar count; count.copyMeta(*ipvar);
+	count.fill(0);
+	printGrid();
+	//int count = 0;
+	
+	gVar Sxx = count, 
+		 Syy = count, 
+		 Sxy = count;
+
+	gVar sxy = count, 
+		 sx = count, 
+		 sy = count, 
+		 sxx = count, 
+		 syy = count;
+
+//	gVar b1 = count, 
+//		 s = count,
+//		 t = count; 
+	
+	clock_t start, end;
+	double msecs;
+	start = clock();
+	
+	CDEBUG << "yearly trend (" << varname << ") :" << year1 << " " << year2 << endl;
+	
+	for(int k = year1; k<= year2; k++){
+	    cout << k << endl;
+		readVar_reduce_mean(ymd2gday(k,1,1), ymd2gday(k,12,31));	// readCoords() would have set ivar1
+		
+		float xk = k-year1;
+		for (int i=0; i<values.size(); ++i){
+			
+			if (values[i] != missing_value){
+				sxy[i] += values[i]*xk;
+				sx[i] += xk;
+				sy[i] += values[i];
+				sxx[i] += xk*xk;
+				syy[i] += values[i] * values[i];
+				++count[i];
+			}
+		}
+			
+	}
+	
+	//CDEBUG << "----------- Read " << count[i] << " timesteps from " << varname << endl;
+	
+	for (int i=0; i<count.values.size(); ++i){
+		if (count.values[i] <= 2) count.values[i] = count.missing_value;
+	}
+	
+	Sxy = sxy - sx*sy/count;
+	Sxx = sxx - sx*sx/count;
+	Syy = syy - sy*sy/count;
+	
+	gVar b1 = Sxy/Sxx;
+	gVar s = (Syy - b1*Sxy)/(count-2);
+	s.sqrtVar();
+
+	gVar sqrt_Sxx = Sxx;
+	sqrt_Sxx.sqrtVar();
+	
+	gVar t = b1/(s/sqrt_Sxx);
+	
+//	gVar P;
+	if (P != NULL){
+		P->copyMeta(t);
+		P->values.resize(t.values.size());
+		
+		for(int ilat=0; ilat<P->nlats; ++ilat){
+			for (int ilon=0; ilon<P->nlons; ++ilon){
+				if (count(ilon, ilat, 0) != count.missing_value){
+					double p_temp = gsl_cdf_tdist_P (fabs(t(ilon,ilat,0)), count(ilon,ilat,0)-2);
+					(*P)(ilon,ilat,0) = 2*(1 - p_temp);
+				}
+				else{
+					(*P)(ilon,ilat,0) = P->missing_value;
+				}
+			}
+		}
+	}	
+	
+	end = clock();
+	msecs = ((double) (end - start)) * 1000 / CLOCKS_PER_SEC;
+	
+	cout << "Execution time is " << msecs/1000 << " sec" << endl;
+	
+//	b1.writeOneShot("b1.nc");
+//	t.writeOneShot("t.nc");
+//	P.writeOneShot("P.nc");	
+//	count.writeOneShot("count.nc");	
+//	if (count > 0) lterpCube(b1, *this, lterp_indices);	// We want to preserve current values if no new values were read
+	return b1;
+}
+
+
+
+//// Both input and output streamsn must be initialized before this function is called
+//gVar percentChange_yoy(int year1, int year2, gVar * P){
+
+//	assert(ifile_handle != NULL && ofile_handle != NULL);
+
+//    gVar count; count.copyMeta(*ipvar);
+//	count.fill(0);
+//	printGrid();
+//	//int count = 0;
+//	
+//	clock_t start, end;
+//	double msecs;
+//	start = clock();
+//	
+//	CDEBUG << "YoY Percent change (" << varname << ") :" << year1 << " " << year2 << endl;
+//	
+//	for(int k = year1; k<= year2; k++){
+//	    cout << k << endl;
+//		readVar_reduce_mean(ymd2gday(k,1,1), ymd2gday(k,12,31));	// readCoords() would have set ivar1
+//		
+//		float xk = k-year1;
+//		for (int i=0; i<values.size(); ++i){
+//			
+//			if (values[i] != missing_value){
+
+//			}
+//		}
+//			
+//	}
+//	
+//	//CDEBUG << "----------- Read " << count[i] << " timesteps from " << varname << endl;
+//	
+//	
+//	end = clock();
+//	msecs = ((double) (end - start)) * 1000 / CLOCKS_PER_SEC;
+//	
+//	cout << "Execution time is " << msecs/1000 << " sec" << endl;
+//	
+////	b1.writeOneShot("b1.nc");
+////	t.writeOneShot("t.nc");
+////	P.writeOneShot("P.nc");	
+////	count.writeOneShot("count.nc");	
+////	if (count > 0) lterpCube(b1, *this, lterp_indices);	// We want to preserve current values if no new values were read
+//	return b1;
+//}
+
+
 
 
 

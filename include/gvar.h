@@ -229,7 +229,12 @@ class gVar{
 	//@{	 
 	int readVar_reduce_mean(double gt1, double gt2); //!< Calculate temporal mean of the variable during time interval gt1-gt2
 //	int readVar_reduce_sd(double gt1, double gt2);
-	gVar trend(double gt1, double gt2);		//!< Calculate trend (slope) of the variable during time interval gt1-gt2
+	gVar trend(double gt1, double gt2, gVar * P = NULL);		//!< Calculate trend (slope) of the variable during time interval gt1-gt2
+	gVar yearlytrend(int year1, int year2, gVar * P = NULL);    //!< 
+
+	gVar percentChange_yoy(int year1, int year2, gVar * P = NULL);    //!< 
+
+	
 	gVar trend_gpu(double gt1, double gt2);	//!< Calculate trend (slope) of the variable during time interval gt1-gt2 (Use GPU)
 	//@}	
 	

@@ -1,5 +1,5 @@
 #include <iostream>
-#include <netcdfcpp.h>
+#include <netcdf>
 #include <vector>
 #include <algorithm>
 #include "../include/gsm.h"
@@ -12,14 +12,14 @@ int main(){
 	
 	// ~~~~~~ Some NetCDF Essentials ~~~~~~~~
 	// set NETCDF error behavior to non-fatal
-	NcError err(NcError::silent_nonfatal);
+//	NcError err(NcError::silent_nonfatal);
 	
 	// specify log file for gsm
 //	ofstream gsml("gsm_log.txt");
 //	gsm_log = &gsml;
 
 	// create a grid limits vector for convenience
-	float glimits[] = {0, 360, -90, 90};
+	float glimits[] = {-180, 180, -90, 90};
 	vector <float> glim(glimits, glimits+4);
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -33,7 +33,7 @@ int main(){
 
 	string files[] = 
 	{
-		"/media/jaideep/Totoro/Data/GPP_modis/gpp.2000-2015.nc",
+		"../test_data/gpp.2000-2015.nc",
 	};
 
 	vector <string> infiles(files, files+1); 
@@ -42,9 +42,9 @@ int main(){
 	hires.createNcInputStream(infiles, glim);
 	hires.printGrid();
 
-	gVar slope = hires.trend(ymd2gday("2000-1-1"), ymd2gday("2015-12-31"));
+	gVar slope = hires.yearlytrend(2000, 2015);
 	
-	slope.writeOneShot("/tmp/npp.slope.nc");
+	slope.writeOneShot("gpp_trend_yearly.nc");
 	
 	return 0;
 
