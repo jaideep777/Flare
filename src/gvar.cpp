@@ -470,7 +470,7 @@ int gVar::createNcInputStream(vector <string> files, vector <float> glim, string
 		end = clock();
 		CDEBUG << "bilIndices [" << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms]" << endl; 
 	}
-	if (regriddingMethod == "nearest") {
+	else if (regriddingMethod == "nearest") {
 		start = clock();
 		lterp_indices = nnIndices(ipvar->lons, ipvar->lats, lons, lats);	// recalculate lterp indices only if file was updated 
 		end = clock();
