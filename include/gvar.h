@@ -176,7 +176,7 @@ class gVar{
 	private:
 	int loadInputFileMeta();
 	int whichNextFile(double gt);
-	int updateInputFile(double gt);
+	int updateInputFile(double gt, bool suppress_out_of_bounds_error_printing = false);
 	
 	public:
 	/** \brief Set the regridding method to use when reading data from an input stream.

@@ -470,7 +470,7 @@ int gVar::createNcInputStream(vector <string> files, vector <float> glim, string
 		end = clock();
 		CDEBUG << "bilIndices [" << ((double) (end - start)) * 1000 / CLOCKS_PER_SEC << " ms]" << endl; 
 	}
-	if (regriddingMethod == "nearest") {
+	else if (regriddingMethod == "nearest") {
 		start = clock();
 		lterp_indices = nnIndices(ipvar->lons, ipvar->lats, lons, lats);	// recalculate lterp indices only if file was updated 
 		end = clock();
@@ -536,7 +536,7 @@ int gVar::whichNextFile(double gt){
 }
 
 
-int gVar::updateInputFile(double gt){
+int gVar::updateInputFile(double gt, bool suppress_out_of_bounds_error_printing){
 	
 	int prev_file = curr_file;
 	int next_file = whichNextFile(gt);
@@ -547,7 +547,17 @@ int gVar::updateInputFile(double gt){
 	while (curr_file != next_file){
 
 		if (next_file < 0 || next_file >= filenames.size()){
-			CERR << "(" << varname << ") updateInputFile(): specified time out of range of given files (" << next_file << ").\n"; 
+			double file_dt = ipvar->tstep/24;
+			if (!suppress_out_of_bounds_error_printing){
+				if (next_file < 0){
+					string tlim = gt2string(ipvar->ix2gt(0)-0);
+					CERR << "(" << varname << ") updateInputFile(): specified time (" << gt2string(gt) << ") < time-range of given files, inferred first = " << tlim << " (" << next_file << ").\n"; 
+				}
+				else{
+					string tlim = gt2string(ipvar->ix2gt(ipvar->ntimes-1)+file_dt);
+					CERR << "(" << varname << ") updateInputFile(): specified time (" << gt2string(gt) << ") > time-range of given files, inferred last = " << tlim << " (" << next_file << ").\n"; 
+				}
+			}
 			return 1;
 		}
 		
@@ -723,7 +733,7 @@ int gVar::readVar_reduce_mean(double gt1, double gt2){
 	temp.fill(0);
 	int count = 0;
 	
-	updateInputFile(gt1);	// this will give correct OR one previous file
+	updateInputFile(gt1, true);	// this will give correct OR one previous file. "true" is to suppress error message for 1st specified time, which often WILL be out of bounds for the 1st file
 	while (gt1 > ipvar->ix2gt(ipvar->times.size()-1)){	// increment curr_file as long as gt1 +outside file range
 		++curr_file;
 		loadInputFileMeta();
